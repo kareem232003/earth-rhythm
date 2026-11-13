@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ExternalLink, KeyRound, MessageCircle, Send, Settings, Sparkles, Trash2, X } from 'lucide-react';
+import { ExternalLink, KeyRound, Send, Settings, Sparkles, Trash2, X } from 'lucide-react';
 
 export interface EchoUiContext {
   map_mode: string;
@@ -48,6 +48,129 @@ const STORAGE_KEYS_MAP = 'earth_rhythm_echo_keys_v1';
 const STORAGE_PROVIDER = 'earth_rhythm_echo_provider_v1';
 const STORAGE_MODELS_MAP = 'earth_rhythm_echo_models_v1';
 
+// Baked-in provider catalog so the dropdown is 100% populated immediately on load
+const DEFAULT_PROVIDERS: ProviderSpec[] = [
+  {
+    id: 'gemini',
+    name: 'Google Gemini (AI Studio)',
+    badge: 'FREE TIER (Recommended)',
+    env_keys: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+    key_placeholder: 'AIzaSy...',
+    get_key_url: 'https://aistudio.google.com/apikey',
+    default_model: 'gemini-2.5-flash',
+    models: [
+      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Fast & Smart)' },
+      { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+      { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Deep Reasoning)' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'groq',
+    name: 'Groq Cloud (LPU Instant)',
+    badge: 'FREE TIER & ULTRA-FAST',
+    env_keys: ['GROQ_API_KEY'],
+    key_placeholder: 'gsk_...',
+    get_key_url: 'https://console.groq.com/keys',
+    default_model: 'llama-3.3-70b-versatile',
+    models: [
+      { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile (Recommended)' },
+      { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
+      { id: 'qwen/qwen3-32b', label: 'Qwen 3 32B' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'openrouter',
+    name: 'OpenRouter (All-in-One / Free Models)',
+    badge: 'FREE & PAID MODELS',
+    env_keys: ['OPENROUTER_API_KEY'],
+    key_placeholder: 'sk-or-v1-...',
+    get_key_url: 'https://openrouter.ai/keys',
+    default_model: 'meta-llama/llama-3.3-70b-instruct:free',
+    models: [
+      { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B Instruct (FREE)' },
+      { id: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash Exp (FREE)' },
+      { id: 'openai/gpt-4o-mini', label: 'OpenAI GPT-4o Mini' },
+      { id: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI (ChatGPT)',
+    badge: 'STANDARD API',
+    env_keys: ['OPENAI_API_KEY'],
+    key_placeholder: 'sk-proj-...',
+    get_key_url: 'https://platform.openai.com/api-keys',
+    default_model: 'gpt-4o-mini',
+    models: [
+      { id: 'gpt-4o-mini', label: 'GPT-4o Mini (Fast)' },
+      { id: 'gpt-4o', label: 'GPT-4o' },
+      { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic (Claude)',
+    badge: 'STANDARD API',
+    env_keys: ['ANTHROPIC_API_KEY'],
+    key_placeholder: 'sk-ant-...',
+    get_key_url: 'https://console.anthropic.com/settings/keys',
+    default_model: 'claude-3-5-haiku-latest',
+    models: [
+      { id: 'claude-3-5-haiku-latest', label: 'Claude 3.5 Haiku (Fast)' },
+      { id: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    badge: 'LOW-COST API',
+    env_keys: ['DEEPSEEK_API_KEY'],
+    key_placeholder: 'sk-...',
+    get_key_url: 'https://platform.deepseek.com/api_keys',
+    default_model: 'deepseek-chat',
+    models: [
+      { id: 'deepseek-chat', label: 'DeepSeek V3 Chat' },
+      { id: 'deepseek-reasoner', label: 'DeepSeek R1 Reasoner' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'mistral',
+    name: 'Mistral AI (La Plateforme)',
+    badge: 'FREE EXPERIMENT TIER',
+    env_keys: ['MISTRAL_API_KEY'],
+    key_placeholder: 'your-mistral-key...',
+    get_key_url: 'https://console.mistral.ai/api-keys',
+    default_model: 'mistral-small-latest',
+    models: [
+      { id: 'mistral-small-latest', label: 'Mistral Small Latest' },
+      { id: 'open-mixtral-8x7b', label: 'Mixtral 8x7B' },
+    ],
+    requires_key: true,
+  },
+  {
+    id: 'ollama',
+    name: 'Local Ollama (100% Offline)',
+    badge: 'NO API KEY NEEDED',
+    env_keys: ['OLLAMA_BASE_URL', 'OLLAMA_MODEL'],
+    key_placeholder: 'No API key needed (runs on localhost:11434)',
+    get_key_url: 'https://ollama.com/download',
+    default_model: 'llama3.2',
+    models: [
+      { id: 'llama3.2', label: 'Llama 3.2 (Local)' },
+      { id: 'qwen2.5', label: 'Qwen 2.5 (Local)' },
+      { id: 'mistral', label: 'Mistral (Local)' },
+      { id: 'gemma2', label: 'Gemma 2 (Local)' },
+    ],
+    requires_key: false,
+  },
+];
+
 const QUICK_PROMPTS = [
   '🗺️ What data is displayed on the map right now, and what do the colors mean?',
   '📈 Explain the chart and the pixel patch I currently have selected.',
@@ -56,6 +179,10 @@ const QUICK_PROMPTS = [
   '🏜️ How did you use the Western Desert to prove changes are not just radar noise?',
 ];
 
+const CLIENT_FALLBACK_SYSTEM_PROMPT = `You are Echo 🍃, the friendly AI Guide inside the EARTH RHYTHM — NISAR L-Band Surface Change Storyteller web observatory (NASA Space Apps 2026: "Dancing with the SARs").
+Explain what is currently displayed on the map, what the colors and dB numbers mean, and how NISAR L-band (24 cm) HH (surface moisture, roughness, double-bounce, wind waves) and HV (3D vegetation canopy volume scattering) work over Fayoum Oasis, Lake Qarun, and the Western Desert, Egypt (10 L2_GCOV passes from 2026-06-23 to 2026-10-21, Track 129 / Frame 016 Ascending, CRID P05023; desert noise thresholds tau_HH=2.73 dB, tau_HV=2.03 dB from N=218,705 pixels).
+In the Dual-Pol RGB Composite: Green = high HV crop canopy volume; Purple = bare soil / rocky desert where HH dominates over HV; Dark Black = specular calm water (Lake Qarun / Wadi El Rayan) or smooth sand near the -24.5 dB NESZ floor; Bright White/Yellow = urban double-bounce in Fayoum City. Be concise, warm, and use bullet points.`;
+
 interface EchoHelperProps {
   uiContext: EchoUiContext;
   isOpen: boolean;
@@ -63,7 +190,7 @@ interface EchoHelperProps {
 }
 
 export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onToggleOpen }) => {
-  const [providers, setProviders] = useState<ProviderSpec[]>([]);
+  const [providers, setProviders] = useState<ProviderSpec[]>(DEFAULT_PROVIDERS);
   const [envConfigured, setEnvConfigured] = useState<Record<string, string>>({});
   const [selectedProvider, setSelectedProvider] = useState<string>(
     () => localStorage.getItem(STORAGE_PROVIDER) || 'gemini'
@@ -101,12 +228,12 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const [sending, setSending] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Load provider catalog from backend
+  // Sync optional backend .env status if backend supports /api/echo/providers
   useEffect(() => {
     fetch('/api/echo/providers')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data && Array.isArray(data.providers)) {
+        if (data && Array.isArray(data.providers) && data.providers.length > 0) {
           setProviders(data.providers);
           setEnvConfigured(data.env_configured_providers || {});
           if (!localStorage.getItem(STORAGE_PROVIDER) && data.default_provider) {
@@ -115,7 +242,7 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         }
       })
       .catch(() => {
-        // Ignore offline init
+        // Uses DEFAULT_PROVIDERS seamlessly
       });
   }, []);
 
@@ -126,14 +253,15 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
 
   // Auto-scroll to newest message
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !showSettings) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen, sending]);
+  }, [messages, isOpen, sending, showSettings]);
 
-  const currentProviderSpec = providers.find((p) => p.id === selectedProvider) || providers[0];
+  const currentProviderSpec =
+    providers.find((p) => p.id === selectedProvider) || DEFAULT_PROVIDERS[0];
   const currentModel =
-    savedModels[selectedProvider] || currentProviderSpec?.default_model || 'gemini-2.5-flash';
+    savedModels[selectedProvider] || currentProviderSpec.default_model || 'gemini-2.5-flash';
 
   const hasKeyConfigured =
     selectedProvider === 'ollama' ||
@@ -143,7 +271,6 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const handleKeyInputChange = (val: string) => {
     setKeyInput(val);
     const trimmed = val.trim();
-    // Smart auto-detection from key prefix
     if (trimmed.startsWith('AIza') && selectedProvider !== 'gemini') {
       setSelectedProvider('gemini');
     } else if (trimmed.startsWith('gsk_') && selectedProvider !== 'groq') {
@@ -158,21 +285,21 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const handleSaveSettings = () => {
     const trimmed = keyInput.trim();
     let targetProv = selectedProvider;
-    if (trimmed.slice(0, 4) === 'AIza') targetProv = 'gemini';
-    else if (trimmed.slice(0, 4) === 'gsk_') targetProv = 'groq';
-    else if (trimmed.slice(0, 6) === 'sk-or-') targetProv = 'openrouter';
-    else if (trimmed.slice(0, 7) === 'sk-ant-') targetProv = 'anthropic';
+    if (trimmed.startsWith('AIza')) targetProv = 'gemini';
+    else if (trimmed.startsWith('gsk_')) targetProv = 'groq';
+    else if (trimmed.startsWith('sk-or-')) targetProv = 'openrouter';
+    else if (trimmed.startsWith('sk-ant-')) targetProv = 'anthropic';
 
     const nextKeys = { ...savedKeys, [targetProv]: trimmed };
     setSavedKeys(nextKeys);
     setSelectedProvider(targetProv);
     localStorage.setItem(STORAGE_KEYS_MAP, JSON.stringify(nextKeys));
     localStorage.setItem(STORAGE_PROVIDER, targetProv);
-    setKeySavedToast('Saved locally in browser!');
+    setKeySavedToast('✓ Saved! Opening chat...');
     setTimeout(() => {
       setKeySavedToast(null);
       setShowSettings(false);
-    }, 900);
+    }, 650);
   };
 
   const handleClearKey = () => {
@@ -189,9 +316,138 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
   };
 
+  // Direct browser-side fallback in case the user hasn't restarted an older uvicorn process yet
+  const callProviderDirectlyFromBrowser = async (
+    provId: string,
+    modelId: string,
+    apiKey: string,
+    history: ChatMessage[]
+  ) => {
+    const contextText = `LIVE SCREEN CONTEXT:\n${JSON.stringify(uiContext, null, 2)}`;
+    const fullSystem = `${CLIENT_FALLBACK_SYSTEM_PROMPT}\n\n${contextText}`;
+
+    if (provId === 'gemini') {
+      if (!apiKey) {
+        return {
+          is_error: true,
+          needs_api_key: true,
+          error: 'Please paste your Google Gemini API key (`AIzaSy...`) in the **🔑 API Key** settings panel!',
+        };
+      }
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${encodeURIComponent(
+        apiKey
+      )}`;
+      const contents = history.slice(-10).map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: fullSystem }] },
+          contents,
+          generationConfig: { temperature: 0.25, maxOutputTokens: 900 },
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        return {
+          is_error: true,
+          needs_api_key: r.status === 400 || r.status === 401 || r.status === 403,
+          error: j?.error?.message || `Gemini API Error (HTTP ${r.status})`,
+        };
+      }
+      const reply =
+        j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') ||
+        'No response returned.';
+      return {
+        is_error: false,
+        provider_name: 'Google Gemini',
+        model: modelId,
+        reply,
+      };
+    }
+
+    if (provId === 'ollama') {
+      const r = await fetch('http://127.0.0.1:11434/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: modelId,
+          stream: false,
+          messages: [
+            { role: 'system', content: fullSystem },
+            ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          ],
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        return { is_error: true, error: `Ollama Error (HTTP ${r.status})` };
+      }
+      return {
+        is_error: false,
+        provider_name: 'Local Ollama',
+        model: modelId,
+        reply: j?.message?.content || '',
+      };
+    }
+
+    // OpenAI-compatible browser endpoints (groq, openrouter, openai, deepseek, mistral)
+    if (!apiKey) {
+      return {
+        is_error: true,
+        needs_api_key: true,
+        error: `Please paste your ${currentProviderSpec.name} API key in the **🔑 API Key** settings panel!`,
+      };
+    }
+    const urlMap: Record<string, string> = {
+      groq: 'https://api.groq.com/openai/v1/chat/completions',
+      openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+      openai: 'https://api.openai.com/v1/chat/completions',
+      deepseek: 'https://api.deepseek.com/chat/completions',
+      mistral: 'https://api.mistral.ai/v1/chat/completions',
+    };
+    const targetUrl = urlMap[provId] || urlMap.openai;
+    const r = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: modelId,
+        temperature: 0.25,
+        max_tokens: 900,
+        messages: [
+          { role: 'system', content: fullSystem },
+          ...history.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+        ],
+      }),
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      return {
+        is_error: true,
+        needs_api_key: r.status === 401 || r.status === 403,
+        error: j?.error?.message || `API Error (HTTP ${r.status})`,
+      };
+    }
+    return {
+      is_error: false,
+      provider_name: currentProviderSpec.name,
+      model: modelId,
+      reply: j?.choices?.[0]?.message?.content || '',
+    };
+  };
+
   const sendMessage = async (textToSend?: string) => {
     const promptText = (textToSend ?? input).trim();
     if (!promptText || sending) return;
+
+    // If settings drawer was open, switch back to chat stream so user sees the answer
+    if (showSettings) setShowSettings(false);
 
     const nextUserMsg: ChatMessage = { role: 'user', content: promptText };
     const updatedHistory = [...messages, nextUserMsg];
@@ -200,32 +456,42 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     setSending(true);
 
     try {
+      const activeKey = (savedKeys[selectedProvider] || keyInput || '').trim();
       const res = await fetch('/api/echo/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           provider: selectedProvider,
           model: currentModel,
-          api_key: savedKeys[selectedProvider] || null,
+          api_key: activeKey || null,
           messages: updatedHistory.map((m) => ({ role: m.role, content: m.content })),
           ui_context: uiContext,
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok || data.is_error) {
+      let data: any;
+      if (res.status === 404) {
+        // Fallback if backend server hasn't been restarted since adding /api/echo/chat
+        data = await callProviderDirectlyFromBrowser(
+          selectedProvider,
+          currentModel,
+          activeKey,
+          updatedHistory
+        );
+      } else {
+        data = await res.json();
+      }
+
+      if (data.is_error) {
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: data.error || `Request failed with HTTP ${res.status}.`,
+            content: data.error || `Request failed.`,
             isError: true,
             needsKey: Boolean(data.needs_api_key),
           },
         ]);
-        if (data.needs_api_key) {
-          setShowSettings(true);
-        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -242,7 +508,7 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         ...prev,
         {
           role: 'assistant',
-          content: `Network error talking to Echo backend: ${err.message || 'Unknown error'}`,
+          content: `Connection error: ${err.message || 'Unknown error'}`,
           isError: true,
         },
       ]);
@@ -251,7 +517,6 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     }
   };
 
-  // Simple lightweight markdown renderer for bold, inline code, and bullet lists
   const renderFormattedContent = (text: string) => {
     const lines = text.split('\n');
     return lines.map((line, i) => {
@@ -260,7 +525,6 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
       const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
       const cleanLine = isBullet ? trimmed.slice(2) : line;
 
-      // Split on **bold** and `code`
       const tokens = cleanLine.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
       const renderedTokens = tokens.map((tok, j) => {
         if (tok.startsWith('**') && tok.endsWith('**')) {
@@ -328,9 +592,9 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
                   Echo 🍃 <span className="echo-role-pill">Earth Rhythm AI Guide</span>
                 </div>
                 <div className="echo-header-meta">
-                  {currentProviderSpec ? currentProviderSpec.name : 'Multi-Provider AI'} •{' '}
+                  {currentProviderSpec.name} •{' '}
                   <span className={hasKeyConfigured ? 'echo-key-ok' : 'echo-key-warn'}>
-                    {hasKeyConfigured ? '✓ Key Ready' : '⚠️ Needs API Key'}
+                    {hasKeyConfigured ? '✓ Key Ready' : '⚠️ Click API Key Setup →'}
                   </span>
                 </div>
               </div>
@@ -340,10 +604,10 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
               <button
                 className={`echo-icon-btn ${showSettings ? 'active' : ''}`}
                 onClick={() => setShowSettings((s) => !s)}
-                title="Configure API Key & AI Provider (Gemini, Groq, OpenRouter, OpenAI, Claude, Ollama)"
+                title="Configure API Key & AI Provider"
               >
-                <KeyRound size={15} />
-                <span>API Key</span>
+                <KeyRound size={14} />
+                <span>{showSettings ? 'Back to Chat' : 'API Key'}</span>
               </button>
               <button className="echo-close-btn" onClick={onToggleOpen} title="Minimize Echo">
                 <X size={17} />
@@ -361,7 +625,7 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
             </div>
           )}
 
-          {/* LIVE CONTEXT STRIP (Shows user that Echo sees what's on their screen) */}
+          {/* LIVE CONTEXT STRIP */}
           <div className="echo-context-bar">
             <span className="echo-context-dot" />
             <span className="echo-context-text">
@@ -370,25 +634,50 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
             </span>
           </div>
 
-          {/* 1-CLICK API KEY & PROVIDER SETUP DRAWER */}
-          {showSettings && (
+          {/* FULL-HEIGHT SCROLLABLE API KEY & PROVIDER SETUP VIEW */}
+          {showSettings ? (
             <div className="echo-settings-panel">
               <div className="echo-settings-header">
                 <h4>
                   <Settings size={14} /> Easy AI Provider &amp; API Key Setup
                 </h4>
-                <span className="echo-privacy-badge">Stored only in your browser</span>
+                <span className="echo-privacy-badge">Stored in your browser</span>
               </div>
 
               <p className="echo-settings-help">
-                Pick any AI provider below! Need a free key in 10 seconds? Choose{' '}
-                <strong>Google Gemini (AI Studio)</strong> or <strong>Groq Cloud</strong>. (Or put your key in{' '}
-                <code>.env</code>!)
+                Click any provider pill below (or use the dropdown), then paste your API key!{' '}
+                <strong>Google Gemini</strong> and <strong>Groq</strong> give you free keys in 20 seconds.
               </p>
 
+              {/* CLICKABLE PROVIDER PILLS (Never hidden by OS dropdown menus!) */}
+              <div className="echo-provider-grid">
+                {providers.map((p) => {
+                  const isSel = p.id === selectedProvider;
+                  const hasK = p.id === 'ollama' || Boolean(savedKeys[p.id]?.trim()) || Boolean(envConfigured[p.id]);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`echo-prov-pill ${isSel ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedProvider(p.id);
+                        localStorage.setItem(STORAGE_PROVIDER, p.id);
+                      }}
+                    >
+                      <div className="echo-prov-top">
+                        <span className="echo-prov-name">{p.name.split(' (')[0]}</span>
+                        {hasK && <span className="echo-prov-check">✓</span>}
+                      </div>
+                      <span className="echo-prov-badge">{p.badge}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="echo-field-row">
-                <label>1. Choose AI Provider:</label>
+                <label>Selected Provider ({currentProviderSpec.name}):</label>
                 <select
+                  className="echo-select"
                   value={selectedProvider}
                   onChange={(e) => {
                     setSelectedProvider(e.target.value);
@@ -403,151 +692,154 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
                 </select>
               </div>
 
-              {currentProviderSpec && (
-                <>
-                  <div className="echo-field-row">
-                    <label>2. Choose Model:</label>
-                    <select value={currentModel} onChange={(e) => handleModelChange(e.target.value)}>
-                      {currentProviderSpec.models.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="echo-field-row">
+                <label>Choose Model:</label>
+                <select
+                  className="echo-select"
+                  value={currentModel}
+                  onChange={(e) => handleModelChange(e.target.value)}
+                >
+                  {currentProviderSpec.models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  {currentProviderSpec.requires_key ? (
-                    <div className="echo-field-row">
-                      <div className="echo-label-split">
-                        <label>3. Paste {currentProviderSpec.name} API Key:</label>
-                        <a
-                          href={currentProviderSpec.get_key_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="echo-get-key-link"
-                        >
-                          Get a {currentProviderSpec.id === 'gemini' || currentProviderSpec.id === 'groq' ? 'FREE ' : ''}
-                          Key <ExternalLink size={11} />
-                        </a>
-                      </div>
-                      <div className="echo-key-input-group">
-                        <input
-                          type="password"
-                          placeholder={
-                            envConfigured[selectedProvider]
-                              ? `✓ Pre-configured via server .env (${envConfigured[selectedProvider]})`
-                              : `Paste key (${currentProviderSpec.key_placeholder}) — auto-detects provider!`
-                          }
-                          value={keyInput}
-                          onChange={(e) => handleKeyInputChange(e.target.value)}
-                        />
-                        {savedKeys[selectedProvider] && (
-                          <button
-                            className="echo-clear-key-btn"
-                            onClick={handleClearKey}
-                            title="Clear saved key from browser"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                      {envConfigured[selectedProvider] && !savedKeys[selectedProvider] && (
-                        <div className="echo-env-detected">
-                          ✓ Server <code>.env</code> already has <code>{envConfigured[selectedProvider]}</code> ready!
-                        </div>
-                      )}
-                    </div>
-                  ) : (
+              {currentProviderSpec.requires_key ? (
+                <div className="echo-field-row">
+                  <div className="echo-label-split">
+                    <label>Paste {currentProviderSpec.name.split(' (')[0]} API Key:</label>
+                    <a
+                      href={currentProviderSpec.get_key_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="echo-get-key-link"
+                    >
+                      Get {currentProviderSpec.id === 'gemini' || currentProviderSpec.id === 'groq' ? 'FREE ' : ''}
+                      Key Here <ExternalLink size={11} />
+                    </a>
+                  </div>
+                  <div className="echo-key-input-group">
+                    <input
+                      type="password"
+                      placeholder={
+                        envConfigured[selectedProvider]
+                          ? `✓ Pre-configured via server .env (${envConfigured[selectedProvider]})`
+                          : `Paste key here (${currentProviderSpec.key_placeholder})`
+                      }
+                      value={keyInput}
+                      onChange={(e) => handleKeyInputChange(e.target.value)}
+                    />
+                    {savedKeys[selectedProvider] && (
+                      <button
+                        type="button"
+                        className="echo-clear-key-btn"
+                        onClick={handleClearKey}
+                        title="Clear saved key from browser"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  {envConfigured[selectedProvider] && !savedKeys[selectedProvider] && (
                     <div className="echo-env-detected">
-                      ✓ <strong>Local Ollama</strong> runs offline on your machine (<code>localhost:11434</code>) with no
-                      API key required.
+                      ✓ Server <code>.env</code> already has <code>{envConfigured[selectedProvider]}</code> ready!
                     </div>
                   )}
-                </>
+                </div>
+              ) : (
+                <div className="echo-env-detected">
+                  ✓ <strong>Local Ollama</strong> runs offline on your machine (<code>localhost:11434</code>) with no
+                  API key required.
+                </div>
               )}
 
               <div className="echo-settings-actions">
-                <button className="echo-save-btn" onClick={handleSaveSettings}>
-                  {keySavedToast || 'Save & Start Chatting'}
+                <button type="button" className="echo-save-btn" onClick={handleSaveSettings}>
+                  {keySavedToast || 'Save Key & Start Chatting'}
                 </button>
-                <button className="echo-cancel-btn" onClick={() => setShowSettings(false)}>
-                  Close
+                <button type="button" className="echo-cancel-btn" onClick={() => setShowSettings(false)}>
+                  Back to Chat
                 </button>
               </div>
             </div>
-          )}
-
-          {/* MESSAGES STREAM */}
-          <div className="echo-messages">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`echo-msg-row ${msg.role === 'user' ? 'user-row' : 'assistant-row'}`}>
-                {msg.role === 'assistant' && (
-                  <img src="/echo-avatar.png" alt="Echo" className="echo-msg-avatar" />
-                )}
-                <div className={`echo-bubble ${msg.role} ${msg.isError ? 'error-bubble' : ''}`}>
-                  <div className="echo-bubble-body">{renderFormattedContent(msg.content)}</div>
-                  {msg.needsKey && (
-                    <button className="echo-inline-key-btn" onClick={() => setShowSettings(true)}>
-                      <KeyRound size={13} /> Open 1-Click API Key Setup
-                    </button>
-                  )}
-                  {msg.providerName && (
-                    <div className="echo-bubble-footer">
-                      {msg.providerName} • <code>{msg.model}</code>
+          ) : (
+            <>
+              {/* MESSAGES STREAM */}
+              <div className="echo-messages">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`echo-msg-row ${msg.role === 'user' ? 'user-row' : 'assistant-row'}`}>
+                    {msg.role === 'assistant' && (
+                      <img src="/echo-avatar.png" alt="Echo" className="echo-msg-avatar" />
+                    )}
+                    <div className={`echo-bubble ${msg.role} ${msg.isError ? 'error-bubble' : ''}`}>
+                      <div className="echo-bubble-body">{renderFormattedContent(msg.content)}</div>
+                      {msg.needsKey && (
+                        <button className="echo-inline-key-btn" onClick={() => setShowSettings(true)}>
+                          <KeyRound size={13} /> Open 1-Click API Key Setup
+                        </button>
+                      )}
+                      {msg.providerName && (
+                        <div className="echo-bubble-footer">
+                          {msg.providerName} • <code>{msg.model}</code>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                  </div>
+                ))}
 
-            {sending && (
-              <div className="echo-msg-row assistant-row">
-                <img src="/echo-avatar.png" alt="Echo" className="echo-msg-avatar" />
-                <div className="echo-bubble assistant typing-bubble">
-                  <span className="typing-dot" />
-                  <span className="typing-dot" />
-                  <span className="typing-dot" />
-                  <span className="typing-label">Echo is reading the active radar layer...</span>
-                </div>
+                {sending && (
+                  <div className="echo-msg-row assistant-row">
+                    <img src="/echo-avatar.png" alt="Echo" className="echo-msg-avatar" />
+                    <div className="echo-bubble assistant typing-bubble">
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-label">Echo is reading the active radar layer...</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* QUICK SUGGESTED QUESTIONS */}
-          <div className="echo-quick-chips">
-            {QUICK_PROMPTS.map((q, i) => (
-              <button
-                key={i}
-                className="echo-chip"
-                onClick={() => sendMessage(q)}
-                disabled={sending}
-                title={q}
+              {/* QUICK SUGGESTED QUESTIONS */}
+              <div className="echo-quick-chips">
+                {QUICK_PROMPTS.map((q, i) => (
+                  <button
+                    key={i}
+                    className="echo-chip"
+                    onClick={() => sendMessage(q)}
+                    disabled={sending}
+                    title={q}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+
+              {/* INPUT BAR */}
+              <form
+                className="echo-input-bar"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  sendMessage();
+                }}
               >
-                {q}
-              </button>
-            ))}
-          </div>
-
-          {/* INPUT BAR */}
-          <form
-            className="echo-input-bar"
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendMessage();
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Ask Echo what's on the map, what HH/HV means, or about this chart..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={sending}
-            />
-            <button type="submit" className="echo-send-btn" disabled={sending || !input.trim()}>
-              <Send size={15} />
-            </button>
-          </form>
+                <input
+                  type="text"
+                  placeholder="Ask Echo what's on the map, what HH/HV means, or about this chart..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={sending}
+                />
+                <button type="submit" className="echo-send-btn" disabled={sending || !input.trim()}>
+                  <Send size={15} />
+                </button>
+              </form>
+            </>
+          )}
         </div>
       )}
     </>

@@ -1557,12 +1557,80 @@ code {
 
 /* SETTINGS / API KEY SETUP PANEL */
 .echo-settings-panel {
-  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
   background: #0f172a;
-  border-bottom: 1px solid #334155;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+}
+
+.echo-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.echo-prov-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: #090e1a;
+  border: 1px solid #263554;
+  color: #cbd5e1;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.echo-prov-pill:hover {
+  border-color: #38bdf8;
+  background: rgba(14, 165, 233, 0.1);
+}
+
+.echo-prov-pill.selected {
+  border-color: #34d399;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(16, 185, 129, 0.18));
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.25);
+}
+
+.echo-prov-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.echo-prov-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.echo-prov-check {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.echo-prov-badge {
+  font-size: 9.5px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.echo-select {
+  color-scheme: dark;
+}
+
+.echo-select option {
+  background-color: #090e1a;
+  color: #f8fafc;
 }
 
 .echo-settings-header {
