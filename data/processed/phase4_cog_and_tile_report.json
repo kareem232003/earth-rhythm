@@ -1,6 +1,6 @@
 {
   "phase": "Phase 4 \u2014 Cloud-Optimized GeoTIFF (COG) & Web-Ready Overlay Tile Generation",
-  "generated_at_utc": "2026-11-13T15:09:04.570900+00:00",
+  "generated_at_utc": "2026-11-13T21:58:37.662926+00:00",
   "elapsed_seconds": 115.06,
   "cog_summary": {
     "total_cogs_generated": 45,
@@ -19,7 +19,7 @@
   },
   "web_overlay_summary": {
     "total_png_overlays_generated": 59,
-    "total_png_size_mb": 262.05,
+    "total_png_size_mb": 255.35,
     "reprojected_crs": "EPSG:4326 (WGS84)",
     "wgs84_bounds": [
       30.287397,
@@ -56,7 +56,7 @@
     }
   },
   "storage_budget_verification": {
-    "total_data_directory_mb": 1574.03,
+    "total_data_directory_mb": 1596.86,
     "within_budget": false
   },
   "catalog_path": "data/web_tiles/layer_catalog.json"

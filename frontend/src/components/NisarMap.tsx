@@ -403,13 +403,27 @@ export const NisarMap: React.FC<Props> = ({
 
           {leftOverlay.legend.channels && (
             <div className="legend-categorical-grid">
-              {leftOverlay.legend.channels.map((ch) => (
-                <div key={ch.channel} className="legend-cat-row">
-                  <span className="legend-cat-label">
-                    <strong>{ch.channel}</strong> ({ch.range}): {ch.meaning}
-                  </span>
-                </div>
-              ))}
+              {leftOverlay.legend.channels.map((ch) => {
+                const lc = ch.channel.toLowerCase();
+                const fallbackColor = lc.includes('green')
+                  ? '#22c55e'
+                  : lc.includes('red')
+                  ? '#ef4444'
+                  : lc.includes('blue') || lc.includes('cyan')
+                  ? '#0ea5e9'
+                  : '#b48a52';
+                return (
+                  <div key={ch.channel} className="legend-cat-row">
+                    <span
+                      className="legend-cat-swatch"
+                      style={{ backgroundColor: ch.color || fallbackColor }}
+                    />
+                    <span className="legend-cat-label">
+                      <strong>{ch.channel}</strong> ({ch.range}): {ch.meaning}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
 

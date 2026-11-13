@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-13T15:09:04.570900+00:00",
+  "generated_at_utc": "2026-11-13T21:58:37.662926+00:00",
   "project": "EARTH RHYTHM \u2014 NISAR Surface Change Storyteller",
   "aoi": {
     "name": "Fayoum Oasis, Egypt (Lake Qarun, Wadi El Rayan & Nile-Fed Agricultural Basin)",
@@ -249,12 +249,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260623_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260623_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6813870,
-      "size_kb": 6654.2,
-      "sha256": "dd9e6d054edbdd05e8ad9eed3a21d62abb1d242f571a4e7fdb5511cb1c43a2bd",
+      "size_bytes": 5995826,
+      "size_kb": 5855.3,
+      "sha256": "bb801f4af3c6215efc7d9f9cbd805b9af1100f48a1d11fc8290b5343cddb81b4",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -279,7 +279,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -287,18 +287,18 @@
         "acquisition_date": "2026-06-23",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_023_129_A_016_4005_DHDH_A_20260623T031546_20260623T031621_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260623_RGB",
       "group": "single_date_backscatter",
       "date": "2026-06-23",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-06-23)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-06-23)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260623_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260623_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -306,19 +306,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -508,12 +517,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260705_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260705_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6840162,
-      "size_kb": 6679.8,
-      "sha256": "d59240a06e21baadef7275fde0306cdc9de3c6b21e145ea024ea18429fea285f",
+      "size_bytes": 5985321,
+      "size_kb": 5845.0,
+      "sha256": "ee9f1a8ff3a49636e7826db3bc84e24bf656c8487c69ecce134505fcce982c93",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -538,7 +547,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -546,18 +555,18 @@
         "acquisition_date": "2026-07-05",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_024_129_A_016_4005_DHDH_A_20260705T031546_20260705T031620_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260705_RGB",
       "group": "single_date_backscatter",
       "date": "2026-07-05",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-07-05)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-07-05)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260705_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260705_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -565,19 +574,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -767,12 +785,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260717_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260717_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6806111,
-      "size_kb": 6646.6,
-      "sha256": "657b3fda37e2a26dbcf2d2e65ccdbdc08be42fecf20d7ace96b47990d51cec0f",
+      "size_bytes": 6072771,
+      "size_kb": 5930.4,
+      "sha256": "cadd2f4c960591ecb688734e7e2e04f2c556840d27f3691e15af312df54aebd7",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -797,7 +815,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -805,18 +823,18 @@
         "acquisition_date": "2026-07-17",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_025_129_A_016_4005_DHDH_A_20260717T031545_20260717T031620_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260717_RGB",
       "group": "single_date_backscatter",
       "date": "2026-07-17",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-07-17)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-07-17)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260717_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260717_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -824,19 +842,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -1026,12 +1053,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260810_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260810_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6623128,
-      "size_kb": 6467.9,
-      "sha256": "162aa9771a5eb5aa7647f58bdb40dbd0189ff9305ef90193f907ec129c070a0e",
+      "size_bytes": 5924651,
+      "size_kb": 5785.8,
+      "sha256": "6ee828ad399eade3db7ea87f17be018a164b952f4313f7985189e02f901869b9",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -1056,7 +1083,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -1064,18 +1091,18 @@
         "acquisition_date": "2026-08-10",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_027_129_A_016_4005_DHDH_A_20260810T031544_20260810T031618_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260810_RGB",
       "group": "single_date_backscatter",
       "date": "2026-08-10",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-08-10)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-08-10)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260810_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260810_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -1083,19 +1110,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -1285,12 +1321,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260822_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260822_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6795662,
-      "size_kb": 6636.4,
-      "sha256": "55012b2552caa27ad1675d9f8692b3fcc0f0afdae807721c2b3589b4a94e3e41",
+      "size_bytes": 6083125,
+      "size_kb": 5940.6,
+      "sha256": "13e036d642f63529d30f2bb09efc520509e253e203bffe9adb34bf40af947ba9",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -1315,7 +1351,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -1323,18 +1359,18 @@
         "acquisition_date": "2026-08-22",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_028_129_A_016_4005_DHDH_A_20260822T031543_20260822T031618_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260822_RGB",
       "group": "single_date_backscatter",
       "date": "2026-08-22",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-08-22)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-08-22)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260822_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260822_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -1342,19 +1378,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -1544,12 +1589,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260903_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260903_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6770992,
-      "size_kb": 6612.3,
-      "sha256": "bc960a07a382ba19e3bee65bf26b1326ba778f680dd98f789f6552c58fd331bb",
+      "size_bytes": 6114579,
+      "size_kb": 5971.3,
+      "sha256": "1cd856813facb576609d2dbbdee862101ea080cf231a51587081bd4abad3f950",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -1574,7 +1619,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -1582,18 +1627,18 @@
         "acquisition_date": "2026-09-03",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_029_129_A_016_4005_DHDH_A_20260903T031543_20260903T031617_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260903_RGB",
       "group": "single_date_backscatter",
       "date": "2026-09-03",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-09-03)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-09-03)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260903_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260903_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -1601,19 +1646,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -1803,12 +1857,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260915_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260915_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6661198,
-      "size_kb": 6505.1,
-      "sha256": "5af434a3b9ac9999f240a93fb6a633e5a90eb1746a664f3c3310bd76c2abca49",
+      "size_bytes": 6018748,
+      "size_kb": 5877.7,
+      "sha256": "404fe133a230d6846178f2e0eda3d66a049c1dc496fd5e2492a28d6c1f6ff966",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -1833,7 +1887,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -1841,18 +1895,18 @@
         "acquisition_date": "2026-09-15",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_030_129_A_016_4005_DHDH_A_20260915T031543_20260915T031617_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260915_RGB",
       "group": "single_date_backscatter",
       "date": "2026-09-15",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-09-15)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-09-15)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260915_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260915_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -1860,19 +1914,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -2062,12 +2125,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260927_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20260927_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6868658,
-      "size_kb": 6707.7,
-      "sha256": "fea74358ff64f58e7a53f46ff73f6accc7a53df93124a84bd461dd1a178e3c6f",
+      "size_bytes": 6159279,
+      "size_kb": 6014.9,
+      "sha256": "242869f3420f7c6c3ab512a1f11d966b14dce84e42222271c9e2f81ba118cd6e",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -2092,7 +2155,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -2100,18 +2163,18 @@
         "acquisition_date": "2026-09-27",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_031_129_A_016_4005_DHDH_A_20260927T031543_20260927T031617_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20260927_RGB",
       "group": "single_date_backscatter",
       "date": "2026-09-27",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-09-27)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-09-27)",
       "url": "/tiles/overlays/gcov_dates/gcov_20260927_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260927_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -2119,19 +2182,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -2321,12 +2393,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20261009_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20261009_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6746223,
-      "size_kb": 6588.1,
-      "sha256": "d329377252a616ab52abe4cda9ee48895f656255b1b175306229b2ec003820c6",
+      "size_bytes": 6147167,
+      "size_kb": 6003.1,
+      "sha256": "fc46cffd373c36a6d51163bbdafb5aaf776865ee9004596b2bd2caa276384644",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -2351,7 +2423,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -2359,18 +2431,18 @@
         "acquisition_date": "2026-10-09",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_032_129_A_016_4005_DHDH_A_20261009T031543_20261009T031617_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20261009_RGB",
       "group": "single_date_backscatter",
       "date": "2026-10-09",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-10-09)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-10-09)",
       "url": "/tiles/overlays/gcov_dates/gcov_20261009_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261009_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -2378,19 +2450,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }
@@ -2580,12 +2661,12 @@
       }
     },
     {
-      "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20261021_RGB_composite.png",
+      "png_path": "data\\web_tiles\\overlays\\gcov_dates\\gcov_20261021_RGB_composite.png",
       "width": 2089,
       "height": 1464,
-      "size_bytes": 6742611,
-      "size_kb": 6584.6,
-      "sha256": "ff0d04d3fb0c298ce5a7a48b1b07481ba03cd9e978bee14131820671fa261dc8",
+      "size_bytes": 6147292,
+      "size_kb": 6003.2,
+      "sha256": "1ee63957135e7fec99f8ac7ea689c37a368779e9d4bd9c5bc4e289cbf347c597",
       "wgs84_bounds": [
         30.287397,
         29.03672,
@@ -2610,7 +2691,7 @@
           29.03672
         ]
       ],
-      "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+      "composite_recipe": "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | Red = Urban/Building Double-Bounce (HH > -7 dB) | Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | Warm Sand = Bare Soil & Desert Surface",
       "rule3_metadata": {
         "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
         "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -2618,18 +2699,18 @@
         "acquisition_date": "2026-10-21",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
-        "polarization": "HH+HV Dual-Pol RGB Composite",
+        "polarization": "HH+HV Decoupled Physical RGB Composite",
         "units": "dB (10*log10 gamma0)",
         "crs": "EPSG:4326 (reprojected from EPSG:32636)",
         "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_033_129_A_016_4005_DHDH_A_20261021T031543_20261021T031617_P05023_N_F_J_001",
         "epistemic_tag": "OBSERVATION",
-        "rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"
+        "rgb_channels": "Green=Vegetation Canopy (HV -19.5..-11 dB), Red=Urban Double-Bounce (HH -7..+2 dB), Blue/Cyan=Calm to Wind-Roughened Water, Warm Sand=Bare Soil & Desert"
       },
       "layer_id": "gcov_20261021_RGB",
       "group": "single_date_backscatter",
       "date": "2026-10-21",
-      "polarization": "RGB (HH / HV / HH-HV)",
-      "title": "NISAR Dual-Pol False-Color Composite (2026-10-21)",
+      "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+      "title": "NISAR Physical Scattering Composite (2026-10-21)",
       "url": "/tiles/overlays/gcov_dates/gcov_20261021_RGB_composite.png",
       "cog_url": "/cogs/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261021_HH_gamma0_dB_40m.tif",
       "legend": {
@@ -2637,19 +2718,28 @@
         "unit": "dB (10*log10 gamma0)",
         "channels": [
           {
-            "channel": "Red (HH)",
-            "range": "-22 to -2 dB",
-            "meaning": "Surface Roughness & Urban/Stem Double-Bounce"
+            "channel": "Lush Green (HV Volume)",
+            "color": "#22c55e",
+            "range": "HV: -19.5 to -11 dB",
+            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)"
           },
           {
-            "channel": "Green (HV)",
-            "range": "-24 to -8 dB",
-            "meaning": "Vegetation Canopy Volume Depolarization"
+            "channel": "Vivid Red (HH Double-Bounce)",
+            "color": "#ef4444",
+            "range": "HH: -7 to +2 dB",
+            "meaning": "Buildings & Towns (90\u00b0 wall-ground corner reflection)"
           },
           {
-            "channel": "Blue (HH - HV)",
-            "range": "+2 to +12 dB",
-            "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"
+            "channel": "Deep Blue \u2192 Cyan (Water & Waves)",
+            "color": "#0ea5e9",
+            "range": "HH: -22 to -13 dB (low HV)",
+            "meaning": "Calm Water (Deep Blue) \u2192 Wind-Wave Ripples & Wet Shore (Cyan)"
+          },
+          {
+            "channel": "Warm Sand (Surface Roughness)",
+            "color": "#b48a52",
+            "range": "HH: -18 to -9 dB (low HV)",
+            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone"
           }
         ]
       }

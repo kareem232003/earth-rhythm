@@ -143,7 +143,7 @@ def main() -> None:
         )
         overlays.append(hv_info)
 
-        # Dual-Pol RGB Composite (R=HH, G=HV, B=HH-HV)
+        # Dual-Pol Decoupled Physical RGB Composite
         rgb_png = OVERLAYS_DIR / "gcov_dates" / f"gcov_{dt_compact}_RGB_composite.png"
         rgb_meta = build_rule3_metadata(
             product_type="NISAR_L2_GCOV_PROVISIONAL_V1",
@@ -152,12 +152,19 @@ def main() -> None:
             track=129,
             frame=16,
             orbit_direction="Ascending",
-            polarization="HH+HV Dual-Pol RGB Composite",
+            polarization="HH+HV Decoupled Physical RGB Composite",
             units="dB (10*log10 gamma0)",
             crs="EPSG:4326 (reprojected from EPSG:32636)",
             source=f"NASA ASF DAAC | {gid}",
             epistemic_tag="OBSERVATION",
-            extra={"rgb_channels": "R=HH [-22,-2 dB], G=HV [-24,-8 dB], B=HH-HV [2,12 dB]"},
+            extra={
+                "rgb_channels": (
+                    "Green=Vegetation Canopy (HV -19.5..-11 dB), "
+                    "Red=Urban Double-Bounce (HH -7..+2 dB), "
+                    "Blue/Cyan=Calm to Wind-Roughened Water, "
+                    "Warm Sand=Bare Soil & Desert"
+                )
+            },
         )
         rgb_info = render_dual_pol_rgb_composite_wgs84_png(hh_tif, hv_tif, rgb_png, rgb_meta)
         rgb_info.update(
@@ -165,17 +172,38 @@ def main() -> None:
                 "layer_id": f"gcov_{dt_compact}_RGB",
                 "group": "single_date_backscatter",
                 "date": dt,
-                "polarization": "RGB (HH / HV / HH-HV)",
-                "title": f"NISAR Dual-Pol False-Color Composite ({dt})",
+                "polarization": "RGB (Green=Crops / Red=Buildings / Blue-Cyan=Water / Sand=Desert)",
+                "title": f"NISAR Physical Scattering Composite ({dt})",
                 "url": f"/tiles/overlays/gcov_dates/{rgb_png.name}",
                 "cog_url": f"/cogs/gcov_filtered_db/{hh_tif.name}",
                 "legend": {
                     "type": "rgb_composite",
                     "unit": "dB (10*log10 gamma0)",
                     "channels": [
-                        {"channel": "Red (HH)", "range": "-22 to -2 dB", "meaning": "Surface Roughness & Urban/Stem Double-Bounce"},
-                        {"channel": "Green (HV)", "range": "-24 to -8 dB", "meaning": "Vegetation Canopy Volume Depolarization"},
-                        {"channel": "Blue (HH - HV)", "range": "+2 to +12 dB", "meaning": "Co-Pol Dominance over Bare Soil / Rough Water"},
+                        {
+                            "channel": "Lush Green (HV Volume)",
+                            "color": "#22c55e",
+                            "range": "HV: -19.5 to -11 dB",
+                            "meaning": "Vegetation & Crops (3D plant stems & canopy volume scattering)",
+                        },
+                        {
+                            "channel": "Vivid Red (HH Double-Bounce)",
+                            "color": "#ef4444",
+                            "range": "HH: -7 to +2 dB",
+                            "meaning": "Buildings & Towns (90° wall-ground corner reflection)",
+                        },
+                        {
+                            "channel": "Deep Blue → Cyan (Water & Waves)",
+                            "color": "#0ea5e9",
+                            "range": "HH: -22 to -13 dB (low HV)",
+                            "meaning": "Calm Water (Deep Blue) → Wind-Wave Ripples & Wet Shore (Cyan)",
+                        },
+                        {
+                            "channel": "Warm Sand (Surface Roughness)",
+                            "color": "#b48a52",
+                            "range": "HH: -18 to -9 dB (low HV)",
+                            "meaning": "Bare Soil, Harvested Fields & Consolidated Desert Limestone",
+                        },
                     ],
                 },
             }

@@ -359,19 +359,193 @@ def render_categorical_wgs84_png(
     return png_info
 
 
+_CLEAN_LAKES_CACHE: dict[tuple[str, tuple[int, int], int], np.ndarray] = {}
+
+
+_LAKE_SEED_COORDS: tuple[tuple[float, float], ...] = (
+    (272000.0, 3261000.0),  # Lake Qarun
+    (255000.0, 3237500.0),  # Upper Wadi El Rayan
+    (247500.0, 3231000.0),  # Lower Wadi El Rayan
+)
+
+
+def compute_pure_sar_water_mask(
+    hh_db_all: np.ndarray,
+    hv_db_all: np.ndarray,
+    mean_coh_40m: np.ndarray,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    mode: str = "v3_coh_island",
+) -> np.ndarray:
+    """Classify open lakes using purely NISAR GCOV multi-temporal backscatter and GUNW coherence.
+
+    Modes:
+      - ``"v2_blind_fill"``: Intermediate heuristic (water_epochs >= 7 with HH < -14 dB &
+        HV < -19.5 dB, mean coherence < 0.145, and blind ``binary_fill_holes``).
+      - ``"v3_coh_island"``: Upgraded pure-SAR classifier combining water persistence
+        (>= 6/10 passes with HH < -13.5 dB & HV < -19.0 dB), InSAR decorrelation
+        (coherence < 0.145) OR shallow/bay wind-wave variability (coherence < 0.25 &
+        std_HH > 0.75 dB), and coherence/area-aware hole filtering that preserves real
+        coherent islands (e.g. El-Qarn Island) while filling small incoherent pinholes.
+    """
+    from scipy.ndimage import binary_fill_holes, label as nd_label
+
+    if mode not in ("v2_blind_fill", "v3_coh_island"):
+        raise ValueError(f"Unsupported pure-SAR water classification mode: {mode!r}")
+
+    shape = hh_db_all.shape[1:]
+    if mode == "v2_blind_fill":
+        water_epochs = ((hh_db_all < -14.0) & (hv_db_all < -19.5)).sum(axis=0)
+        cand = (water_epochs >= 7) & (mean_coh_40m < 0.145)
+    else:
+        water_epochs = ((hh_db_all < -13.5) & (hv_db_all < -19.0)).sum(axis=0)
+        std_hh = np.std(hh_db_all, axis=0)
+        cand = (water_epochs >= 6) & (
+            (mean_coh_40m < 0.145) | ((mean_coh_40m < 0.25) & (std_hh > 0.75))
+        )
+
+    lbl, _ = nd_label(cand)
+    true_lakes = np.zeros(shape, dtype=bool)
+    for sx, sy in _LAKE_SEED_COORDS:
+        ir = int(np.argmin(np.abs(ys - sy)))
+        ic = int(np.argmin(np.abs(xs - sx)))
+        cid = int(lbl[ir, ic])
+        if cid <= 0:
+            continue
+        comp = lbl == cid
+        if mode == "v2_blind_fill":
+            true_lakes |= binary_fill_holes(comp)
+        else:
+            holes = binary_fill_holes(comp) & (~comp)
+            hlbl, nh = nd_label(holes)
+            for hid in range(1, nh + 1):
+                hm = hlbl == hid
+                # Preserve islands and elevated barriers (area >= 40 px or median coherence >= 0.22)
+                if int(hm.sum()) < 40 and float(np.median(mean_coh_40m[hm])) < 0.22:
+                    comp |= hm
+            true_lakes |= comp
+
+    return true_lakes
+
+
+def _get_clean_open_lakes_mask(hh_tif_path: Path, shape: tuple[int, int]) -> np.ndarray | None:
+    """Build and cache a box-free, island-preserving pure-SAR water mask for Fayoum lakes.
+
+    Uses all 9 Track 129 / Frame 016 L2_GUNW 80 m coherence arrays in
+    ``data/processed/gunw_coherence/`` (falling back to the exploratory pairs in
+    ``phase1_manifest.json`` if unavailable) alongside the 10-date calibrated L2_GCOV cube.
+    """
+    import json
+
+    import h5py
+
+    resolved = hh_tif_path.resolve()
+    data_dir: Path | None = None
+    for anc in (resolved.parent, *resolved.parents):
+        if (anc / "processed" / "fayoum_gcov_10dates_40m_filtered.h5").exists():
+            data_dir = anc
+            break
+        if (anc / "data" / "processed" / "fayoum_gcov_10dates_40m_filtered.h5").exists():
+            data_dir = anc / "data"
+            break
+    if data_dir is None:
+        return None
+
+    h5_path = data_dir / "processed" / "fayoum_gcov_10dates_40m_filtered.h5"
+    manifest_path = data_dir / "subsets" / "phase1_manifest.json"
+    if not h5_path.exists():
+        return None
+
+    coh_dir = data_dir / "processed" / "gunw_coherence"
+    coh_paths = sorted(coh_dir.glob("*_coherenceMagnitude_80m.tif")) if coh_dir.exists() else []
+    if not coh_paths and manifest_path.exists():
+        repo_root = data_dir.parent
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for item in manifest.get("gunw_subsets", []):
+            coh_rel = item.get("files", {}).get("coherence_tif", {}).get("path")
+            if not coh_rel:
+                continue
+            cp = Path(coh_rel)
+            if not cp.is_absolute():
+                cp = repo_root / cp
+            if cp.exists():
+                coh_paths.append(cp)
+
+    if not coh_paths:
+        return None
+
+    cache_key = (str(data_dir), shape, len(coh_paths))
+    cached = _CLEAN_LAKES_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    coh_sum: np.ndarray | None = None
+    coh_cnt: np.ndarray | None = None
+    for coh_path in coh_paths:
+        with rasterio.open(coh_path, "r") as s_coh:
+            coh_80m = s_coh.read(1).astype(np.float32)
+        coh_40m = np.repeat(np.repeat(coh_80m, 2, axis=0), 2, axis=1)
+        if coh_40m.shape != shape:
+            continue
+        fin = np.isfinite(coh_40m)
+        if coh_sum is None:
+            coh_sum = np.where(fin, coh_40m, 0.0).astype(np.float32)
+            coh_cnt = fin.astype(np.int32)
+        else:
+            coh_sum += np.where(fin, coh_40m, 0.0)
+            coh_cnt += fin.astype(np.int32)
+
+    if coh_sum is None or coh_cnt is None:
+        return None
+    mean_coh_40m = np.where(coh_cnt > 0, coh_sum / np.maximum(coh_cnt, 1), 1.0)
+
+    with h5py.File(h5_path, "r") as hf:
+        hh_lin = hf["HHHH_linear_filt"][:]
+        hv_lin = hf["HVHV_linear_filt"][:]
+        xs = hf["xCoordinates"][:]
+        ys = hf["yCoordinates"][:]
+
+    if hh_lin.shape[1:] != shape:
+        return None
+
+    hh_db_all = 10.0 * np.log10(np.maximum(hh_lin, 1e-6))
+    hv_db_all = 10.0 * np.log10(np.maximum(hv_lin, 1e-6))
+    true_lakes = compute_pure_sar_water_mask(
+        hh_db_all=hh_db_all,
+        hv_db_all=hv_db_all,
+        mean_coh_40m=mean_coh_40m,
+        xs=xs,
+        ys=ys,
+        mode="v3_coh_island",
+    )
+
+    _CLEAN_LAKES_CACHE[cache_key] = true_lakes
+    return true_lakes
+
+
 def render_dual_pol_rgb_composite_wgs84_png(
     hh_tif_path: Path,
     hv_tif_path: Path,
     out_png_path: Path,
     rule3_meta: dict[str, str],
 ) -> dict[str, Any]:
-    """Render a False-Color Dual-Polarization SAR Composite (R=HH dB, G=HV dB, B=HH-HV dB) in EPSG:4326."""
+    """Render a Physically Decoupled Dual-Polarization SAR Composite in EPSG:4326.
+
+    Decouples the 3 radar scattering mechanisms into distinct, non-overlapping visual channels:
+      - Green (HV Canopy Volume, -19.5 to -11.0 dB): 3D Crop & Vegetation Biomass (Lush Emerald Green)
+      - Red (HH Double-Bounce, -7.0 to +1.0 dB): Buildings, Towns & Structural Corner Reflections (Vivid Red)
+      - Blue -> Cyan (Specular & Wind-Wave Bragg Water, HH -22 to -13 dB at low HV): Calm Water (Deep Blue)
+        transitioning to Aqua-Cyan where wind ripples or shoreline drawdown roughen the water surface
+      - Warm Earth Tan (Moderate HH -18 to -9 dB at low HV): Bare Soil, Fallow Fields & Desert Limestone
+    """
     with rasterio.open(hh_tif_path, "r") as s_hh, rasterio.open(hv_tif_path, "r") as s_hv:
         hh_db = s_hh.read(1).astype(np.float32)
         hv_db = s_hv.read(1).astype(np.float32)
         src_transform = s_hh.transform
         src_crs = str(s_hh.crs)
         src_bounds = (s_hh.bounds.left, s_hh.bounds.bottom, s_hh.bounds.right, s_hh.bounds.top)
+
+    true_lakes = _get_clean_open_lakes_mask(hh_tif_path, hh_db.shape)
 
     wgs_hh, _, wgs_bounds = reproject_array_to_wgs84(
         hh_db, src_transform, src_crs, src_bounds, src_nodata=np.nan, is_categorical=False
@@ -381,18 +555,60 @@ def render_dual_pol_rgb_composite_wgs84_png(
     )
 
     valid = np.isfinite(wgs_hh) & np.isfinite(wgs_hv)
-    diff_db = wgs_hh - wgs_hv
+    hh_clean = np.nan_to_num(wgs_hh, nan=-24.0)
+    hv_clean = np.nan_to_num(wgs_hv, nan=-25.0)
 
-    # Stretch: R = HH [-22, -2] dB, G = HV [-24, -8] dB, B = (HH - HV) [2, 12] dB
-    r = np.clip(np.nan_to_num((wgs_hh - (-22.0)) / 20.0, nan=0.0), 0.0, 1.0)
-    g = np.clip(np.nan_to_num((wgs_hv - (-24.0)) / 16.0, nan=0.0), 0.0, 1.0)
-    b = np.clip(np.nan_to_num((diff_db - 2.0) / 10.0, nan=0.0), 0.0, 1.0)
+    if true_lakes is not None:
+        wgs_lakes, _, _ = reproject_array_to_wgs84(
+            true_lakes.astype(np.float32),
+            src_transform,
+            src_crs,
+            src_bounds,
+            src_nodata=np.nan,
+            is_categorical=False,
+        )
+        w_water = np.clip(np.nan_to_num(wgs_lakes, nan=0.0), 0.0, 1.0)
+    else:
+        w_water = np.where((hv_clean < -21.0) & (hh_clean < -17.0), 1.0, 0.0)
+
+    # 1. Urban / Building Double-Bounce (HH -6.8 to +0.5 dB) -> VIVID RED / CORAL
+    urban_idx = np.clip((hh_clean - (-6.8)) / 7.3, 0.0, 1.0) ** 0.72
+    urban_gate = np.clip((hh_clean - (-6.8)) / 2.2, 0.0, 1.0)
+
+    # 2. Vegetation Canopy Volume (HV -18.8 to -11.5 dB) -> LUSH EMERALD GREEN
+    veg_raw = np.clip((hv_clean - (-18.8)) / 7.3, 0.0, 1.0) ** 0.65
+    veg_idx = veg_raw * (1.0 - 0.92 * urban_gate) * (1.0 - w_water)
+
+    # 3. Open Water & Wind-Wave Bragg Roughness (Deep Blue -> Cyan-Blue) -> OCEAN BLUE / CYAN
+    wind_wave = w_water * np.clip((hh_clean - (-20.4)) / 6.2, 0.0, 1.0)
+
+    # 4. Bare Soil / Harvested Fallow / Desert Limestone (HH -21.8 to -8.8 dB, low HV) -> WARM SAND / TAN
+    soil_w = (
+        (0.08 + 0.92 * np.clip((hh_clean - (-21.8)) / 13.0, 0.0, 1.0))
+        * (1.0 - urban_gate)
+        * (1.0 - np.clip(veg_idx * 2.0, 0.0, 1.0))
+        * (1.0 - w_water)
+    )
+
+    r = np.clip(0.98 * urban_idx + 0.66 * soil_w + 0.08 * veg_idx + 0.03 * w_water, 0.0, 1.0)
+    g = np.clip(
+        0.95 * veg_idx + 0.52 * soil_w + 0.60 * wind_wave + 0.15 * w_water + 0.14 * (urban_idx**2),
+        0.0,
+        1.0,
+    )
+    b = np.clip(
+        0.60 * w_water + 0.35 * wind_wave + 0.33 * soil_w + 0.14 * veg_idx + 0.10 * urban_idx,
+        0.0,
+        1.0,
+    )
+
+    alpha_map = np.where(valid, 235, 0).astype(np.uint8)
 
     rgba = np.zeros((wgs_hh.shape[0], wgs_hh.shape[1], 4), dtype=np.uint8)
     rgba[:, :, 0] = np.where(valid, (r * 255.0).astype(np.uint8), 0)
     rgba[:, :, 1] = np.where(valid, (g * 255.0).astype(np.uint8), 0)
     rgba[:, :, 2] = np.where(valid, (b * 255.0).astype(np.uint8), 0)
-    rgba[:, :, 3] = np.where(valid, 235, 0)
+    rgba[:, :, 3] = alpha_map
 
     png_info = write_rgba_png(out_png_path, rgba)
     west, south, east, north = wgs_bounds
@@ -405,7 +621,12 @@ def render_dual_pol_rgb_composite_wgs84_png(
                 [round(east, 6), round(south, 6)],
                 [round(west, 6), round(south, 6)],
             ],
-            "composite_recipe": "R: HH [-22, -2 dB] | G: HV [-24, -8 dB] | B: HH-HV [2, 12 dB]",
+            "composite_recipe": (
+                "Decoupled Physical RGB: Green = Vegetation Canopy (HV -19.5 to -11 dB) | "
+                "Red = Urban/Building Double-Bounce (HH > -7 dB) | "
+                "Blue/Cyan = Calm to Wind-Roughened Water (Lake Qarun & Wadi El Rayan) | "
+                "Warm Sand = Bare Soil & Desert Surface"
+            ),
             "rule3_metadata": rule3_meta,
         }
     )

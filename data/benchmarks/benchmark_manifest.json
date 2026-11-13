@@ -1,0 +1,102 @@
+{
+  "generated_at_utc": "2026-11-13T21:51:39.890409+00:00",
+  "rule2_notice": "External ancillary and benchmark datasets strictly separated from primary NISAR GCOV observations (Rule 2).",
+  "datasets": {
+    "nisar_watermask": {
+      "path": "data/benchmarks/nisar_watermask_40m_fayoum.tif",
+      "size_mb": 0.022,
+      "sha256": "404f3c2ab4a8af7287eb093c2f6724da7e8ed0c72b42aa6a2fff432de5d817e6",
+      "granule_ids": [
+        "WATER_MASK-v0-5-EPSG4326-N20_30-E030_040-NISAR_water_mask_N29_N30_E30_E31_30m_v0-5-0-tif",
+        "WATER_MASK-v0-5-EPSG4326-N20_30-E030_040-NISAR_water_mask_N29_N30_E31_E32_30m_v0-5-0-tif"
+      ],
+      "water_pixel_count": 0,
+      "unique_values": [
+        0,
+        101,
+        102,
+        103,
+        104,
+        105
+      ]
+    },
+    "nisar_dem": {
+      "path": "data/benchmarks/nisar_dem_40m_fayoum.tif",
+      "size_mb": 7.788,
+      "sha256": "2caa2866bf607c6690c9c925813f78df49feab29f95c5cb58d2f5feb3773f9a6",
+      "granule_ids": [
+        "v1-2-EPSG4326-N20-N20_E020-DEM_N29_00_E030_00_C01-tif",
+        "v1-2-EPSG4326-N20-N20_E020-DEM_N29_00_E031_00_C01-tif"
+      ],
+      "elevation_min_m": -33.84,
+      "elevation_median_m": 32.41,
+      "elevation_max_m": 358.52
+    },
+    "opera_dswx_hls": [
+      {
+        "path": "data/benchmarks/opera_dswx_hls_match_20260705_40m_fayoum.tif",
+        "size_mb": 0.077,
+        "sha256": "b7014b1b7b5fe6335b72adaa3063616dc055ac1172248b3c4b8280a0ba311a1c",
+        "matched_nisar_date": "2026-07-05",
+        "opera_window": [
+          "2026-07-05",
+          "2026-07-07"
+        ],
+        "granule_ids": [
+          "OPERA_L3_DSWx-HLS_T36RTT_20260705T082933Z_20260708T103453Z_L9_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260705T082933Z_20260708T103450Z_L9_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260706T082315Z_20260709T121746Z_L8_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260706T082315Z_20260709T121752Z_L8_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260706T082601Z_20260708T113526Z_S2C_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260706T082601Z_20260721T181239Z_S2C_30_v1.1"
+        ],
+        "clear_pixel_count": 3070077,
+        "clear_coverage_pct": 100.0,
+        "open_water_pixel_count": 208686,
+        "partial_water_pixel_count": 71090
+      },
+      {
+        "path": "data/benchmarks/opera_dswx_hls_match_20260810_40m_fayoum.tif",
+        "size_mb": 0.048,
+        "sha256": "18eb79b6b6108af123b29fdd1f73fad950ae6f0ff45cb5a3dd468b8f8f8be977",
+        "matched_nisar_date": "2026-08-10",
+        "opera_window": [
+          "2026-08-10",
+          "2026-08-10"
+        ],
+        "granule_ids": [
+          "OPERA_L3_DSWx-HLS_T36RUT_20260810T082559Z_20260909T234902Z_S2B_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260810T082559Z_20260909T234912Z_S2B_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260810T083741Z_20260910T000556Z_S2A_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260810T083741Z_20260910T000610Z_S2A_30_v1.1"
+        ],
+        "clear_pixel_count": 3063723,
+        "clear_coverage_pct": 99.79,
+        "open_water_pixel_count": 201752,
+        "partial_water_pixel_count": 17792
+      },
+      {
+        "path": "data/benchmarks/opera_dswx_hls_match_20260915_40m_fayoum.tif",
+        "size_mb": 0.061,
+        "sha256": "7b4eb43afed73813e76d064fc7eff9ad856e84e3c5c3a3aac38d7c2b2ad44f22",
+        "matched_nisar_date": "2026-09-15",
+        "opera_window": [
+          "2026-09-15",
+          "2026-09-16"
+        ],
+        "granule_ids": [
+          "OPERA_L3_DSWx-HLS_T36RUT_20260915T082955Z_20260918T011748Z_L8_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260915T082955Z_20260918T170435Z_L8_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260916T082349Z_20260918T235529Z_L9_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260916T082349Z_20260918T235534Z_L9_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RUT_20260916T083521Z_20260918T181221Z_S2A_30_v1.1",
+          "OPERA_L3_DSWx-HLS_T36RTT_20260916T083521Z_20260918T181214Z_S2A_30_v1.1"
+        ],
+        "clear_pixel_count": 3070012,
+        "clear_coverage_pct": 100.0,
+        "open_water_pixel_count": 204033,
+        "partial_water_pixel_count": 34635
+      }
+    ]
+  }
+}

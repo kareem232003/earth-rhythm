@@ -18,6 +18,7 @@ import {
 import { BasemapType, NisarMap } from './components/NisarMap';
 import { EchoHelper, EchoUiContext } from './components/EchoHelper';
 import { TimeSeriesChart } from './components/TimeSeriesChart';
+import { BenchmarkCard } from './components/BenchmarkCard';
 import { STORY_STEPS } from './storySteps';
 import { FocalROI, InspectResponse, LayerCatalog, OverlayItem, StoryPayload } from './types';
 
@@ -400,7 +401,7 @@ export const App: React.FC = () => {
                 className={`pol-chip ${singlePol === 'RGB' ? 'pol-chip-active' : ''}`}
                 onClick={() => setSinglePol('RGB')}
               >
-                Dual-Pol RGB (HH / HV / HH−HV)
+                Physical Scattering Map (Crops / Buildings / Water)
               </button>
               <button
                 className={`pol-chip ${singlePol === 'HH' ? 'pol-chip-active' : ''}`}
@@ -1186,7 +1187,10 @@ export const App: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* 4. Grounded Future NISAR Operational Applications */}
+                {/* 4. Quantitative Benchmark Comparison vs Authoritative NASA Datasets */}
+                <BenchmarkCard />
+
+                {/* 5. Grounded Future NISAR Operational Applications */}
                 <div className="data-table-card future-apps-card">
                   <span className="section-eyebrow">REQUIRED SECTION • OPERATIONAL ROADMAP</span>
                   <h3>Future NISAR Operational Applications in the Nile Basin &amp; Arid Agro-Ecosystems</h3>

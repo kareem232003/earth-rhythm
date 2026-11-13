@@ -35,6 +35,7 @@ CATALOG_PATH = DATA_DIR / "web_tiles" / "layer_catalog.json"
 PHASE2_REPORT_PATH = DATA_DIR / "processed" / "phase2_processing_report.json"
 PHASE3_REPORT_PATH = DATA_DIR / "processed" / "phase3_change_and_timeseries_report.json"
 PHASE4_REPORT_PATH = DATA_DIR / "processed" / "phase4_cog_and_tile_report.json"
+BENCHMARK_REPORT_PATH = DATA_DIR / "processed" / "sar_water_benchmark_report.json"
 OVERLAYS_DIR = DATA_DIR / "web_tiles" / "overlays"
 COGS_DIR = DATA_DIR / "cogs"
 
@@ -347,6 +348,17 @@ def api_story() -> dict[str, Any]:
         "phase3_change_and_timeseries": p3,
         "phase4_serving_summary": p4,
     }
+
+
+@app.get("/api/benchmark")
+def api_benchmark() -> dict[str, Any]:
+    """Return quantitative pure-SAR vs NASA ancillary benchmark metrics (OPERA DSWx, NISAR_WATERMASK, NISAR_DEM)."""
+    if not BENCHMARK_REPORT_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Benchmark report not found. Run scripts/benchmark_sar_water_accuracy.py.",
+        )
+    return json.loads(BENCHMARK_REPORT_PATH.read_text(encoding="utf-8"))
 
 
 @app.get("/api/inspect")

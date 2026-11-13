@@ -27,7 +27,7 @@ export const STORY_STEPS: StoryStep[] = [
     mapMode: 'single',
     primaryLayerId: 'gcov_20260810_RGB',
     physicsTakeaway:
-      'Unlike optical satellites blinded by cloud cover or limited to leaf-surface chlorophyll, NISAR’s 24 cm L-band wavelength penetrates into crop canopies to measure 3D stem volume (Green: HV), urban & trunk dihedral double-bounce (Red: HH), and specular water vs. desert roughness (Blue: HH−HV).',
+      'Unlike optical satellites blinded by cloud cover or limited to leaf-surface chlorophyll, NISAR’s 24 cm L-band wavelength penetrates into crop canopies to separate 3D vegetation volume (Lush Green: HV −18.8 to −11.5 dB), building & urban double-bounce (Vivid Red: HH −6.8 to +0.5 dB), calm mirror water vs. wind-wave Bragg ripples (Deep Blue → Cyan over Lake Qarun & Wadi El Rayan), and bare soil or desert limestone (Warm Sand: HH −21.8 to −8.8 dB).',
     whyPolarizationMatters:
       'NASA POWER records show just 0.15 mm of total rainfall across the entire June–October 2026 season (0.00 mm on all 10 NISAR overpasses). Every hydrological and phenological pulse inside this 1,934 km² agricultural depression is driven by human-managed Nile canal water entering via the ancient Bahr Youssef canal.',
   },

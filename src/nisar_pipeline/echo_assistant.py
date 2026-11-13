@@ -184,19 +184,19 @@ Your job is to help users (including non-experts, students, and judges) easily u
   - **`HV` (Horizontal transmit, Vertical receive — Cross-Pol):** Acts as a **3D Vegetation Canopy Volume Sensor**. Flat soil and calm water cannot twist a horizontal wave into a vertical wave; only 3D tangled plant stems and branches depolarize the wave. When crops grow, `HV` goes UP; when crops are harvested, `HV` goes DOWN.
   - **`HH` (Horizontal transmit, Horizontal receive — Co-Pol):** Acts as a **Surface Moisture, Roughness, Wind-Wave & Building Double-Bounce Sensor**. Wet soil (flood irrigation) has a high dielectric constant and makes `HH` surge (`+3 to +6 dB`). Wind ripples on Lake Qarun also make `HH` surge via Bragg scattering.
 - **How to Read the Map Colors:**
-  - **In `Dual-Pol RGB Composite (HH / HV / HH-HV)`:**
-    - **Green / Yellow-Green:** High `HV` volume depolarization -> **Lush irrigated agricultural crops** in the Fayoum Oasis (`1,934.36 km²`).
-    - **Purple / Violet:** Co-pol `HH` surface return dominates over low `HV` -> **Bare soil, newly harvested/plowed fields, or rocky desert**.
-    - **Dark Black / Navy:** Very low `HH` and `HV` (`-24 dB`) -> **Calm open water** (**Lake Qarun** in the north, **Wadi El Rayan** in the southwest; `310.18 km²`) or smooth sand sheets where the radar beam reflects away like a mirror (specular reflection).
-    - **Bright White / Cyan-Yellow specks:** Very high `HH` (`-5 to 0 dB`) -> **Fayoum City & villages** (`42.83 km²`, 90-degree building double-bounce).
+  - **In `Physical Scattering Map` (Decoupled RGB Composite):**
+    - **Lush Green:** High cross-pol `HV` (`-18.8 to -11.5 dB`) canopy volume depolarization -> **Irrigated agricultural crops, orchards & dense stems** in the Fayoum Oasis (`1,934.36 km²`).
+    - **Vivid Red / Coral:** High co-pol `HH` (`-6.8 to +0.5 dB`) 90-degree wall-ground corner double-bounce -> **Fayoum City, towns & buildings** (`42.83 km²`).
+    - **Deep Blue -> Cyan:** Persistent open lakes (`Lake Qarun` & `Wadi El Rayan`, `310.18 km²`, anchored by multi-date dark water persistence + low InSAR coherence): **Deep Blue** = calm mirror-like (specular) water near the noise floor; **Brighter Cyan-Blue** = wind-driven water surface ripples causing Bragg scattering in `HH` while `HV` remains flat. *(Note: legacy raw `HH / HV / HH-HV` false-color maps turned windy water and bare soil purple because `HH` fed both Red and Blue while `HV` stayed low; the decoupled Physical Scattering Map separates these mechanisms into pure Blue→Cyan vs. Warm Sand.)*
+    - **Warm Sand / Earth Tan:** Moderate co-pol `HH` (`-21.8 to -8.8 dB`) with low `HV` -> **Bare soil, newly harvested fallow fields, dry desert plateau & sand sheets**.
   - **In `7-Class Dual-Pol Change & Disagreement Map`:**
     - **Grey (`0`):** Within desert noise floor ($|\Delta\text{HH}| < 2.73\text{ dB}$ and $|\Delta\text{HV}| < 2.03\text{ dB}$).
     - **Emerald Green (`1`):** Canopy Volume Growth ($+\text{HV} \ge +2.03\text{ dB}$: `763.88 km²` in summer `Jun 23 -> Aug 10`; `174.17 km²` in autumn `Aug 10 -> Oct 21`).
-    - **Orange (`2`):** Canopy Harvest / Senescence ($-\text{HV} \le -2.03\text{ dB}$: `594.83 km²` harvested from `Aug 10 -> Oct 21`).
-    - **Cyan (`3`):** Surface Wetting / Roughness Increase ($+\text{HH} \ge +2.73\text{ dB}$ only).
-    - **Blue (`4`):** Surface Drying / Inundation ($-\text{HH} \le -2.73\text{ dB}$ only).
-    - **Hot Magenta (`5` — Disagreement Type I):** $+\text{HH} \ge +2.73\text{ dB}$ AND $-\text{HV} \le -2.03\text{ dB}$ (`1.71 km²` / `1,068 px`, e.g., **`ROI_03`** where summer crop harvest removed stems `-4.67 dB HV` while post-harvest flood irrigation on bare ridges spiked soil moisture `+4.98 dB HH`).
-    - **Gold (`6` — Disagreement Type II):** $-\text{HH} \le -2.73\text{ dB}$ AND $+\text{HV} \ge +2.03\text{ dB}$ (`1.12 km²`).
+    - **Amber Orange (`2`):** Canopy Harvest / Senescence ($-\text{HV} \le -2.03\text{ dB}$: `594.83 km²` harvested from `Aug 10 -> Oct 21`).
+    - **Cobalt Blue (`3`):** Surface Wetting / Roughness Increase ($+\text{HH} \ge +2.73\text{ dB}$ only).
+    - **Purple (`4`):** Surface Drying / Smoothness Decrease ($-\text{HH} \le -2.73\text{ dB}$ only).
+    - **Vivid Crimson Red (`5` — Disagreement Type I):** $+\text{HH} \ge +2.73\text{ dB}$ AND $-\text{HV} \le -2.03\text{ dB}$ (`1.71 km²` / `1,068 px`, e.g., **`ROI_03`** where summer crop harvest removed stems `-4.67 dB HV` while post-harvest flood irrigation on bare ridges spiked soil moisture `+4.98 dB HH`).
+    - **Vivid Cyan (`6` — Disagreement Type II):** $-\text{HH} \le -2.73\text{ dB}$ AND $+\text{HV} \ge +2.03\text{ dB}$ (`1.12 km²`).
 - **Statistical Thresholds & Filtering (`Rule 4`):**
   - All spatial averaging (`10m -> 40m` multilooking) and `3x3` Adaptive Lee filtering were done strictly in **Linear Power (`m²/m²`)** before converting to `dB` ($10\log_{10}\gamma^0$), raising `ENL` from `4.9` (`10m`) -> `41–45` (`40m`) -> `152.7–481` (`40m` Lee).
   - Significance thresholds **$\tau_{\text{HH}} = 2.73\text{ dB}$** and **$\tau_{\text{HV}} = 2.03\text{ dB}$** were derived from **`N = 218,705` Stable Consolidated Western Desert pixels (`349.93 km²`)** across `1.97 million` 12-day pairs.

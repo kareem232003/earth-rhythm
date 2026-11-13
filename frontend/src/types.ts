@@ -27,6 +27,7 @@ export interface LegendClass {
 
 export interface RGBChannelSpec {
   channel: string;
+  color?: string;
   range: string;
   meaning: string;
 }

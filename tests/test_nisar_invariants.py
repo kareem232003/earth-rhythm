@@ -37,7 +37,8 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from nisar_pipeline.api_server import api_catalog, api_echo_providers, api_health, api_inspect, api_story
+from nisar_pipeline.api_server import api_benchmark, api_catalog, api_echo_providers, api_health, api_inspect, api_story
+from nisar_pipeline.tiles_and_cogs import compute_pure_sar_water_mask
 from nisar_pipeline.change_detection import classify_dual_pol_change, derive_change_thresholds
 from nisar_pipeline.echo_assistant import detect_provider_from_key, query_echo_llm
 from nisar_pipeline.guards import (
@@ -421,4 +422,60 @@ def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> No
         )
         assert res["is_error"] is True
         assert res["needs_api_key"] is True
+
+
+def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants() -> None:
+    """Invariant 10: Upgraded pure-SAR classifier preserves coherent islands and passes NASA benchmarks."""
+    # 1. Synthetic unit test verifying v3 preserves coherent islands that v2 blind hole-fill destroys
+    ny, nx = 90, 90
+    hh_db_syn = np.full((10, ny, nx), -8.0, dtype=np.float32)
+    hv_db_syn = np.full((10, ny, nx), -15.0, dtype=np.float32)
+    coh_syn = np.full((ny, nx), 0.75, dtype=np.float32)
+
+    # Outer lake basin centered on Lake Qarun seed (row 45, col 45)
+    hh_db_syn[:, 15:75, 15:75] = -18.0
+    hv_db_syn[:, 15:75, 15:75] = -22.5
+    coh_syn[15:75, 15:75] = 0.08
+
+    # Interior coherent island (8x8 = 64 px >= 40 px & coherence = 0.65 >= 0.22)
+    hh_db_syn[:, 32:40, 52:60] = -17.0
+    hv_db_syn[:, 32:40, 52:60] = -22.0
+    coh_syn[32:40, 52:60] = 0.65
+
+    xs_syn = np.linspace(270000.0, 273600.0, nx)
+    ys_syn = np.linspace(3263000.0, 3259400.0, ny)
+
+    v2_mask = compute_pure_sar_water_mask(hh_db_syn, hv_db_syn, coh_syn, xs_syn, ys_syn, mode="v2_blind_fill")
+    v3_mask = compute_pure_sar_water_mask(hh_db_syn, hv_db_syn, coh_syn, xs_syn, ys_syn, mode="v3_coh_island")
+
+    # v2 falsely classifies coherent island interior as water; v3 keeps it as dry ground while keeping surrounding water
+    assert np.all(v2_mask[32:40, 52:60])
+    assert not np.any(v3_mask[32:40, 52:60])
+    assert v3_mask[20, 20] and v3_mask[65, 65]
+
+    with pytest.raises(ValueError, match="Unsupported pure-SAR"):
+        compute_pure_sar_water_mask(hh_db_syn, hv_db_syn, coh_syn, xs_syn, ys_syn, mode="invalid_mode")
+
+    # 2. Verify real benchmark report served by /api/benchmark
+    bench = api_benchmark()
+    models = bench["models"]
+    for key in ("v1_baseline_lc1", "v2_2gunw_blind_fill", "v3_pure_nisar_9gunw", "v4_option2_dem_fusion"):
+        assert key in models
+        op = models[key]["vs_opera_dswx_consensus_open_water"]
+        assert op["tp"] + op["fp"] + op["fn"] + op["tn"] == op["valid_pixels"]
+        assert 0.0 < op["iou"] <= 1.0
+        assert 0.0 < op["precision"] <= 1.0
+        assert 0.0 < op["recall"] <= 1.0
+
+    # Pure NISAR v3 must outperform v1 & v2 and reduce El-Qarn Island false water below 2% (vs ~100% in v2)
+    v1_iou = models["v1_baseline_lc1"]["vs_opera_dswx_consensus_open_water"]["iou"]
+    v2_iou = models["v2_2gunw_blind_fill"]["vs_opera_dswx_consensus_open_water"]["iou"]
+    v3_iou = models["v3_pure_nisar_9gunw"]["vs_opera_dswx_consensus_open_water"]["iou"]
+    v2_qarn_fp = models["v2_2gunw_blind_fill"]["el_qarn_island_verification"]["false_water_rate_pct"]
+    v3_qarn_fp = models["v3_pure_nisar_9gunw"]["el_qarn_island_verification"]["false_water_rate_pct"]
+
+    assert v3_iou > v2_iou > v1_iou
+    assert v2_qarn_fp > 90.0
+    assert v3_qarn_fp < 2.0
+
 

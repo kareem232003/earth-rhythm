@@ -1,0 +1,676 @@
+{
+  "generated_at_utc": "2026-11-13T21:57:35.682358+00:00",
+  "random_seed": 42,
+  "grid": {
+    "height": 1560,
+    "width": 1968,
+    "pixel_spacing_m": 40.0
+  },
+  "benchmarks": {
+    "opera_dswx_hls_v1": {
+      "product": "NASA JPL OPERA_L3_DSWX-HLS_V1 (B01_WTR)",
+      "matched_dates": [
+        "2026-07-05",
+        "2026-08-10",
+        "2026-09-15"
+      ],
+      "consensus_valid_pixels": 3063660,
+      "consensus_open_water_pixels": 199035
+    },
+    "nisar_watermask_v050": {
+      "product": "NASA NISAR_WATERMASK v0.5.0",
+      "inland_water_pixels": 201217
+    },
+    "nisar_dem_v12_profile": {
+      "el_qarn_island_pixels": 1375,
+      "el_qarn_island_area_km2": 2.2,
+      "el_qarn_island_dem_m": {
+        "min": -28.81,
+        "p25": -21.54,
+        "median": -14.12,
+        "p75": -0.81,
+        "max": 15.03
+      },
+      "lake_qarun_water_dem_m": {
+        "p10": -28.86,
+        "median": -28.8,
+        "p90": -28.7
+      }
+    }
+  },
+  "models": {
+    "v1_baseline_lc1": {
+      "label": "v1 Baseline (Phase 2 lc == 1, Rectangular Box-Gated)",
+      "data_source": "Pure NISAR (2 GUNW pairs + synthetic basin boxes)",
+      "el_qarn_island_verification": {
+        "island_total_pixels": 1375,
+        "island_area_km2": 2.2,
+        "false_water_pixels": 31,
+        "false_water_area_km2": 0.05,
+        "false_water_rate_pct": 2.25,
+        "island_correctly_excluded_pct": 97.75
+      },
+      "vs_opera_dswx_consensus_open_water": {
+        "valid_pixels": 3063660,
+        "tp": 160369,
+        "fp": 33031,
+        "fn": 38666,
+        "tn": 2831594,
+        "predicted_water_pixels": 193400,
+        "predicted_water_area_km2": 309.44,
+        "truth_water_pixels": 199035,
+        "truth_water_area_km2": 318.456,
+        "iou": 0.691,
+        "f1": 0.8173,
+        "precision": 0.8292,
+        "recall": 0.8057,
+        "overall_accuracy": 0.9766,
+        "cohens_kappa": 0.8048
+      },
+      "vs_nisar_watermask_v050": {
+        "valid_pixels": 3070080,
+        "tp": 160248,
+        "fp": 33612,
+        "fn": 40969,
+        "tn": 2835251,
+        "predicted_water_pixels": 193860,
+        "predicted_water_area_km2": 310.176,
+        "truth_water_pixels": 201217,
+        "truth_water_area_km2": 321.947,
+        "iou": 0.6824,
+        "f1": 0.8112,
+        "precision": 0.8266,
+        "recall": 0.7964,
+        "overall_accuracy": 0.9757,
+        "cohens_kappa": 0.7982
+      },
+      "vs_opera_dswx_matched_dates": {
+        "2026-07-05": {
+          "open_water_only": {
+            "valid_pixels": 3070077,
+            "tp": 161351,
+            "fp": 32509,
+            "fn": 47335,
+            "tn": 2828882,
+            "predicted_water_pixels": 193860,
+            "predicted_water_area_km2": 310.176,
+            "truth_water_pixels": 208686,
+            "truth_water_area_km2": 333.898,
+            "iou": 0.669,
+            "f1": 0.8017,
+            "precision": 0.8323,
+            "recall": 0.7732,
+            "overall_accuracy": 0.974,
+            "cohens_kappa": 0.7878
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070077,
+            "tp": 161611,
+            "fp": 32249,
+            "fn": 118165,
+            "tn": 2758052,
+            "predicted_water_pixels": 193860,
+            "predicted_water_area_km2": 310.176,
+            "truth_water_pixels": 279776,
+            "truth_water_area_km2": 447.642,
+            "iou": 0.5179,
+            "f1": 0.6824,
+            "precision": 0.8336,
+            "recall": 0.5776,
+            "overall_accuracy": 0.951,
+            "cohens_kappa": 0.6568
+          }
+        },
+        "2026-08-10": {
+          "open_water_only": {
+            "valid_pixels": 3063723,
+            "tp": 160725,
+            "fp": 32690,
+            "fn": 41027,
+            "tn": 2829281,
+            "predicted_water_pixels": 193415,
+            "predicted_water_area_km2": 309.464,
+            "truth_water_pixels": 201752,
+            "truth_water_area_km2": 322.803,
+            "iou": 0.6856,
+            "f1": 0.8135,
+            "precision": 0.831,
+            "recall": 0.7966,
+            "overall_accuracy": 0.9759,
+            "cohens_kappa": 0.8006
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3063723,
+            "tp": 160810,
+            "fp": 32605,
+            "fn": 58734,
+            "tn": 2811574,
+            "predicted_water_pixels": 193415,
+            "predicted_water_area_km2": 309.464,
+            "truth_water_pixels": 219544,
+            "truth_water_area_km2": 351.27,
+            "iou": 0.6378,
+            "f1": 0.7788,
+            "precision": 0.8314,
+            "recall": 0.7325,
+            "overall_accuracy": 0.9702,
+            "cohens_kappa": 0.7629
+          }
+        },
+        "2026-09-15": {
+          "open_water_only": {
+            "valid_pixels": 3070012,
+            "tp": 160852,
+            "fp": 32993,
+            "fn": 43181,
+            "tn": 2832986,
+            "predicted_water_pixels": 193845,
+            "predicted_water_area_km2": 310.152,
+            "truth_water_pixels": 204033,
+            "truth_water_area_km2": 326.453,
+            "iou": 0.6786,
+            "f1": 0.8085,
+            "precision": 0.8298,
+            "recall": 0.7884,
+            "overall_accuracy": 0.9752,
+            "cohens_kappa": 0.7953
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070012,
+            "tp": 161006,
+            "fp": 32839,
+            "fn": 77662,
+            "tn": 2798505,
+            "predicted_water_pixels": 193845,
+            "predicted_water_area_km2": 310.152,
+            "truth_water_pixels": 238668,
+            "truth_water_area_km2": 381.869,
+            "iou": 0.593,
+            "f1": 0.7445,
+            "precision": 0.8306,
+            "recall": 0.6746,
+            "overall_accuracy": 0.964,
+            "cohens_kappa": 0.7254
+          }
+        }
+      }
+    },
+    "v2_2gunw_blind_fill": {
+      "label": "v2 Intermediate (2-Pair GUNW + Blind binary_fill_holes)",
+      "data_source": "Pure NISAR (2 GUNW pairs)",
+      "el_qarn_island_verification": {
+        "island_total_pixels": 1375,
+        "island_area_km2": 2.2,
+        "false_water_pixels": 1375,
+        "false_water_area_km2": 2.2,
+        "false_water_rate_pct": 100.0,
+        "island_correctly_excluded_pct": 0.0
+      },
+      "vs_opera_dswx_consensus_open_water": {
+        "valid_pixels": 3063660,
+        "tp": 182384,
+        "fp": 2958,
+        "fn": 16651,
+        "tn": 2861667,
+        "predicted_water_pixels": 185342,
+        "predicted_water_area_km2": 296.547,
+        "truth_water_pixels": 199035,
+        "truth_water_area_km2": 318.456,
+        "iou": 0.9029,
+        "f1": 0.949,
+        "precision": 0.984,
+        "recall": 0.9163,
+        "overall_accuracy": 0.9936,
+        "cohens_kappa": 0.9456
+      },
+      "vs_nisar_watermask_v050": {
+        "valid_pixels": 3070080,
+        "tp": 182372,
+        "fp": 3292,
+        "fn": 18845,
+        "tn": 2865571,
+        "predicted_water_pixels": 185664,
+        "predicted_water_area_km2": 297.062,
+        "truth_water_pixels": 201217,
+        "truth_water_area_km2": 321.947,
+        "iou": 0.8918,
+        "f1": 0.9428,
+        "precision": 0.9823,
+        "recall": 0.9063,
+        "overall_accuracy": 0.9928,
+        "cohens_kappa": 0.9389
+      },
+      "vs_opera_dswx_matched_dates": {
+        "2026-07-05": {
+          "open_water_only": {
+            "valid_pixels": 3070077,
+            "tp": 183368,
+            "fp": 2296,
+            "fn": 25318,
+            "tn": 2859095,
+            "predicted_water_pixels": 185664,
+            "predicted_water_area_km2": 297.062,
+            "truth_water_pixels": 208686,
+            "truth_water_area_km2": 333.898,
+            "iou": 0.8691,
+            "f1": 0.93,
+            "precision": 0.9876,
+            "recall": 0.8787,
+            "overall_accuracy": 0.991,
+            "cohens_kappa": 0.9252
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070077,
+            "tp": 183593,
+            "fp": 2071,
+            "fn": 96183,
+            "tn": 2788230,
+            "predicted_water_pixels": 185664,
+            "predicted_water_area_km2": 297.062,
+            "truth_water_pixels": 279776,
+            "truth_water_area_km2": 447.642,
+            "iou": 0.6514,
+            "f1": 0.7889,
+            "precision": 0.9888,
+            "recall": 0.6562,
+            "overall_accuracy": 0.968,
+            "cohens_kappa": 0.7723
+          }
+        },
+        "2026-08-10": {
+          "open_water_only": {
+            "valid_pixels": 3063723,
+            "tp": 182708,
+            "fp": 2634,
+            "fn": 19044,
+            "tn": 2859337,
+            "predicted_water_pixels": 185342,
+            "predicted_water_area_km2": 296.547,
+            "truth_water_pixels": 201752,
+            "truth_water_area_km2": 322.803,
+            "iou": 0.8939,
+            "f1": 0.944,
+            "precision": 0.9858,
+            "recall": 0.9056,
+            "overall_accuracy": 0.9929,
+            "cohens_kappa": 0.9402
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3063723,
+            "tp": 182795,
+            "fp": 2547,
+            "fn": 36749,
+            "tn": 2841632,
+            "predicted_water_pixels": 185342,
+            "predicted_water_area_km2": 296.547,
+            "truth_water_pixels": 219544,
+            "truth_water_area_km2": 351.27,
+            "iou": 0.8231,
+            "f1": 0.9029,
+            "precision": 0.9863,
+            "recall": 0.8326,
+            "overall_accuracy": 0.9872,
+            "cohens_kappa": 0.8961
+          }
+        },
+        "2026-09-15": {
+          "open_water_only": {
+            "valid_pixels": 3070012,
+            "tp": 182741,
+            "fp": 2923,
+            "fn": 21292,
+            "tn": 2863056,
+            "predicted_water_pixels": 185664,
+            "predicted_water_area_km2": 297.062,
+            "truth_water_pixels": 204033,
+            "truth_water_area_km2": 326.453,
+            "iou": 0.883,
+            "f1": 0.9379,
+            "precision": 0.9843,
+            "recall": 0.8956,
+            "overall_accuracy": 0.9921,
+            "cohens_kappa": 0.9337
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070012,
+            "tp": 182875,
+            "fp": 2789,
+            "fn": 55793,
+            "tn": 2828555,
+            "predicted_water_pixels": 185664,
+            "predicted_water_area_km2": 297.062,
+            "truth_water_pixels": 238668,
+            "truth_water_area_km2": 381.869,
+            "iou": 0.7574,
+            "f1": 0.8619,
+            "precision": 0.985,
+            "recall": 0.7662,
+            "overall_accuracy": 0.9809,
+            "cohens_kappa": 0.8519
+          }
+        }
+      }
+    },
+    "v3_pure_nisar_9gunw": {
+      "label": "v3 Pure NISAR Upgrade (Option 1: 9-Pair GUNW + Wave stdHH + Island Preservation)",
+      "data_source": "100% Pure NISAR (10-Date GCOV + 9-Pair GUNW Coherence)",
+      "el_qarn_island_verification": {
+        "island_total_pixels": 1375,
+        "island_area_km2": 2.2,
+        "false_water_pixels": 11,
+        "false_water_area_km2": 0.018,
+        "false_water_rate_pct": 0.8,
+        "island_correctly_excluded_pct": 99.2
+      },
+      "vs_opera_dswx_consensus_open_water": {
+        "valid_pixels": 3063660,
+        "tp": 185369,
+        "fp": 1514,
+        "fn": 13666,
+        "tn": 2863111,
+        "predicted_water_pixels": 186883,
+        "predicted_water_area_km2": 299.013,
+        "truth_water_pixels": 199035,
+        "truth_water_area_km2": 318.456,
+        "iou": 0.9243,
+        "f1": 0.9607,
+        "precision": 0.9919,
+        "recall": 0.9313,
+        "overall_accuracy": 0.995,
+        "cohens_kappa": 0.958
+      },
+      "vs_nisar_watermask_v050": {
+        "valid_pixels": 3070080,
+        "tp": 185093,
+        "fp": 2286,
+        "fn": 16124,
+        "tn": 2866577,
+        "predicted_water_pixels": 187379,
+        "predicted_water_area_km2": 299.806,
+        "truth_water_pixels": 201217,
+        "truth_water_area_km2": 321.947,
+        "iou": 0.9095,
+        "f1": 0.9526,
+        "precision": 0.9878,
+        "recall": 0.9199,
+        "overall_accuracy": 0.994,
+        "cohens_kappa": 0.9494
+      },
+      "vs_opera_dswx_matched_dates": {
+        "2026-07-05": {
+          "open_water_only": {
+            "valid_pixels": 3070077,
+            "tp": 186727,
+            "fp": 652,
+            "fn": 21959,
+            "tn": 2860739,
+            "predicted_water_pixels": 187379,
+            "predicted_water_area_km2": 299.806,
+            "truth_water_pixels": 208686,
+            "truth_water_area_km2": 333.898,
+            "iou": 0.892,
+            "f1": 0.9429,
+            "precision": 0.9965,
+            "recall": 0.8948,
+            "overall_accuracy": 0.9926,
+            "cohens_kappa": 0.939
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070077,
+            "tp": 187044,
+            "fp": 335,
+            "fn": 92732,
+            "tn": 2789966,
+            "predicted_water_pixels": 187379,
+            "predicted_water_area_km2": 299.806,
+            "truth_water_pixels": 279776,
+            "truth_water_area_km2": 447.642,
+            "iou": 0.6677,
+            "f1": 0.8008,
+            "precision": 0.9982,
+            "recall": 0.6685,
+            "overall_accuracy": 0.9697,
+            "cohens_kappa": 0.7851
+          }
+        },
+        "2026-08-10": {
+          "open_water_only": {
+            "valid_pixels": 3063723,
+            "tp": 185788,
+            "fp": 1095,
+            "fn": 15964,
+            "tn": 2860876,
+            "predicted_water_pixels": 186883,
+            "predicted_water_area_km2": 299.013,
+            "truth_water_pixels": 201752,
+            "truth_water_area_km2": 322.803,
+            "iou": 0.9159,
+            "f1": 0.9561,
+            "precision": 0.9941,
+            "recall": 0.9209,
+            "overall_accuracy": 0.9944,
+            "cohens_kappa": 0.9531
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3063723,
+            "tp": 185927,
+            "fp": 956,
+            "fn": 33617,
+            "tn": 2843223,
+            "predicted_water_pixels": 186883,
+            "predicted_water_area_km2": 299.013,
+            "truth_water_pixels": 219544,
+            "truth_water_area_km2": 351.27,
+            "iou": 0.8432,
+            "f1": 0.9149,
+            "precision": 0.9949,
+            "recall": 0.8469,
+            "overall_accuracy": 0.9887,
+            "cohens_kappa": 0.9089
+          }
+        },
+        "2026-09-15": {
+          "open_water_only": {
+            "valid_pixels": 3070012,
+            "tp": 185837,
+            "fp": 1542,
+            "fn": 18196,
+            "tn": 2864437,
+            "predicted_water_pixels": 187379,
+            "predicted_water_area_km2": 299.806,
+            "truth_water_pixels": 204033,
+            "truth_water_area_km2": 326.453,
+            "iou": 0.904,
+            "f1": 0.9496,
+            "precision": 0.9918,
+            "recall": 0.9108,
+            "overall_accuracy": 0.9936,
+            "cohens_kappa": 0.9461
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070012,
+            "tp": 186077,
+            "fp": 1302,
+            "fn": 52591,
+            "tn": 2830042,
+            "predicted_water_pixels": 187379,
+            "predicted_water_area_km2": 299.806,
+            "truth_water_pixels": 238668,
+            "truth_water_area_km2": 381.869,
+            "iou": 0.7754,
+            "f1": 0.8735,
+            "precision": 0.9931,
+            "recall": 0.7796,
+            "overall_accuracy": 0.9824,
+            "cohens_kappa": 0.8642
+          }
+        }
+      }
+    },
+    "v4_option2_dem_fusion": {
+      "label": "v4 Exploratory Hybrid (Option 2: v3 + NISAR_DEM Basin Gate)",
+      "data_source": "NISAR GCOV/GUNW + Rule 2 Ancillary NASA NISAR_DEM v1.2",
+      "el_qarn_island_verification": {
+        "island_total_pixels": 1375,
+        "island_area_km2": 2.2,
+        "false_water_pixels": 6,
+        "false_water_area_km2": 0.01,
+        "false_water_rate_pct": 0.44,
+        "island_correctly_excluded_pct": 99.56
+      },
+      "vs_opera_dswx_consensus_open_water": {
+        "valid_pixels": 3063660,
+        "tp": 189822,
+        "fp": 3475,
+        "fn": 9213,
+        "tn": 2861150,
+        "predicted_water_pixels": 193297,
+        "predicted_water_area_km2": 309.275,
+        "truth_water_pixels": 199035,
+        "truth_water_area_km2": 318.456,
+        "iou": 0.9373,
+        "f1": 0.9677,
+        "precision": 0.982,
+        "recall": 0.9537,
+        "overall_accuracy": 0.9959,
+        "cohens_kappa": 0.9654
+      },
+      "vs_nisar_watermask_v050": {
+        "valid_pixels": 3070080,
+        "tp": 189584,
+        "fp": 4649,
+        "fn": 11633,
+        "tn": 2864214,
+        "predicted_water_pixels": 194233,
+        "predicted_water_area_km2": 310.773,
+        "truth_water_pixels": 201217,
+        "truth_water_area_km2": 321.947,
+        "iou": 0.9209,
+        "f1": 0.9588,
+        "precision": 0.9761,
+        "recall": 0.9422,
+        "overall_accuracy": 0.9947,
+        "cohens_kappa": 0.956
+      },
+      "vs_opera_dswx_matched_dates": {
+        "2026-07-05": {
+          "open_water_only": {
+            "valid_pixels": 3070077,
+            "tp": 191934,
+            "fp": 2299,
+            "fn": 16752,
+            "tn": 2859092,
+            "predicted_water_pixels": 194233,
+            "predicted_water_area_km2": 310.773,
+            "truth_water_pixels": 208686,
+            "truth_water_area_km2": 333.898,
+            "iou": 0.9097,
+            "f1": 0.9527,
+            "precision": 0.9882,
+            "recall": 0.9197,
+            "overall_accuracy": 0.9938,
+            "cohens_kappa": 0.9494
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070077,
+            "tp": 192608,
+            "fp": 1625,
+            "fn": 87168,
+            "tn": 2788676,
+            "predicted_water_pixels": 194233,
+            "predicted_water_area_km2": 310.773,
+            "truth_water_pixels": 279776,
+            "truth_water_area_km2": 447.642,
+            "iou": 0.6845,
+            "f1": 0.8127,
+            "precision": 0.9916,
+            "recall": 0.6884,
+            "overall_accuracy": 0.9711,
+            "cohens_kappa": 0.7976
+          }
+        },
+        "2026-08-10": {
+          "open_water_only": {
+            "valid_pixels": 3063723,
+            "tp": 190464,
+            "fp": 2833,
+            "fn": 11288,
+            "tn": 2859138,
+            "predicted_water_pixels": 193297,
+            "predicted_water_area_km2": 309.275,
+            "truth_water_pixels": 201752,
+            "truth_water_area_km2": 322.803,
+            "iou": 0.931,
+            "f1": 0.9643,
+            "precision": 0.9853,
+            "recall": 0.9441,
+            "overall_accuracy": 0.9954,
+            "cohens_kappa": 0.9618
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3063723,
+            "tp": 190777,
+            "fp": 2520,
+            "fn": 28767,
+            "tn": 2841659,
+            "predicted_water_pixels": 193297,
+            "predicted_water_area_km2": 309.275,
+            "truth_water_pixels": 219544,
+            "truth_water_area_km2": 351.27,
+            "iou": 0.8591,
+            "f1": 0.9242,
+            "precision": 0.987,
+            "recall": 0.869,
+            "overall_accuracy": 0.9898,
+            "cohens_kappa": 0.9188
+          }
+        },
+        "2026-09-15": {
+          "open_water_only": {
+            "valid_pixels": 3070012,
+            "tp": 190687,
+            "fp": 3546,
+            "fn": 13346,
+            "tn": 2862433,
+            "predicted_water_pixels": 194233,
+            "predicted_water_area_km2": 310.773,
+            "truth_water_pixels": 204033,
+            "truth_water_area_km2": 326.453,
+            "iou": 0.9186,
+            "f1": 0.9576,
+            "precision": 0.9817,
+            "recall": 0.9346,
+            "overall_accuracy": 0.9945,
+            "cohens_kappa": 0.9546
+          },
+          "open_plus_partial_water": {
+            "valid_pixels": 3070012,
+            "tp": 191247,
+            "fp": 2986,
+            "fn": 47421,
+            "tn": 2828358,
+            "predicted_water_pixels": 194233,
+            "predicted_water_area_km2": 310.773,
+            "truth_water_pixels": 238668,
+            "truth_water_area_km2": 381.869,
+            "iou": 0.7914,
+            "f1": 0.8836,
+            "precision": 0.9846,
+            "recall": 0.8013,
+            "overall_accuracy": 0.9836,
+            "cohens_kappa": 0.8748
+          }
+        }
+      }
+    }
+  },
+  "computed_comparison_summary": {
+    "best_pure_nisar_model": "v3_pure_nisar_9gunw",
+    "best_pure_nisar_iou_vs_opera": 0.9243,
+    "best_overall_model": "v4_option2_dem_fusion",
+    "best_overall_iou_vs_opera": 0.9373,
+    "iou_gain_v3_over_v1": 0.2333,
+    "iou_gain_v3_over_v2": 0.0214,
+    "el_qarn_false_water_reduction_v2_to_v3_pct_pts": 99.2
+  }
+}
