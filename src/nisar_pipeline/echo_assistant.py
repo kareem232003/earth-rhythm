@@ -149,7 +149,7 @@ PROVIDERS: list[dict[str, Any]] = [
         "id": "ollama",
         "name": "Local Ollama (100% Offline)",
         "badge": "NO API KEY NEEDED",
-        "env_keys": [],
+        "env_keys": ["OLLAMA_BASE_URL", "OLLAMA_MODEL"],
         "key_placeholder": "No API key needed (runs on localhost:11434)",
         "get_key_url": "https://ollama.com/download",
         "default_model": "llama3.2",
@@ -213,6 +213,8 @@ def get_env_configured_providers() -> dict[str, str]:
     dotenv_map = _load_dotenv_dict()
     configured: dict[str, str] = {}
     for p in PROVIDERS:
+        if not p.get("requires_key", True):
+            continue
         for env_key in p["env_keys"]:
             val = os.environ.get(env_key) or dotenv_map.get(env_key)
             if val and len(val.strip()) > 6:
@@ -536,19 +538,31 @@ def _call_ollama(
     system_prompt: str,
     messages: list[dict[str, str]],
 ) -> dict[str, Any]:
-    """Call local Ollama instance on http://127.0.0.1:11434/api/chat."""
+    """Call local Ollama instance on OLLAMA_BASE_URL (defaults to http://127.0.0.1:11434)."""
+    dotenv_map = _load_dotenv_dict()
+    base_url = (
+        os.environ.get("OLLAMA_BASE_URL")
+        or dotenv_map.get("OLLAMA_BASE_URL")
+        or "http://127.0.0.1:11434"
+    ).rstrip("/")
+    chosen_model = (
+        model
+        or os.environ.get("OLLAMA_MODEL")
+        or dotenv_map.get("OLLAMA_MODEL")
+        or "llama3.2"
+    )
     oai_messages = [{"role": "system", "content": system_prompt}] + messages
-    payload = {"model": model, "messages": oai_messages, "stream": False}
+    payload = {"model": chosen_model, "messages": oai_messages, "stream": False}
     try:
-        resp = requests.post("http://127.0.0.1:11434/api/chat", json=payload, timeout=30)
+        resp = requests.post(f"{base_url}/api/chat", json=payload, timeout=30)
     except requests.RequestException:
         return {
             "is_error": True,
             "needs_api_key": False,
             "provider": "ollama",
-            "model": model,
+            "model": chosen_model,
             "error": (
-                "Could not connect to local Ollama at `http://127.0.0.1:11434`. "
+                f"Could not connect to local Ollama at `{base_url}`. "
                 "Either start Ollama (`ollama run llama3.2`) or switch to a cloud provider like Google Gemini or Groq."
             ),
         }
@@ -556,7 +570,7 @@ def _call_ollama(
         return {
             "is_error": True,
             "provider": "ollama",
-            "model": model,
+            "model": chosen_model,
             "error": f"Ollama Error (HTTP {resp.status_code}): {resp.text[:300]}",
         }
     data = resp.json()
@@ -565,7 +579,7 @@ def _call_ollama(
         "is_error": False,
         "provider": "ollama",
         "provider_name": "Local Ollama",
-        "model": model,
+        "model": chosen_model,
         "reply": reply,
     }
 
