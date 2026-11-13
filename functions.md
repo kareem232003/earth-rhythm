@@ -87,14 +87,16 @@ _No top-level classes or functions defined._
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `class CalibratedCubeStore` | 58 | In-memory store for the 10-date 40m calibrated linear-power GCOV cube and masks. |
-| `  def __init__(self, h5_path) -> None` | 61 | No docstring. |
-| `  def inspect_location(self, lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 86 | Extract 10-date time series, interval changes, regime classification, and masks at any AOI point. |
-| `def get_cube_store() -> CalibratedCubeStore` | 296 | Lazy-load and cache the calibrated 10-date HDF5 cube in memory. |
-| `def api_health() -> dict[str, Any]` | 305 | Return server readiness, calibrated cube dimensions, and catalog counts. |
-| `def api_catalog() -> dict[str, Any]` | 323 | Return the master Rule 3 & Rule 5 layer catalog (`data/web_tiles/layer_catalog.json`). |
-| `def api_story() -> dict[str, Any]` | 331 | Return the complete Phase 2 + Phase 3 + Phase 4 scientific payload for Story Mode and charts. |
-| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 346 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
+| `class CalibratedCubeStore` | 59 | In-memory store for the 10-date 40m calibrated linear-power GCOV cube and masks. |
+| `  def __init__(self, h5_path) -> None` | 62 | No docstring. |
+| `  def inspect_location(self, lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 87 | Extract 10-date time series, interval changes, regime classification, and masks at any AOI point. |
+| `def get_cube_store() -> CalibratedCubeStore` | 297 | Lazy-load and cache the calibrated 10-date HDF5 cube in memory. |
+| `def api_health() -> dict[str, Any]` | 306 | Return server readiness, calibrated cube dimensions, and catalog counts. |
+| `def api_catalog() -> dict[str, Any]` | 324 | Return the master Rule 3 & Rule 5 layer catalog (`data/web_tiles/layer_catalog.json`). |
+| `def api_story() -> dict[str, Any]` | 332 | Return the complete Phase 2 + Phase 3 + Phase 4 scientific payload for Story Mode and charts. |
+| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 347 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
+| `def api_echo_providers() -> dict[str, Any]` | 363 | Return all supported AI providers, models, and which keys are pre-configured in `.env`. |
+| `def api_echo_chat(payload) -> dict[str, Any]` | 374 | Answer user questions about the NISAR data and current UI state via Echo AI Helper. |
 
 ## `src/nisar_pipeline/change_detection.py`
 **Summary:** Change Detection, Statistical Noise Threshold Derivation, and Polarization Disagreement Analysis.
@@ -103,6 +105,22 @@ _No top-level classes or functions defined._
 | :--- | :--- | :--- |
 | `def derive_change_thresholds(hhhh_stack_linear, hvhv_stack_linear, stable_desert_mask, enl_hh, enl_hv) -> dict[str, Any]` | 24 | Derive statistically justified dB change thresholds from speckle theory and stable desert pixels. |
 | `def classify_dual_pol_change(delta_hh_db, delta_hv_db, tau_hh_db, tau_hv_db, valid_mask) -> tuple[np.ndarray, dict[str, Any]]` | 138 | Classify dual-polarization log-ratio changes into 7 physical/statistical regimes. |
+
+## `src/nisar_pipeline/echo_assistant.py`
+**Summary:** Echo AI Helper — Multi-Provider Scientific Guide for Earth Rhythm Observatory.
+
+| Symbol | Line | Description |
+| :--- | :--- | :--- |
+| `def _load_dotenv_dict() -> dict[str, str]` | 28 | Read key-value pairs from workspace `.env` without logging values. |
+| `def get_env_configured_providers() -> dict[str, str]` | 211 | Return mapping of provider_id -> masked status for keys present in os.environ or `.env`. |
+| `def resolve_api_key(provider_id, client_api_key) -> str | None` | 224 | Resolve the API key from client request first, falling back to `.env` or environment. |
+| `def detect_provider_from_key(api_key, requested_provider) -> str` | 239 | Auto-correct provider if the user pasted a key with an unmistakable prefix. |
+| `def format_ui_context_block(ui_context) -> str` | 253 | Format the live frontend state into a concise markdown block for the prompt. |
+| `def query_echo_llm(provider=..., model=..., api_key=..., messages=..., ui_context=...) -> dict[str, Any]` | 279 | Send a grounded chat request to the selected LLM provider. |
+| `def _call_gemini(model, api_key, system_prompt, messages) -> dict[str, Any]` | 373 | Call Google Gemini GenerateContent REST API. |
+| `def _call_openai_compatible(provider_id=..., url=..., model=..., api_key=..., system_prompt=..., messages=...) -> dict[str, Any]` | 426 | Call any OpenAI-compatible Chat Completions endpoint (Groq, OpenRouter, OpenAI, DeepSeek, Mistral). |
+| `def _call_anthropic(model, api_key, system_prompt, messages) -> dict[str, Any]` | 488 | Call Anthropic Messages REST API. |
+| `def _call_ollama(model, system_prompt, messages) -> dict[str, Any]` | 534 | Call local Ollama instance on http://127.0.0.1:11434/api/chat. |
 
 ## `src/nisar_pipeline/guards.py`
 **Summary:** Geometry, CRS, and Product Version Consistency Guards (Rules 3, 7, 8).
@@ -160,11 +178,12 @@ _No top-level classes or functions defined._
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `def test_invariant_1_linear_vs_db_averaging_and_guard() -> None` | 62 | Invariant 1: Averaging in linear power then converting to dB != averaging in dB (Rule 4). |
-| `def test_invariant_2_log_ratio_db_equivalence() -> None` | 99 | Invariant 2: Log-ratio in dB equals 10*log10(P2 / P1) == dB(P2) - dB(P1) within tolerance. |
-| `def test_invariant_3_zero_negative_nan_fill_handling_without_warnings() -> None` | 113 | Invariant 3: Zeros, NaNs, and masked fill values map to NaN before log10 without warnings. |
-| `def test_invariant_4_speckle_filter_increases_enl_and_preserves_mean_power() -> None` | 150 | Invariant 4: 3x3 Adaptive Lee & Boxcar filters increase ENL while preserving mean linear power. |
-| `def test_invariant_5_crs_grid_geometry_and_version_mismatch_guards() -> None` | 185 | Invariant 5: CRS, affine grid, orbit geometry, and CRID/version mismatches raise ValueError. |
-| `def test_invariant_6_gunw_phase_to_los_conversion_and_coherence_mask() -> None` | 241 | Invariant 6: GUNW phase-to-LOS matches -(lambda / 4*pi) * dphi and masks gamma < 0.50. |
-| `def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata() -> None` | 287 | Invariant 7: Every exported layer in layer_catalog.json and data/cogs/ has all Rule 3 & Rule 5 fields. |
-| `def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None` | 339 | Invariant 8: Dual-pol regime classification sums to 100% of valid pixels & API validates bounds. |
+| `def test_invariant_1_linear_vs_db_averaging_and_guard() -> None` | 63 | Invariant 1: Averaging in linear power then converting to dB != averaging in dB (Rule 4). |
+| `def test_invariant_2_log_ratio_db_equivalence() -> None` | 100 | Invariant 2: Log-ratio in dB equals 10*log10(P2 / P1) == dB(P2) - dB(P1) within tolerance. |
+| `def test_invariant_3_zero_negative_nan_fill_handling_without_warnings() -> None` | 114 | Invariant 3: Zeros, NaNs, and masked fill values map to NaN before log10 without warnings. |
+| `def test_invariant_4_speckle_filter_increases_enl_and_preserves_mean_power() -> None` | 151 | Invariant 4: 3x3 Adaptive Lee & Boxcar filters increase ENL while preserving mean linear power. |
+| `def test_invariant_5_crs_grid_geometry_and_version_mismatch_guards() -> None` | 186 | Invariant 5: CRS, affine grid, orbit geometry, and CRID/version mismatches raise ValueError. |
+| `def test_invariant_6_gunw_phase_to_los_conversion_and_coherence_mask() -> None` | 242 | Invariant 6: GUNW phase-to-LOS matches -(lambda / 4*pi) * dphi and masks gamma < 0.50. |
+| `def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata() -> None` | 288 | Invariant 7: Every exported layer in layer_catalog.json and data/cogs/ has all Rule 3 & Rule 5 fields. |
+| `def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None` | 340 | Invariant 8: Dual-pol regime classification sums to 100% of valid pixels & API validates bounds. |
+| `def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None` | 400 | Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates. |

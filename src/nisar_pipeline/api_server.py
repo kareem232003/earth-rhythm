@@ -12,13 +12,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import h5py
 import numpy as np
 from rasterio.warp import transform as rio_transform
 
+from .echo_assistant import PROVIDERS, get_env_configured_providers, query_echo_llm
 from .radiometry import linear_to_db
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -356,6 +357,36 @@ def api_inspect(
         return store.inspect_location(lon=lon, lat=lat, utm_x=utm_x, utm_y=utm_y, window_px=window_px)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/echo/providers")
+def api_echo_providers() -> dict[str, Any]:
+    """Return all supported AI providers, models, and which keys are pre-configured in `.env`."""
+    env_configured = get_env_configured_providers()
+    return {
+        "providers": PROVIDERS,
+        "env_configured_providers": env_configured,
+        "default_provider": next(iter(env_configured.keys()), "gemini"),
+    }
+
+
+@app.post("/api/echo/chat")
+def api_echo_chat(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Answer user questions about the NISAR data and current UI state via Echo AI Helper."""
+    provider = str(payload.get("provider") or "gemini")
+    model = payload.get("model")
+    api_key = payload.get("api_key")
+    messages = payload.get("messages") or []
+    ui_context = payload.get("ui_context") or {}
+    if not isinstance(messages, list) or not messages:
+        raise HTTPException(status_code=400, detail="`messages` must be a non-empty list.")
+    return query_echo_llm(
+        provider=provider,
+        model=str(model) if model else None,
+        api_key=str(api_key) if api_key else None,
+        messages=messages,
+        ui_context=ui_context if isinstance(ui_context, dict) else None,
+    )
 
 
 if OVERLAYS_DIR.exists():

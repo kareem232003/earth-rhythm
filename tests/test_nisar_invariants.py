@@ -37,8 +37,9 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from nisar_pipeline.api_server import api_catalog, api_health, api_inspect, api_story
+from nisar_pipeline.api_server import api_catalog, api_echo_providers, api_health, api_inspect, api_story
 from nisar_pipeline.change_detection import classify_dual_pol_change, derive_change_thresholds
+from nisar_pipeline.echo_assistant import detect_provider_from_key, query_echo_llm
 from nisar_pipeline.guards import (
     MANDATORY_RULE3_FIELDS,
     build_rule3_metadata,
@@ -394,3 +395,30 @@ def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None:
     with pytest.raises(HTTPException) as exc_info:
         api_inspect(lon=35.0, lat=31.0, utm_x=None, utm_y=None, window_px=5)
     assert exc_info.value.status_code == 400
+
+
+def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None:
+    """Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates."""
+    prov_resp = api_echo_providers()
+    prov_ids = [p["id"] for p in prov_resp["providers"]]
+    for expected in ("gemini", "groq", "openrouter", "openai", "anthropic", "deepseek", "mistral", "ollama"):
+        assert expected in prov_ids
+
+    # Key prefix auto-detection
+    assert detect_provider_from_key("AIzaSyDummyKey123", "openai") == "gemini"
+    assert detect_provider_from_key("gsk_DummyGroqKey123", "gemini") == "groq"
+    assert detect_provider_from_key("sk-or-v1-DummyKey", "gemini") == "openrouter"
+    assert detect_provider_from_key("sk-ant-api03-Dummy", "openai") == "anthropic"
+
+    # Rule 1 (No Fabricated Fallbacks): when no key is available, returns explicit is_error=True, needs_api_key=True
+    if not prov_resp["env_configured_providers"]:
+        res = query_echo_llm(
+            provider="gemini",
+            model="gemini-2.5-flash",
+            api_key="",
+            messages=[{"role": "user", "content": "What is displayed on the map?"}],
+            ui_context={"map_mode": "single", "active_layer_title": "NISAR Dual-Pol RGB Composite"},
+        )
+        assert res["is_error"] is True
+        assert res["needs_api_key"] is True
+

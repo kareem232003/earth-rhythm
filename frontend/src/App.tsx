@@ -16,6 +16,7 @@ import {
   SplitSquareHorizontal,
 } from 'lucide-react';
 import { BasemapType, NisarMap } from './components/NisarMap';
+import { EchoHelper, EchoUiContext } from './components/EchoHelper';
 import { TimeSeriesChart } from './components/TimeSeriesChart';
 import { STORY_STEPS } from './storySteps';
 import { FocalROI, InspectResponse, LayerCatalog, OverlayItem, StoryPayload } from './types';
@@ -62,6 +63,7 @@ export const App: React.FC = () => {
   const [inspectedLonLat, setInspectedLonLat] = useState<[number, number] | null>([30.9806, 29.3201]);
   const [showS2Overlay, setShowS2Overlay] = useState<boolean>(true);
   const [flyToTarget, setFlyToTarget] = useState<{ center: [number, number]; zoom: number; seq: number } | null>(null);
+  const [isEchoOpen, setIsEchoOpen] = useState<boolean>(false);
 
   // Fetch initial catalog, story payload, and default ROI inspection
   useEffect(() => {
@@ -275,15 +277,45 @@ export const App: React.FC = () => {
   const activeS2Points = selectedRoiId && s2ComparisonByRoi[selectedRoiId] ? s2ComparisonByRoi[selectedRoiId] : undefined;
   const activeS2Corr = selectedRoiId && s2Correlations[selectedRoiId] ? s2Correlations[selectedRoiId] : undefined;
 
+  const echoUiContext: EchoUiContext = {
+    map_mode: mapMode,
+    active_date: mapMode === 'single' ? activeDate : undefined,
+    compare_dates: mapMode === 'swipe' ? `${swipeLeftId} vs ${swipeRightId}` : undefined,
+    active_interval: mapMode === 'change' ? changeInterval : undefined,
+    active_pol_or_metric: mapMode === 'single' ? singlePol : mapMode === 'change' ? changeMetric : selectedMaskLayerId,
+    active_layer_title: leftOverlay?.title,
+    active_layer_id: leftOverlay?.layer_id,
+    active_layer_units: leftOverlay?.rule3_metadata?.units,
+    active_layer_epistemic_tag: leftOverlay?.rule3_metadata?.epistemic_tag,
+    significance_filter_on: mapMode === 'change' ? thresholdMaskOnly : undefined,
+    active_workbench_tab: activeTab,
+    story_step: `${activeStep.stepNumber}: ${activeStep.title}`,
+    selected_roi_or_stratum: selectedRoiId,
+    inspected_patch: inspectResult
+      ? `${inspectResult.geophysical_stratum.landcover_label} at (${inspectResult.coordinates.wgs84_lon.toFixed(4)}°E, ${inspectResult.coordinates.wgs84_lat.toFixed(4)}°N) | HH range [${inspectResult.seasonal_summary.hh_min_db}, ${inspectResult.seasonal_summary.hh_max_db}] dB, HV range [${inspectResult.seasonal_summary.hv_min_db}, ${inspectResult.seasonal_summary.hv_max_db}] dB`
+      : undefined,
+  };
+
   return (
     <div className="app-shell">
       {/* TOP MISSION HEADER BAR */}
       <header className="top-header">
         <div className="brand-block">
-          <div className="nasa-badge">NASA SPACE APPS 2026 • DANCING WITH THE SARs</div>
-          <h1 className="app-title">
-            EARTH RHYTHM <span className="title-sub">NISAR L-Band Surface Change Storyteller</span>
-          </h1>
+          <div className="brand-title-row">
+            <img
+              src="/echo-avatar.png"
+              alt="Earth Rhythm & Echo Logo"
+              className="brand-logo-icon"
+              onClick={() => setIsEchoOpen((v) => !v)}
+              title="Click to ask Echo — Your Earth Rhythm AI Guide!"
+            />
+            <div>
+              <div className="nasa-badge">NASA SPACE APPS 2026 • DANCING WITH THE SARs</div>
+              <h1 className="app-title">
+                EARTH RHYTHM <span className="title-sub">NISAR L-Band Surface Change Storyteller</span>
+              </h1>
+            </div>
+          </div>
           <div className="aoi-meta-pill">
             Fayoum Oasis, Egypt • Track 129 / Frame 016 Ascending • <code>NISAR_L2_GCOV_PROVISIONAL_V1</code> (CRID{' '}
             <code>P05023</code>) • 10 Passes (<code>2026-06-23</code> → <code>2026-10-21</code>)
@@ -339,6 +371,14 @@ export const App: React.FC = () => {
               onChange={(e) => setOpacity(parseFloat(e.target.value))}
             />
           </div>
+          <button
+            className={`echo-header-trigger ${isEchoOpen ? 'active' : ''}`}
+            onClick={() => setIsEchoOpen((v) => !v)}
+            title="Open Echo — Your Earth Rhythm AI Guide"
+          >
+            <img src="/echo-avatar.png" alt="Echo" className="echo-trigger-img" />
+            <span>Ask Echo 🍃</span>
+          </button>
         </div>
       </header>
 
@@ -1188,6 +1228,13 @@ export const App: React.FC = () => {
           </div>
         </aside>
       </main>
+
+      {/* ECHO AI HELPER (Floating Launcher & Context-Aware Chat Guide) */}
+      <EchoHelper
+        uiContext={echoUiContext}
+        isOpen={isEchoOpen}
+        onToggleOpen={() => setIsEchoOpen((v) => !v)}
+      />
     </div>
   );
 };
