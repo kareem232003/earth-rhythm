@@ -1,0 +1,63 @@
+{
+  "phase": "Phase 4 \u2014 Cloud-Optimized GeoTIFF (COG) & Web-Ready Overlay Tile Generation",
+  "generated_at_utc": "2026-11-13T15:09:04.570900+00:00",
+  "elapsed_seconds": 115.06,
+  "cog_summary": {
+    "total_cogs_generated": 45,
+    "total_cog_size_mb": 384.34,
+    "tile_block_size": [
+      256,
+      256
+    ],
+    "overview_pyramids": [
+      2,
+      4,
+      8
+    ],
+    "compression": "DEFLATE (predictor 2/3)",
+    "all_rule3_tags_verified": true
+  },
+  "web_overlay_summary": {
+    "total_png_overlays_generated": 59,
+    "total_png_size_mb": 262.05,
+    "reprojected_crs": "EPSG:4326 (WGS84)",
+    "wgs84_bounds": [
+      30.287397,
+      29.03672,
+      31.110058,
+      29.613253
+    ],
+    "maplibre_corner_coordinates": [
+      [
+        30.287397,
+        29.613253
+      ],
+      [
+        31.110058,
+        29.613253
+      ],
+      [
+        31.110058,
+        29.03672
+      ],
+      [
+        30.287397,
+        29.03672
+      ]
+    ],
+    "groups_breakdown": {
+      "change_detection": 9,
+      "change_detection_thresholded": 6,
+      "dual_pol_regimes": 3,
+      "exploratory_insar_gunw": 2,
+      "geophysical_masks": 7,
+      "seasonal_dynamic_range": 2,
+      "single_date_backscatter": 30
+    }
+  },
+  "storage_budget_verification": {
+    "total_data_directory_mb": 1574.03,
+    "within_budget": false
+  },
+  "catalog_path": "data/web_tiles/layer_catalog.json"
+}

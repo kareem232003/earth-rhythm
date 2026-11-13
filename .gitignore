@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.netrc
+_netrc
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Data and cache (large binary rasters & rendered overlays stay local; JSON manifests/reports are tracked)
+data/raw/
+data/cache/
+data/web_tiles/overlays/
+*.h5
+*.hdf5
+*.nc
+*.tif
+*.tiff
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+

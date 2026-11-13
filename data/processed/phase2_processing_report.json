@@ -1,0 +1,807 @@
+{
+  "phase": "Phase 2 \u2014 Radiometric/Geometric Alignment, Masking, Speckle Filtering & ENL Report",
+  "generated_at_utc": "2026-11-13T14:17:22.708410+00:00",
+  "crs_validation": {
+    "epsg": 32636,
+    "crs_name": "WGS 84 / UTM zone 36N",
+    "utm_bounds_m": [
+      237280.0,
+      3215040.0,
+      316000.0,
+      3277440.0
+    ],
+    "grid_shape_40m": [
+      1560,
+      1968
+    ],
+    "pixel_spacing_m": [
+      40.0,
+      -40.0
+    ],
+    "gunw_grid_shape_80m": [
+      780,
+      984
+    ],
+    "gunw_pixel_spacing_m": [
+      80.0,
+      -80.0
+    ],
+    "all_10_dates_co_registered_exact": true
+  },
+  "radiometric_calibration": {
+    "quantity": "Radiometrically Terrain-Corrected (RTC) Gamma-Nought (gamma0)",
+    "filtering_domain": "Linear power (m^2/m^2) strictly prior to dB conversion",
+    "db_conversion_formula": "10 * log10(gamma0_linear)",
+    "nesz_hh_median_db": -23.26,
+    "nesz_hv_median_db": -24.52
+  },
+  "speckle_and_enl_verification": {
+    "homogeneous_water_patch_utm": [
+      268000.0,
+      3259500.0,
+      270000.0,
+      3261500.0
+    ],
+    "homogeneous_desert_patch_utm": [
+      265500.0,
+      3261200.0,
+      267000.0,
+      3262100.0
+    ],
+    "stage0_native_10m": {
+      "water_HH": {
+        "pixel_count": 40000,
+        "mean_linear": 0.019403,
+        "std_linear": 0.008784,
+        "enl": 4.88,
+        "single_date_speckle_std_db": 1.966,
+        "two_date_diff_speckle_std_db": 2.78
+      },
+      "water_HV": {
+        "pixel_count": 40000,
+        "mean_linear": 0.006522,
+        "std_linear": 0.002783,
+        "enl": 5.49,
+        "single_date_speckle_std_db": 1.853,
+        "two_date_diff_speckle_std_db": 2.621
+      },
+      "desert_HH": {
+        "pixel_count": 13500,
+        "mean_linear": 0.018986,
+        "std_linear": 0.008565,
+        "enl": 4.91,
+        "single_date_speckle_std_db": 1.959,
+        "two_date_diff_speckle_std_db": 2.771
+      },
+      "desert_HV": {
+        "pixel_count": 13500,
+        "mean_linear": 0.006418,
+        "std_linear": 0.002781,
+        "enl": 5.33,
+        "single_date_speckle_std_db": 1.882,
+        "two_date_diff_speckle_std_db": 2.661
+      }
+    },
+    "stage1_multilook_40m_raw": {
+      "water_HH": {
+        "pixel_count": 2550,
+        "mean_linear": 0.019402,
+        "std_linear": 0.003028,
+        "enl": 41.04,
+        "single_date_speckle_std_db": 0.678,
+        "two_date_diff_speckle_std_db": 0.959
+      },
+      "water_HV": {
+        "pixel_count": 2550,
+        "mean_linear": 0.006524,
+        "std_linear": 0.000862,
+        "enl": 57.28,
+        "single_date_speckle_std_db": 0.574,
+        "two_date_diff_speckle_std_db": 0.812
+      },
+      "desert_HH": {
+        "pixel_count": 874,
+        "mean_linear": 0.018968,
+        "std_linear": 0.002808,
+        "enl": 45.64,
+        "single_date_speckle_std_db": 0.643,
+        "two_date_diff_speckle_std_db": 0.909
+      },
+      "desert_HV": {
+        "pixel_count": 874,
+        "mean_linear": 0.006414,
+        "std_linear": 0.000854,
+        "enl": 56.41,
+        "single_date_speckle_std_db": 0.578,
+        "two_date_diff_speckle_std_db": 0.818
+      }
+    },
+    "stage2_filtered_40m_adaptive_lee_3x3": {
+      "water_HH": {
+        "pixel_count": 2550,
+        "mean_linear": 0.019399,
+        "std_linear": 0.00157,
+        "enl": 152.74,
+        "single_date_speckle_std_db": 0.351,
+        "two_date_diff_speckle_std_db": 0.497
+      },
+      "water_HV": {
+        "pixel_count": 2550,
+        "mean_linear": 0.006522,
+        "std_linear": 0.00031,
+        "enl": 444.01,
+        "single_date_speckle_std_db": 0.206,
+        "two_date_diff_speckle_std_db": 0.291
+      },
+      "desert_HH": {
+        "pixel_count": 874,
+        "mean_linear": 0.018968,
+        "std_linear": 0.001232,
+        "enl": 237.0,
+        "single_date_speckle_std_db": 0.282,
+        "two_date_diff_speckle_std_db": 0.399
+      },
+      "desert_HV": {
+        "pixel_count": 874,
+        "mean_linear": 0.006421,
+        "std_linear": 0.000293,
+        "enl": 481.06,
+        "single_date_speckle_std_db": 0.198,
+        "two_date_diff_speckle_std_db": 0.28
+      }
+    },
+    "stage2_filtered_40m_boxcar_3x3": {
+      "water_HH": {
+        "pixel_count": 2550,
+        "mean_linear": 0.0194,
+        "std_linear": 0.001565,
+        "enl": 153.74,
+        "single_date_speckle_std_db": 0.35,
+        "two_date_diff_speckle_std_db": 0.495
+      },
+      "desert_HH": {
+        "pixel_count": 874,
+        "mean_linear": 0.018969,
+        "std_linear": 0.001231,
+        "enl": 237.4,
+        "single_date_speckle_std_db": 0.282,
+        "two_date_diff_speckle_std_db": 0.399
+      }
+    }
+  },
+  "mask_documentation": {
+    "total_grid_pixels": 3070080,
+    "total_grid_area_km2": 4912.13,
+    "masks": {
+      "valid_all_dates_mask": {
+        "pixel_count": 3070080,
+        "pixel_share_pct": 100.0,
+        "area_km2": 4912.13,
+        "description": "Valid radar observations across all 10 dates (NISAR mask in 1..9, finite positive gamma0)"
+      },
+      "nodata_or_layover_mask": {
+        "pixel_count": 0,
+        "pixel_share_pct": 0.0,
+        "area_km2": 0.0,
+        "description": "NoData (0/255) or radar layover/shadow (>=10) in any of the 10 acquisitions"
+      },
+      "low_snr_nesz_mask": {
+        "pixel_count": 876813,
+        "pixel_share_pct": 28.56,
+        "area_km2": 1402.9,
+        "description": "Low-SNR pixels within +3 dB of sensor NESZ floor (HH < -20.25 dB or HV < -21.51 dB; loose sand sheets & calm water)"
+      },
+      "permanent_water_mask": {
+        "pixel_count": 193860,
+        "pixel_share_pct": 6.31,
+        "area_km2": 310.18,
+        "description": "Permanent open water (Lake Qarun & Wadi El Rayan Lakes; HH < -14.5 dB & HV < -19.5 dB in >= 8/10 dates)"
+      },
+      "seasonal_water_margin_mask": {
+        "pixel_count": 103659,
+        "pixel_share_pct": 3.38,
+        "area_km2": 165.85,
+        "description": "Dynamic shoreline, fish-pond, and basin inundation margins (min HH < -14.0 dB with >= 2.5 dB HH range)"
+      },
+      "vegetated_agriculture_mask": {
+        "pixel_count": 1208974,
+        "pixel_share_pct": 39.38,
+        "area_km2": 1934.36,
+        "description": "Irrigated cropland and orchards exhibiting L-band volume scattering (max HV > -17.5 dB, mean HH > -13.5 dB)"
+      },
+      "urban_settlement_mask": {
+        "pixel_count": 90943,
+        "pixel_share_pct": 2.96,
+        "area_km2": 145.51,
+        "description": "Persistent dihedral double-bounce urban/built-up cores (mean HH > -5.5 dB, temporal std < 1.2 dB)"
+      },
+      "stable_desert_reference_mask": {
+        "pixel_count": 218705,
+        "pixel_share_pct": 7.12,
+        "area_km2": 349.93,
+        "description": "Consolidated hyper-arid desert plateau reference pixels outside oasis used for empirical noise/threshold calibration"
+      }
+    }
+  },
+  "exported_gcov_layers_count": 10,
+  "exported_gcov_layers": [
+    {
+      "date": "2026-06-23",
+      "granule_id": "NISAR_L2_PR_GCOV_023_129_A_016_4005_DHDH_A_20260623T031546_20260623T031621_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260623_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260623_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-06-23T03:15:46.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_023_129_A_016_4005_DHDH_A_20260623T031546_20260623T031621_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-06-23T03:15:46.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_023_129_A_016_4005_DHDH_A_20260623T031546_20260623T031621_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-07-05",
+      "granule_id": "NISAR_L2_PR_GCOV_024_129_A_016_4005_DHDH_A_20260705T031546_20260705T031620_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260705_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260705_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-07-05T03:15:46.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_024_129_A_016_4005_DHDH_A_20260705T031546_20260705T031620_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-07-05T03:15:46.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_024_129_A_016_4005_DHDH_A_20260705T031546_20260705T031620_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-07-17",
+      "granule_id": "NISAR_L2_PR_GCOV_025_129_A_016_4005_DHDH_A_20260717T031545_20260717T031620_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260717_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260717_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-07-17T03:15:45.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_025_129_A_016_4005_DHDH_A_20260717T031545_20260717T031620_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-07-17T03:15:45.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_025_129_A_016_4005_DHDH_A_20260717T031545_20260717T031620_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-08-10",
+      "granule_id": "NISAR_L2_PR_GCOV_027_129_A_016_4005_DHDH_A_20260810T031544_20260810T031618_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260810_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260810_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-08-10T03:15:44.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_027_129_A_016_4005_DHDH_A_20260810T031544_20260810T031618_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-08-10T03:15:44.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_027_129_A_016_4005_DHDH_A_20260810T031544_20260810T031618_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-08-22",
+      "granule_id": "NISAR_L2_PR_GCOV_028_129_A_016_4005_DHDH_A_20260822T031543_20260822T031618_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260822_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260822_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-08-22T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_028_129_A_016_4005_DHDH_A_20260822T031543_20260822T031618_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-08-22T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_028_129_A_016_4005_DHDH_A_20260822T031543_20260822T031618_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-09-03",
+      "granule_id": "NISAR_L2_PR_GCOV_029_129_A_016_4005_DHDH_A_20260903T031543_20260903T031617_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260903_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260903_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-03T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_029_129_A_016_4005_DHDH_A_20260903T031543_20260903T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-03T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_029_129_A_016_4005_DHDH_A_20260903T031543_20260903T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-09-15",
+      "granule_id": "NISAR_L2_PR_GCOV_030_129_A_016_4005_DHDH_A_20260915T031543_20260915T031617_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260915_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260915_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-15T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_030_129_A_016_4005_DHDH_A_20260915T031543_20260915T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-15T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_030_129_A_016_4005_DHDH_A_20260915T031543_20260915T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-09-27",
+      "granule_id": "NISAR_L2_PR_GCOV_031_129_A_016_4005_DHDH_A_20260927T031543_20260927T031617_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260927_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20260927_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-27T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_031_129_A_016_4005_DHDH_A_20260927T031543_20260927T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-09-27T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_031_129_A_016_4005_DHDH_A_20260927T031543_20260927T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-10-09",
+      "granule_id": "NISAR_L2_PR_GCOV_032_129_A_016_4005_DHDH_A_20261009T031543_20261009T031617_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261009_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261009_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-10-09T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_032_129_A_016_4005_DHDH_A_20261009T031543_20261009T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-10-09T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_032_129_A_016_4005_DHDH_A_20261009T031543_20261009T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    },
+    {
+      "date": "2026-10-21",
+      "granule_id": "NISAR_L2_PR_GCOV_033_129_A_016_4005_DHDH_A_20261021T031543_20261021T031617_P05023_N_F_J_001",
+      "hh_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261021_HH_gamma0_dB_40m.tif",
+      "hv_db_tif": "data/processed/gcov_filtered_db/NISAR_L2_GCOV_T129_F016_20261021_HV_gamma0_dB_40m.tif",
+      "rule3_metadata_hh": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-10-21T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (HHHH gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_033_129_A_016_4005_DHDH_A_20261021T031543_20261021T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      },
+      "rule3_metadata_hv": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GCOV_PROVISIONAL_V1",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-10-21T03:15:43.000000000",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV (HVHV gamma0)",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GCOV_033_129_A_016_4005_DHDH_A_20261021T031543_20261021T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "speckle_filter": "4x4 linear block average (10m->40m) + 3x3 Adaptive Lee in linear power",
+        "conversion_formula": "10 * log10(gamma0_linear_filtered)"
+      }
+    }
+  ],
+  "exploratory_gunw_evaluation": [
+    {
+      "pair": "2026-07-05_to_2026-07-17",
+      "granule_id": "NISAR_L2_PR_GUNW_024_129_A_016_025_4000_SH_20260705T031546_20260705T031620_20260717T031545_20260717T031620_P05023_N_F_J_001",
+      "los_geotiff": "data/processed/gunw_los/NISAR_L2_GUNW_T129_F016_20260705_to_20260717_LOS_displacement_m_coh050_80m.tif",
+      "rule3_metadata": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GUNW_PROVISIONAL_V1 (Exploratory InSAR)",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-07-05_to_2026-07-17",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (SH 40 MHz)",
+        "units": "meters LOS",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GUNW_024_129_A_016_025_4000_SH_20260705T031546_20260705T031620_20260717T031545_20260717T031620_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "coherence_mask": "gamma >= 0.50 and connectedComponents > 0 (gamma < 0.50 masked to NaN: UNRELIABLE)",
+        "reference_point_utm_32636": "Easting 291880.0m, Northing 3244600.0m (Fayoum Urban Core Benchmark)",
+        "ionosphere_correction": "ionospherePhaseScreen subtracted prior to reference anchoring",
+        "exploratory_warning": "12-day L-band phase variations (~10-25 mm std) are dominated by tropospheric water vapor and soil moisture dielectric phase, NOT tectonic/compaction subsidence rates."
+      },
+      "overall_los_stats": {
+        "coherence_threshold": 0.5,
+        "wavelength_m": 0.241963,
+        "reference_pixel_row_col": [
+          410,
+          682
+        ],
+        "reference_patch_median_coherence": 0.845,
+        "reference_phase_rad": 9.2147,
+        "valid_coherent_pixel_count": 347693,
+        "valid_coherent_pixel_pct": 45.3,
+        "unreliable_masked_pixel_pct": 54.7,
+        "los_displacement_m_p05_p50_p95": [
+          0.0006,
+          0.0239,
+          0.0535
+        ],
+        "los_displacement_m_std": 0.018,
+        "reference_utm_easting_m": 291880.0,
+        "reference_utm_northing_m": 3244600.0
+      },
+      "landcover_coherence_breakdown": {
+        "Urban_Settlement": {
+          "pixel_count_80m": 22815,
+          "median_coherence": 0.81,
+          "pct_coherent_ge_0_5": 98.22,
+          "los_std_mm_over_coherent_pixels": 13.64,
+          "los_p05_p50_p95_mm": [
+            -3.1,
+            14.2,
+            40.8
+          ]
+        },
+        "Stable_Consolidated_Desert": {
+          "pixel_count_80m": 54804,
+          "median_coherence": 0.702,
+          "pct_coherent_ge_0_5": 97.05,
+          "los_std_mm_over_coherent_pixels": 18.78,
+          "los_p05_p50_p95_mm": [
+            3.0,
+            33.3,
+            54.6
+          ]
+        },
+        "Vegetated_Agriculture": {
+          "pixel_count_80m": 289661,
+          "median_coherence": 0.47,
+          "pct_coherent_ge_0_5": 42.51,
+          "los_std_mm_over_coherent_pixels": 15.14,
+          "los_p05_p50_p95_mm": [
+            -2.3,
+            16.0,
+            44.0
+          ]
+        },
+        "Seasonal_Water_Margin": {
+          "pixel_count_80m": 26036,
+          "median_coherence": 0.408,
+          "pct_coherent_ge_0_5": 27.2,
+          "los_std_mm_over_coherent_pixels": 16.4,
+          "los_p05_p50_p95_mm": [
+            -0.6,
+            20.9,
+            46.2
+          ]
+        },
+        "Permanent_Open_Water": {
+          "pixel_count_80m": 48389,
+          "median_coherence": 0.082,
+          "pct_coherent_ge_0_5": 0.0,
+          "los_std_mm_over_coherent_pixels": null,
+          "los_p05_p50_p95_mm": null
+        },
+        "Low_SNR_Sand_Sheet": {
+          "pixel_count_80m": 325815,
+          "median_coherence": 0.469,
+          "pct_coherent_ge_0_5": 43.81,
+          "los_std_mm_over_coherent_pixels": 17.95,
+          "los_p05_p50_p95_mm": [
+            4.0,
+            34.4,
+            56.3
+          ]
+        }
+      }
+    },
+    {
+      "pair": "2026-10-09_to_2026-10-21",
+      "granule_id": "NISAR_L2_PR_GUNW_032_129_A_016_033_4000_SH_20261009T031543_20261009T031617_20261021T031543_20261021T031617_P05023_N_F_J_001",
+      "los_geotiff": "data/processed/gunw_los/NISAR_L2_GUNW_T129_F016_20261009_to_20261021_LOS_displacement_m_coh050_80m.tif",
+      "rule3_metadata": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "NISAR_L2_GUNW_PROVISIONAL_V1 (Exploratory InSAR)",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3)",
+        "acquisition_date": "2026-10-09_to_2026-10-21",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH (SH 40 MHz)",
+        "units": "meters LOS",
+        "crs": "EPSG:32636",
+        "source": "NASA ASF DAAC | NISAR_L2_PR_GUNW_032_129_A_016_033_4000_SH_20261009T031543_20261009T031617_20261021T031543_20261021T031617_P05023_N_F_J_001",
+        "epistemic_tag": "OBSERVATION",
+        "coherence_mask": "gamma >= 0.50 and connectedComponents > 0 (gamma < 0.50 masked to NaN: UNRELIABLE)",
+        "reference_point_utm_32636": "Easting 292680.0m, Northing 3244840.0m (Fayoum Urban Core Benchmark)",
+        "ionosphere_correction": "ionospherePhaseScreen subtracted prior to reference anchoring",
+        "exploratory_warning": "12-day L-band phase variations (~10-25 mm std) are dominated by tropospheric water vapor and soil moisture dielectric phase, NOT tectonic/compaction subsidence rates."
+      },
+      "overall_los_stats": {
+        "coherence_threshold": 0.5,
+        "wavelength_m": 0.241963,
+        "reference_pixel_row_col": [
+          407,
+          692
+        ],
+        "reference_patch_median_coherence": 0.703,
+        "reference_phase_rad": 11.1803,
+        "valid_coherent_pixel_count": 319668,
+        "valid_coherent_pixel_pct": 41.65,
+        "unreliable_masked_pixel_pct": 58.35,
+        "los_displacement_m_p05_p50_p95": [
+          -0.0049,
+          0.0107,
+          0.0239
+        ],
+        "los_displacement_m_std": 0.0093,
+        "reference_utm_easting_m": 292680.0,
+        "reference_utm_northing_m": 3244840.0
+      },
+      "landcover_coherence_breakdown": {
+        "Urban_Settlement": {
+          "pixel_count_80m": 22815,
+          "median_coherence": 0.804,
+          "pct_coherent_ge_0_5": 98.33,
+          "los_std_mm_over_coherent_pixels": 7.89,
+          "los_p05_p50_p95_mm": [
+            -9.6,
+            7.4,
+            17.5
+          ]
+        },
+        "Stable_Consolidated_Desert": {
+          "pixel_count_80m": 54804,
+          "median_coherence": 0.668,
+          "pct_coherent_ge_0_5": 93.12,
+          "los_std_mm_over_coherent_pixels": 8.8,
+          "los_p05_p50_p95_mm": [
+            -2.7,
+            13.2,
+            22.8
+          ]
+        },
+        "Vegetated_Agriculture": {
+          "pixel_count_80m": 289661,
+          "median_coherence": 0.467,
+          "pct_coherent_ge_0_5": 42.59,
+          "los_std_mm_over_coherent_pixels": 8.46,
+          "los_p05_p50_p95_mm": [
+            -7.4,
+            7.4,
+            19.5
+          ]
+        },
+        "Seasonal_Water_Margin": {
+          "pixel_count_80m": 26036,
+          "median_coherence": 0.382,
+          "pct_coherent_ge_0_5": 23.54,
+          "los_std_mm_over_coherent_pixels": 8.5,
+          "los_p05_p50_p95_mm": [
+            -4.1,
+            9.0,
+            21.9
+          ]
+        },
+        "Permanent_Open_Water": {
+          "pixel_count_80m": 48389,
+          "median_coherence": 0.08,
+          "pct_coherent_ge_0_5": 0.0,
+          "los_std_mm_over_coherent_pixels": null,
+          "los_p05_p50_p95_mm": null
+        },
+        "Low_SNR_Sand_Sheet": {
+          "pixel_count_80m": 325815,
+          "median_coherence": 0.429,
+          "pct_coherent_ge_0_5": 36.11,
+          "los_std_mm_over_coherent_pixels": 9.13,
+          "los_p05_p50_p95_mm": [
+            -1.3,
+            15.0,
+            28.0
+          ]
+        }
+      }
+    }
+  ],
+  "consolidated_cube_h5": "data/processed/fayoum_gcov_10dates_40m_filtered.h5",
+  "consolidated_cube_size_mb": 182.53
+}
