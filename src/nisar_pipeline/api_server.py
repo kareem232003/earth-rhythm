@@ -20,7 +20,12 @@ import h5py
 import numpy as np
 from rasterio.warp import transform as rio_transform
 
-from .echo_assistant import PROVIDERS, get_env_configured_providers, query_echo_llm
+from .echo_assistant import (
+    PROVIDERS,
+    discover_available_models,
+    get_env_configured_providers,
+    query_echo_llm,
+)
 from .radiometry import linear_to_db
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -406,6 +411,14 @@ def api_echo_test(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     )
     result["latency_ms"] = int((time.perf_counter() - t0) * 1000)
     return result
+
+
+@app.post("/api/echo/models")
+def api_echo_models(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Dynamically query and return available models for the given provider & API key."""
+    provider = str(payload.get("provider") or "gemini")
+    api_key = payload.get("api_key")
+    return discover_available_models(provider=provider, api_key=str(api_key) if api_key else None)
 
 
 if OVERLAYS_DIR.exists():

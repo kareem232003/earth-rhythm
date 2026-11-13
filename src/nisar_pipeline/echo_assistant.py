@@ -53,9 +53,10 @@ PROVIDERS: list[dict[str, Any]] = [
         "default_model": "gemini-3.8-flash",
         "models": [
             {"id": "gemini-3.8-flash", "label": "Gemini 3.8 Flash (Latest & Recommended)"},
-            {"id": "gemini-2.5-flash", "label": "Gemini 2.5 Flash"},
+            {"id": "gemini-3.6-flash", "label": "Gemini 3.6 Flash"},
+            {"id": "gemini-3.5-flash-lite", "label": "Gemini 3.5 Flash Lite"},
             {"id": "gemini-2.0-flash", "label": "Gemini 2.0 Flash"},
-            {"id": "gemini-1.5-flash", "label": "Gemini 1.5 Flash"},
+            {"id": "gemini-3.8-pro", "label": "Gemini 3.8 Pro (Reasoning)"},
             {"id": "gemini-2.5-pro", "label": "Gemini 2.5 Pro (Deep Reasoning)"},
         ],
         "requires_key": True,
@@ -332,6 +333,9 @@ def query_echo_llm(
         }
 
     chosen_model = (model or "").strip() or prov_spec["default_model"]
+    # Deprecated model auto-upgrade
+    if provider_id == "gemini" and chosen_model in ("gemini-2.5-flash", "gemini-1.0-pro"):
+        chosen_model = "gemini-3.8-flash"
     # Allow any valid custom model string (e.g. gemini-3.8-flash, openrouter model slugs)
     valid_model_ids = {m["id"] for m in prov_spec["models"]}
     if chosen_model not in valid_model_ids and "/" not in chosen_model and not chosen_model.startswith("gemini-"):
@@ -416,6 +420,72 @@ def _dispatch_provider_call(
     )
 
 
+def discover_gemini_models(api_key: str) -> list[str]:
+    """Query Google AI Studio v1beta/models to discover live, supported models for this specific API key."""
+    if not api_key or not api_key.strip():
+        return []
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key.strip()}"
+        resp = requests.get(url, timeout=5)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        models_raw = data.get("models", [])
+        discovered: list[str] = []
+        for m in models_raw:
+            name = m.get("name", "")
+            methods = m.get("supportedGenerationMethods", [])
+            if isinstance(methods, list) and "generateContent" in methods:
+                clean_id = name.replace("models/", "").strip()
+                if clean_id and clean_id != "gemini-2.5-flash":
+                    discovered.append(clean_id)
+
+        # Prioritize modern flash models, then other flash, then pro
+        def _sort_key(mid: str) -> tuple[int, str]:
+            if "gemini-3.8-flash" in mid:
+                return (0, mid)
+            if "gemini-3.6-flash" in mid:
+                return (1, mid)
+            if "gemini-3.5-flash" in mid:
+                return (2, mid)
+            if "gemini-2.0-flash" in mid:
+                return (3, mid)
+            if "flash" in mid:
+                return (4, mid)
+            if "gemini-3.8" in mid:
+                return (5, mid)
+            return (6, mid)
+
+        discovered.sort(key=_sort_key)
+        return discovered
+    except Exception:
+        return []
+
+
+def discover_available_models(provider: str, api_key: str | None = None) -> dict[str, Any]:
+    """Dynamically discover available models for a provider or return curated catalog."""
+    prov_id = (provider or "gemini").lower().strip()
+    resolved_key = resolve_api_key(prov_id, api_key)
+    if prov_id == "gemini" and resolved_key:
+        live = discover_gemini_models(resolved_key)
+        if live:
+            return {
+                "provider": "gemini",
+                "models": [{"id": m, "label": m} for m in live],
+                "recommended": live[0],
+                "discovered": True,
+            }
+    prov_spec = PROVIDER_MAP.get(prov_id)
+    if prov_spec:
+        return {
+            "provider": prov_id,
+            "models": prov_spec.get("models", []),
+            "recommended": prov_spec.get("default_model", ""),
+            "discovered": False,
+        }
+    return {"provider": prov_id, "models": [], "recommended": "", "discovered": False}
+
+
 def _call_gemini(
     model: str,
     api_key: str,
@@ -423,7 +493,11 @@ def _call_gemini(
     messages: list[dict[str, str]],
     _tried_models: set[str] | None = None,
 ) -> dict[str, Any]:
-    """Call Google Gemini GenerateContent REST API with automatic on-the-go model fallback."""
+    """Call Google Gemini GenerateContent REST API with dynamic model discovery and on-the-go fallback."""
+    # Pre-flight auto-upgrade for deprecated models before sending request
+    if model in ("gemini-2.5-flash", "gemini-1.0-pro"):
+        model = "gemini-3.8-flash"
+
     if _tried_models is None:
         _tried_models = set()
     _tried_models.add(model)
@@ -454,23 +528,31 @@ def _call_gemini(
             pass
 
         # Smart on-the-go fallback:
-        # If Google reports the model is deprecated / not found and suggests a replacement:
+        # If Google reports the model is deprecated / not found or suggests a replacement:
         # e.g., "Please update your code to use models/gemini-3.8-flash"
         fallback_candidates: list[str] = []
         suggested_match = re.search(r"use models/([a-zA-Z0-9.\-_]+)", err_text, re.IGNORECASE)
         if suggested_match:
             sug = suggested_match.group(1).strip()
-            if sug and sug not in _tried_models:
+            if sug and sug not in _tried_models and sug != "gemini-2.5-flash":
                 fallback_candidates.append(sug)
 
         err_lower = err_text.lower()
         if resp.status_code == 404 or "no longer available" in err_lower or "not found" in err_lower:
+            # 1. Search for available models dynamically from Google AI Studio for this key!
+            live_models = discover_gemini_models(api_key)
+            for m in live_models:
+                if m not in _tried_models and m not in fallback_candidates:
+                    fallback_candidates.append(m)
+
+            # 2. Add curated working models cascade
             for candidate in [
                 "gemini-3.8-flash",
-                "gemini-2.5-flash",
+                "gemini-3.6-flash",
+                "gemini-3.5-flash-lite",
                 "gemini-2.0-flash",
                 "gemini-1.5-flash",
-                "gemini-1.5-pro",
+                "gemini-3.8-pro",
                 "gemini-2.5-pro",
             ]:
                 if candidate not in _tried_models and candidate not in fallback_candidates:

@@ -60,9 +60,10 @@ const DEFAULT_PROVIDERS: ProviderSpec[] = [
     default_model: 'gemini-3.8-flash',
     models: [
       { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (Latest & Recommended)' },
-      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+      { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash' },
+      { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite' },
       { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-      { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+      { id: 'gemini-3.8-pro', label: 'Gemini 3.8 Pro (Reasoning)' },
       { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Deep Reasoning)' },
     ],
     requires_key: true,
@@ -208,9 +209,15 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const [savedModels, setSavedModels] = useState<Record<string, string>>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_MODELS_MAP);
-      return raw ? JSON.parse(raw) : {};
+      const parsed = raw ? JSON.parse(raw) : {};
+      // Auto-migrate any deprecated model saved in browser localStorage to gemini-3.8-flash
+      if (parsed.gemini === 'gemini-2.5-flash' || parsed.gemini === 'gemini-1.0-pro' || !parsed.gemini) {
+        parsed.gemini = 'gemini-3.8-flash';
+        localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(parsed));
+      }
+      return parsed;
     } catch {
-      return {};
+      return { gemini: 'gemini-3.8-flash' };
     }
   });
 
@@ -265,7 +272,89 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const currentProviderSpec =
     providers.find((p) => p.id === selectedProvider) || DEFAULT_PROVIDERS[0];
   const currentModel =
-    savedModels[selectedProvider] || currentProviderSpec.default_model || 'gemini-2.5-flash';
+    savedModels[selectedProvider] || currentProviderSpec.default_model || 'gemini-3.8-flash';
+
+  // Dynamic model discovery: queries provider's live models so valid models are discovered before/on run
+  const discoverProviderModels = async (provId: string, apiKey: string): Promise<string[] | null> => {
+    if (provId === 'gemini' && apiKey) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey.trim())}`;
+        const r = await fetch(url);
+        if (r.ok) {
+          const j = await r.json();
+          const list: string[] = (j.models || [])
+            .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+            .map((m: any) => String(m.name || '').replace('models/', '').trim())
+            .filter((m: string) => m && m !== 'gemini-2.5-flash');
+          if (list.length > 0) {
+            list.sort((a, b) => {
+              if (a.includes('3.8-flash')) return -1;
+              if (b.includes('3.8-flash')) return 1;
+              if (a.includes('3.6-flash')) return -1;
+              if (b.includes('3.6-flash')) return 1;
+              if (a.includes('3.5-flash')) return -1;
+              if (b.includes('3.5-flash')) return 1;
+              if (a.includes('flash') && !b.includes('flash')) return -1;
+              if (!a.includes('flash') && b.includes('flash')) return 1;
+              return a.localeCompare(b);
+            });
+            return list;
+          }
+        }
+      } catch {
+        // Browser CORS or network error — fallback to backend
+      }
+    }
+    try {
+      const r = await fetch('/api/echo/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: provId, api_key: apiKey || null }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        if (Array.isArray(j.models) && j.models.length > 0) {
+          return j.models
+            .map((m: any) => (typeof m === 'string' ? m : m.id))
+            .filter((id: string) => id && id !== 'gemini-2.5-flash');
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  };
+
+  // Discover and refresh model options dynamically when user sets or switches Gemini key
+  useEffect(() => {
+    const key = (savedKeys[selectedProvider] || keyInput || '').trim();
+    if (selectedProvider === 'gemini' && key.startsWith('AIza')) {
+      discoverProviderModels('gemini', key).then((discovered) => {
+        if (discovered && discovered.length > 0) {
+          setProviders((prev) =>
+            prev.map((p) => {
+              if (p.id !== 'gemini') return p;
+              const newModels: ProviderModel[] = discovered.map((m) => {
+                let lbl = m;
+                if (m === 'gemini-3.8-flash') lbl = 'Gemini 3.8 Flash (Latest & Recommended)';
+                else if (m === 'gemini-3.6-flash') lbl = 'Gemini 3.6 Flash';
+                else if (m === 'gemini-3.5-flash-lite') lbl = 'Gemini 3.5 Flash Lite';
+                else if (m === 'gemini-2.0-flash') lbl = 'Gemini 2.0 Flash';
+                else if (m === 'gemini-3.8-pro') lbl = 'Gemini 3.8 Pro (Reasoning)';
+                return { id: m, label: lbl };
+              });
+              return { ...p, models: newModels, default_model: discovered[0] };
+            })
+          );
+          if (savedModels.gemini === 'gemini-2.5-flash' || !discovered.includes(savedModels.gemini || '')) {
+            const nextModels = { ...savedModels, gemini: discovered[0] };
+            setSavedModels(nextModels);
+            localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
+          }
+        }
+      });
+    }
+  }, [selectedProvider, savedKeys, keyInput]);
 
   const hasKeyConfigured =
     selectedProvider === 'ollama' ||
@@ -315,12 +404,17 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     }
     const validPayload =
       data && (data.is_error === true || (data.is_error === false && typeof data.reply === 'string'));
-    if (!validPayload) {
-      // Older backend without /api/echo/test — ping the provider directly from the browser
+    if (!validPayload || (data && data.is_error && (
+      String(data.error).includes('404') ||
+      String(data.error).toLowerCase().includes('no longer available') ||
+      String(data.error).includes('Please update your code') ||
+      String(data.error).includes('gemini-2.5-flash')
+    ))) {
+      // Older backend without /api/echo/test or with deprecated model error — ping the provider directly from the browser
       try {
         data = await callProviderDirectlyFromBrowser(
           provId,
-          modelId,
+          modelId === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : modelId,
           apiKey,
           [{ role: 'user', content: 'ping' }],
           true
@@ -385,7 +479,13 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     runConnectionTest(selectedProvider, currentModel, (savedKeys[selectedProvider] || '').trim()).then((r) => {
       if (r.ok) {
         setConnStatus('ready');
-        setMessages((prev) => [...prev, readyMessage(r.providerId || selectedProvider, r.model || currentModel, r.latencyMs)]);
+        const workingModel = r.model || currentModel;
+        if (workingModel !== currentModel) {
+          const nextModels = { ...savedModels, [selectedProvider]: workingModel };
+          setSavedModels(nextModels);
+          localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
+        }
+        setMessages((prev) => [...prev, readyMessage(r.providerId || selectedProvider, workingModel, r.latencyMs)]);
       } else {
         setConnStatus('failed');
         setMessages((prev) => [...prev, failedMessage(selectedProvider, r.error || 'Unknown error', r.needsKey)]);
@@ -478,7 +578,7 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         parts: [{ text: m.content }],
       }));
 
-      let activeModel = modelId;
+      let activeModel = (modelId === 'gemini-2.5-flash' || modelId === 'gemini-1.0-pro') ? 'gemini-3.8-flash' : modelId;
       const tried = new Set<string>();
 
       while (activeModel && !tried.has(activeModel)) {
@@ -514,6 +614,11 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
           const reply =
             j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') || '';
           if (reply.trim()) {
+            if (activeModel !== modelId) {
+              const nextModels = { ...savedModels, [provId]: activeModel };
+              setSavedModels(nextModels);
+              localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
+            }
             return {
               is_error: false,
               provider_name: 'Google Gemini',
@@ -527,21 +632,30 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         const errLower = errMsg.toLowerCase();
 
         // Smart on-the-go fallback:
-        // Extract any suggested model Google returns: e.g. "Please update your code to use models/gemini-3.8-flash"
+        // 1. Extract any suggested model Google returns: e.g. "Please update your code to use models/gemini-3.8-flash"
         const sugMatch = errMsg.match(/use models\/([a-zA-Z0-9.\-_]+)/i);
         let nextCandidate: string | undefined = undefined;
-        if (sugMatch && sugMatch[1] && !tried.has(sugMatch[1])) {
+        if (sugMatch && sugMatch[1] && !tried.has(sugMatch[1]) && sugMatch[1] !== 'gemini-2.5-flash') {
           nextCandidate = sugMatch[1];
         } else if (r.status === 404 || errLower.includes('no longer available') || errLower.includes('not found')) {
-          const chain = [
-            'gemini-3.8-flash',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
-            'gemini-2.5-pro',
-          ];
-          nextCandidate = chain.find((c) => !tried.has(c));
+          // 2. Discover live models from Google AI Studio on the fly
+          const discovered = await discoverProviderModels('gemini', apiKey);
+          if (discovered && discovered.length > 0) {
+            nextCandidate = discovered.find((m) => !tried.has(m) && m !== 'gemini-2.5-flash');
+          }
+          // 3. Fallback priority list
+          if (!nextCandidate) {
+            const chain = [
+              'gemini-3.8-flash',
+              'gemini-3.6-flash',
+              'gemini-3.5-flash-lite',
+              'gemini-2.0-flash',
+              'gemini-1.5-flash',
+              'gemini-3.8-pro',
+              'gemini-2.5-pro',
+            ];
+            nextCandidate = chain.find((c) => !tried.has(c));
+          }
         }
 
         if (nextCandidate) {
@@ -683,6 +797,22 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         );
       }
 
+      // If backend returned a deprecated model / 404 error (e.g. older uvicorn instance),
+      // seamlessly intercept and solve it on the fly via browser direct fallback
+      if (data && data.is_error && (
+        String(data.error).includes('404') ||
+        String(data.error).toLowerCase().includes('no longer available') ||
+        String(data.error).includes('Please update your code') ||
+        String(data.error).includes('gemini-2.5-flash')
+      )) {
+        data = await callProviderDirectlyFromBrowser(
+          selectedProvider,
+          'gemini-3.8-flash',
+          activeKey,
+          updatedHistory
+        );
+      }
+
       if (!data || data.is_error || typeof data.reply !== 'string') {
         setMessages((prev) => [
           ...prev,
@@ -694,6 +824,11 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
           },
         ]);
       } else {
+        if (data.model && data.model !== currentModel) {
+          const nextModels = { ...savedModels, [selectedProvider]: data.model };
+          setSavedModels(nextModels);
+          localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
+        }
         setMessages((prev) => [
           ...prev,
           {
