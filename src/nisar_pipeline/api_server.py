@@ -9,6 +9,7 @@ Pixel/Patch Inspector (`/api/inspect`) backed by the calibrated 10-date linear-p
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -387,6 +388,24 @@ def api_echo_chat(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         messages=messages,
         ui_context=ui_context if isinstance(ui_context, dict) else None,
     )
+
+
+@app.post("/api/echo/test")
+def api_echo_test(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Send a tiny 'ping' to the selected provider to verify the API key/model before chatting."""
+    provider = str(payload.get("provider") or "gemini")
+    model = payload.get("model")
+    api_key = payload.get("api_key")
+    t0 = time.perf_counter()
+    result = query_echo_llm(
+        provider=provider,
+        model=str(model) if model else None,
+        api_key=str(api_key) if api_key else None,
+        messages=[{"role": "user", "content": "ping"}],
+        ping=True,
+    )
+    result["latency_ms"] = int((time.perf_counter() - t0) * 1000)
+    return result
 
 
 if OVERLAYS_DIR.exists():

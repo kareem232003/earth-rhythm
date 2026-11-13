@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import re
 from typing import Any
 
 import requests
@@ -49,10 +50,12 @@ PROVIDERS: list[dict[str, Any]] = [
         "env_keys": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
         "key_placeholder": "AIzaSy...",
         "get_key_url": "https://aistudio.google.com/apikey",
-        "default_model": "gemini-2.5-flash",
+        "default_model": "gemini-3.8-flash",
         "models": [
-            {"id": "gemini-2.5-flash", "label": "Gemini 2.5 Flash (Fast & Smart)"},
+            {"id": "gemini-3.8-flash", "label": "Gemini 3.8 Flash (Latest & Recommended)"},
+            {"id": "gemini-2.5-flash", "label": "Gemini 2.5 Flash"},
             {"id": "gemini-2.0-flash", "label": "Gemini 2.0 Flash"},
+            {"id": "gemini-1.5-flash", "label": "Gemini 1.5 Flash"},
             {"id": "gemini-2.5-pro", "label": "Gemini 2.5 Pro (Deep Reasoning)"},
         ],
         "requires_key": True,
@@ -285,8 +288,13 @@ def query_echo_llm(
     api_key: str | None,
     messages: list[dict[str, str]],
     ui_context: dict[str, Any] | None = None,
+    ping: bool = False,
 ) -> dict[str, Any]:
-    """Send a grounded chat request to the selected LLM provider."""
+    """Send a grounded chat request to the selected LLM provider.
+
+    When `ping=True`, a tiny connection-test prompt is sent instead of the full
+    Echo system prompt so the user's API key/model can be verified cheaply.
+    """
     provider_id = (provider or "gemini").lower().strip()
     resolved_key = resolve_api_key(provider_id, api_key)
 
@@ -324,9 +332,9 @@ def query_echo_llm(
         }
 
     chosen_model = (model or "").strip() or prov_spec["default_model"]
-    # Ensure chosen_model belongs to provider if provider was auto-switched
+    # Allow any valid custom model string (e.g. gemini-3.8-flash, openrouter model slugs)
     valid_model_ids = {m["id"] for m in prov_spec["models"]}
-    if chosen_model not in valid_model_ids and "/" not in chosen_model:
+    if chosen_model not in valid_model_ids and "/" not in chosen_model and not chosen_model.startswith("gemini-"):
         chosen_model = prov_spec["default_model"]
 
     context_block = format_ui_context_block(ui_context)
@@ -339,24 +347,13 @@ def query_echo_llm(
         if m.get("content")
     ]
 
+    if ping:
+        full_system_prompt = PING_SYSTEM_PROMPT
+        trimmed_msgs = [{"role": "user", "content": "ping"}]
+
     try:
-        if provider_id == "gemini":
-            return _call_gemini(chosen_model, resolved_key or "", full_system_prompt, trimmed_msgs)
-        if provider_id == "anthropic":
-            return _call_anthropic(chosen_model, resolved_key or "", full_system_prompt, trimmed_msgs)
-        if provider_id == "ollama":
-            return _call_ollama(chosen_model, full_system_prompt, trimmed_msgs)
-        # OpenAI-compatible endpoints: groq, openrouter, openai, deepseek, mistral
-        endpoint_map = {
-            "groq": "https://api.groq.com/openai/v1/chat/completions",
-            "openrouter": "https://openrouter.ai/api/v1/chat/completions",
-            "openai": "https://api.openai.com/v1/chat/completions",
-            "deepseek": "https://api.deepseek.com/chat/completions",
-            "mistral": "https://api.mistral.ai/v1/chat/completions",
-        }
-        return _call_openai_compatible(
+        result = _dispatch_provider_call(
             provider_id=provider_id,
-            url=endpoint_map[provider_id],
             model=chosen_model,
             api_key=resolved_key or "",
             system_prompt=full_system_prompt,
@@ -371,33 +368,119 @@ def query_echo_llm(
             "error": f"Network error talking to `{prov_spec['name']}`: {exc}",
         }
 
+    # Rule 1: an empty completion is a failure, never a silent "success"
+    if not result.get("is_error") and not str(result.get("reply", "")).strip():
+        return {
+            "is_error": True,
+            "needs_api_key": False,
+            "provider": provider_id,
+            "model": chosen_model,
+            "error": f"{prov_spec['name']} returned an empty reply for model `{chosen_model}`.",
+        }
+    return result
+
+
+PING_SYSTEM_PROMPT = "You are a connection test. Reply with exactly one word: READY"
+
+
+def _dispatch_provider_call(
+    *,
+    provider_id: str,
+    model: str,
+    api_key: str,
+    system_prompt: str,
+    messages: list[dict[str, str]],
+) -> dict[str, Any]:
+    """Route a chat request to the correct provider-specific REST client."""
+    if provider_id == "gemini":
+        return _call_gemini(model, api_key, system_prompt, messages)
+    if provider_id == "anthropic":
+        return _call_anthropic(model, api_key, system_prompt, messages)
+    if provider_id == "ollama":
+        return _call_ollama(model, system_prompt, messages)
+    # OpenAI-compatible endpoints: groq, openrouter, openai, deepseek, mistral
+    endpoint_map = {
+        "groq": "https://api.groq.com/openai/v1/chat/completions",
+        "openrouter": "https://openrouter.ai/api/v1/chat/completions",
+        "openai": "https://api.openai.com/v1/chat/completions",
+        "deepseek": "https://api.deepseek.com/chat/completions",
+        "mistral": "https://api.mistral.ai/v1/chat/completions",
+    }
+    return _call_openai_compatible(
+        provider_id=provider_id,
+        url=endpoint_map[provider_id],
+        model=model,
+        api_key=api_key,
+        system_prompt=system_prompt,
+        messages=messages,
+    )
+
 
 def _call_gemini(
     model: str,
     api_key: str,
     system_prompt: str,
     messages: list[dict[str, str]],
+    _tried_models: set[str] | None = None,
 ) -> dict[str, Any]:
-    """Call Google Gemini GenerateContent REST API."""
+    """Call Google Gemini GenerateContent REST API with automatic on-the-go model fallback."""
+    if _tried_models is None:
+        _tried_models = set()
+    _tried_models.add(model)
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     contents = []
     for m in messages:
         role = "model" if m["role"] == "assistant" else "user"
         contents.append({"role": role, "parts": [{"text": m["content"]}]})
 
+    gen_config: dict[str, Any] = {"temperature": 0.25, "maxOutputTokens": 2048}
+    # Gemini 2.x/3.x "flash" models spend output tokens on hidden thinking by default; disable it
+    # so short answers or pings are never truncated to an empty reply.
+    if "flash" in model:
+        gen_config["thinkingConfig"] = {"thinkingBudget": 0}
     payload = {
         "systemInstruction": {"parts": [{"text": system_prompt}]},
         "contents": contents,
-        "generationConfig": {"temperature": 0.25, "maxOutputTokens": 900},
+        "generationConfig": gen_config,
     }
     resp = requests.post(url, json=payload, timeout=30)
     if resp.status_code != 200:
-        err_text = resp.text[:400]
+        err_text = resp.text[:600]
         try:
             err_json = resp.json()
             err_text = err_json.get("error", {}).get("message", err_text)
         except ValueError:
             pass
+
+        # Smart on-the-go fallback:
+        # If Google reports the model is deprecated / not found and suggests a replacement:
+        # e.g., "Please update your code to use models/gemini-3.8-flash"
+        fallback_candidates: list[str] = []
+        suggested_match = re.search(r"use models/([a-zA-Z0-9.\-_]+)", err_text, re.IGNORECASE)
+        if suggested_match:
+            sug = suggested_match.group(1).strip()
+            if sug and sug not in _tried_models:
+                fallback_candidates.append(sug)
+
+        err_lower = err_text.lower()
+        if resp.status_code == 404 or "no longer available" in err_lower or "not found" in err_lower:
+            for candidate in [
+                "gemini-3.8-flash",
+                "gemini-2.5-flash",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro",
+                "gemini-2.5-pro",
+            ]:
+                if candidate not in _tried_models and candidate not in fallback_candidates:
+                    fallback_candidates.append(candidate)
+
+        for next_model in fallback_candidates:
+            fb_res = _call_gemini(next_model, api_key, system_prompt, messages, _tried_models)
+            if not fb_res.get("is_error"):
+                return fb_res
+
         return {
             "is_error": True,
             "needs_api_key": resp.status_code in (400, 401, 403),

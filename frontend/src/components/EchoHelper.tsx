@@ -57,10 +57,12 @@ const DEFAULT_PROVIDERS: ProviderSpec[] = [
     env_keys: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
     key_placeholder: 'AIzaSy...',
     get_key_url: 'https://aistudio.google.com/apikey',
-    default_model: 'gemini-2.5-flash',
+    default_model: 'gemini-3.8-flash',
     models: [
-      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Fast & Smart)' },
+      { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (Latest & Recommended)' },
+      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
       { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+      { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
       { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Deep Reasoning)' },
     ],
     requires_key: true,
@@ -217,13 +219,14 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
   const [keyInput, setKeyInput] = useState<string>('');
   const [keySavedToast, setKeySavedToast] = useState<string | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content:
-        "Hi! I'm **Echo 🍃**, your Earth Rhythm SAR Guide! I can see whichever NISAR layer, date, or pixel you're inspecting right now.\n\nAsk me anything about **what's on the map**, **what the colors or dB numbers mean**, or **how L-band HH & HV radar works**!",
-    },
-  ]);
+  // Connection state: is the configured provider actually answering?
+  type ConnStatus = 'checking' | 'missing' | 'testing' | 'ready' | 'failed';
+  const [connStatus, setConnStatus] = useState<ConnStatus>('checking');
+  const [testError, setTestError] = useState<string | null>(null);
+  const [providersLoaded, setProvidersLoaded] = useState<boolean>(false);
+  const greetedRef = useRef<boolean>(false);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [sending, setSending] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -243,7 +246,8 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
       })
       .catch(() => {
         // Uses DEFAULT_PROVIDERS seamlessly
-      });
+      })
+      .finally(() => setProvidersLoaded(true));
   }, []);
 
   // Sync keyInput when switching provider tab
@@ -282,7 +286,115 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     }
   };
 
-  const handleSaveSettings = () => {
+  const providerLabel = (provId: string) =>
+    (providers.find((p) => p.id === provId) || DEFAULT_PROVIDERS[0]).name.split(' (')[0];
+
+  // Sends a tiny "ping" to the provider and reports whether it answered.
+  const runConnectionTest = async (
+    provId: string,
+    modelId: string,
+    apiKey: string
+  ): Promise<{ ok: boolean; error?: string; needsKey?: boolean; latencyMs?: number; model?: string; providerId?: string }> => {
+    const t0 = performance.now();
+    let data: any = null;
+    try {
+      const res = await fetch('/api/echo/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: provId, model: modelId, api_key: apiKey || null }),
+      });
+      if (res.ok) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+      }
+    } catch {
+      data = null;
+    }
+    const validPayload =
+      data && (data.is_error === true || (data.is_error === false && typeof data.reply === 'string'));
+    if (!validPayload) {
+      // Older backend without /api/echo/test — ping the provider directly from the browser
+      try {
+        data = await callProviderDirectlyFromBrowser(
+          provId,
+          modelId,
+          apiKey,
+          [{ role: 'user', content: 'ping' }],
+          true
+        );
+      } catch (err: any) {
+        data = { is_error: true, error: `Connection test failed: ${err?.message || 'network error'}` };
+      }
+    }
+    const latencyMs = typeof data?.latency_ms === 'number' ? data.latency_ms : Math.round(performance.now() - t0);
+    if (!data || data.is_error || !String(data.reply || '').trim()) {
+      return {
+        ok: false,
+        error: String(data?.error || 'The provider returned an empty reply to the test ping.'),
+        needsKey: Boolean(data?.needs_api_key),
+        latencyMs,
+      };
+    }
+    return { ok: true, latencyMs, model: data.model || modelId, providerId: data.provider || provId };
+  };
+
+  const readyMessage = (provId: string, modelId: string, latencyMs?: number): ChatMessage => ({
+    role: 'assistant',
+    content: `✅ **Connection test passed!** ${providerLabel(provId)} (\`${modelId}\`) answered my test ping${
+      latencyMs ? ` in ${(latencyMs / 1000).toFixed(1)}s` : ''
+    }.\n\n**I'm ready to go! 🍃** Ask me anything about the map, the chart, or how NISAR's HH & HV radar works.`,
+  });
+
+  const failedMessage = (provId: string, error: string, needsKey?: boolean): ChatMessage => ({
+    role: 'assistant',
+    content: `❌ **Connection test failed** for ${providerLabel(provId)}:\n\n${error}\n\nPlease check your key (or pick another provider) in the **🔑 API Key** panel.`,
+    isError: true,
+    needsKey: needsKey ?? true,
+  });
+
+  // Starting message: greet the user, then either ask for a key or verify the existing one
+  useEffect(() => {
+    if (!providersLoaded || greetedRef.current) return;
+    greetedRef.current = true;
+
+    const greeting =
+      "Hi! I'm **Echo 🍃**, your Earth Rhythm SAR Guide! I can see whichever NISAR layer, date, or pixel you're inspecting right now.\n\nAsk me anything about **what's on the map**, **what the colors or dB numbers mean**, or **how L-band HH & HV radar works**!";
+
+    if (!hasKeyConfigured) {
+      setConnStatus('missing');
+      setMessages([
+        {
+          role: 'assistant',
+          content: `${greeting}\n\n🔑 **But first, I need an AI API key so I can answer you.** Click **🔑 API Key** above, pick a provider (Google Gemini and Groq have free keys), paste your key, and I'll test the connection automatically.`,
+          needsKey: true,
+        },
+      ]);
+      return;
+    }
+
+    setMessages([
+      {
+        role: 'assistant',
+        content: `${greeting}\n\n🔄 Checking my connection to **${providerLabel(selectedProvider)}**...`,
+      },
+    ]);
+    setConnStatus('testing');
+    runConnectionTest(selectedProvider, currentModel, (savedKeys[selectedProvider] || '').trim()).then((r) => {
+      if (r.ok) {
+        setConnStatus('ready');
+        setMessages((prev) => [...prev, readyMessage(r.providerId || selectedProvider, r.model || currentModel, r.latencyMs)]);
+      } else {
+        setConnStatus('failed');
+        setMessages((prev) => [...prev, failedMessage(selectedProvider, r.error || 'Unknown error', r.needsKey)]);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providersLoaded]);
+
+  const handleSaveSettings = async () => {
     const trimmed = keyInput.trim();
     let targetProv = selectedProvider;
     if (trimmed.startsWith('AIza')) targetProv = 'gemini';
@@ -290,16 +402,40 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     else if (trimmed.startsWith('sk-or-')) targetProv = 'openrouter';
     else if (trimmed.startsWith('sk-ant-')) targetProv = 'anthropic';
 
-    const nextKeys = { ...savedKeys, [targetProv]: trimmed };
+    const targetSpec = providers.find((p) => p.id === targetProv) || DEFAULT_PROVIDERS[0];
+    if (targetSpec.requires_key && !trimmed && !envConfigured[targetProv]) {
+      setTestError(`Please paste your ${providerLabel(targetProv)} API key first.`);
+      return;
+    }
+
+    const nextKeys = { ...savedKeys };
+    if (trimmed) nextKeys[targetProv] = trimmed;
     setSavedKeys(nextKeys);
     setSelectedProvider(targetProv);
     localStorage.setItem(STORAGE_KEYS_MAP, JSON.stringify(nextKeys));
     localStorage.setItem(STORAGE_PROVIDER, targetProv);
-    setKeySavedToast('✓ Saved! Opening chat...');
-    setTimeout(() => {
-      setKeySavedToast(null);
+
+    const targetModel = savedModels[targetProv] || targetSpec.default_model;
+    setTestError(null);
+    setConnStatus('testing');
+    setKeySavedToast('🔄 Testing connection...');
+
+    const r = await runConnectionTest(targetProv, targetModel, trimmed);
+    setKeySavedToast(null);
+    if (r.ok) {
+      setConnStatus('ready');
+      const workingModel = r.model || targetModel;
+      if (workingModel !== targetModel) {
+        const nextModels = { ...savedModels, [targetProv]: workingModel };
+        setSavedModels(nextModels);
+        localStorage.setItem(STORAGE_MODELS_MAP, JSON.stringify(nextModels));
+      }
+      setMessages((prev) => [...prev, readyMessage(r.providerId || targetProv, workingModel, r.latencyMs)]);
       setShowSettings(false);
-    }, 650);
+    } else {
+      setConnStatus('failed');
+      setTestError(r.error || 'Connection test failed.');
+    }
   };
 
   const handleClearKey = () => {
@@ -321,10 +457,13 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     provId: string,
     modelId: string,
     apiKey: string,
-    history: ChatMessage[]
+    history: ChatMessage[],
+    pingMode: boolean = false
   ) => {
     const contextText = `LIVE SCREEN CONTEXT:\n${JSON.stringify(uiContext, null, 2)}`;
-    const fullSystem = `${CLIENT_FALLBACK_SYSTEM_PROMPT}\n\n${contextText}`;
+    const fullSystem = pingMode
+      ? 'You are a connection test. Reply with exactly one word: READY'
+      : `${CLIENT_FALLBACK_SYSTEM_PROMPT}\n\n${contextText}`;
 
     if (provId === 'gemini') {
       if (!apiKey) {
@@ -334,38 +473,92 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
           error: 'Please paste your Google Gemini API key (`AIzaSy...`) in the **🔑 API Key** settings panel!',
         };
       }
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${encodeURIComponent(
-        apiKey
-      )}`;
       const contents = history.slice(-10).map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: fullSystem }] },
-          contents,
-          generationConfig: { temperature: 0.25, maxOutputTokens: 900 },
-        }),
-      });
-      const j = await r.json();
-      if (!r.ok) {
+
+      let activeModel = modelId;
+      const tried = new Set<string>();
+
+      while (activeModel && !tried.has(activeModel)) {
+        tried.add(activeModel);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${encodeURIComponent(
+          apiKey
+        )}`;
+        let r: Response;
+        let j: any;
+        try {
+          r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: fullSystem }] },
+              contents,
+              generationConfig: {
+                temperature: 0.25,
+                maxOutputTokens: 2048,
+                ...(activeModel.includes('flash') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+              },
+            }),
+          });
+          j = await r.json();
+        } catch (fetchErr: any) {
+          return {
+            is_error: true,
+            error: `Failed to connect to Google Gemini: ${fetchErr?.message || 'network error'}`,
+          };
+        }
+
+        if (r.ok) {
+          const reply =
+            j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') || '';
+          if (reply.trim()) {
+            return {
+              is_error: false,
+              provider_name: 'Google Gemini',
+              model: activeModel,
+              reply,
+            };
+          }
+        }
+
+        const errMsg: string = j?.error?.message || '';
+        const errLower = errMsg.toLowerCase();
+
+        // Smart on-the-go fallback:
+        // Extract any suggested model Google returns: e.g. "Please update your code to use models/gemini-3.8-flash"
+        const sugMatch = errMsg.match(/use models\/([a-zA-Z0-9.\-_]+)/i);
+        let nextCandidate: string | undefined = undefined;
+        if (sugMatch && sugMatch[1] && !tried.has(sugMatch[1])) {
+          nextCandidate = sugMatch[1];
+        } else if (r.status === 404 || errLower.includes('no longer available') || errLower.includes('not found')) {
+          const chain = [
+            'gemini-3.8-flash',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-2.5-pro',
+          ];
+          nextCandidate = chain.find((c) => !tried.has(c));
+        }
+
+        if (nextCandidate) {
+          activeModel = nextCandidate;
+          continue;
+        }
+
         return {
           is_error: true,
           needs_api_key: r.status === 400 || r.status === 401 || r.status === 403,
-          error: j?.error?.message || `Gemini API Error (HTTP ${r.status})`,
+          error: errMsg || `Gemini API Error (HTTP ${r.status})`,
         };
       }
-      const reply =
-        j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text || '').join('') ||
-        'No response returned.';
+
       return {
-        is_error: false,
-        provider_name: 'Google Gemini',
-        model: modelId,
-        reply,
+        is_error: true,
+        error: 'All Gemini fallback models were exhausted without a response.',
       };
     }
 

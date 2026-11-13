@@ -87,16 +87,17 @@ _No top-level classes or functions defined._
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `class CalibratedCubeStore` | 59 | In-memory store for the 10-date 40m calibrated linear-power GCOV cube and masks. |
-| `  def __init__(self, h5_path) -> None` | 62 | No docstring. |
-| `  def inspect_location(self, lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 87 | Extract 10-date time series, interval changes, regime classification, and masks at any AOI point. |
-| `def get_cube_store() -> CalibratedCubeStore` | 297 | Lazy-load and cache the calibrated 10-date HDF5 cube in memory. |
-| `def api_health() -> dict[str, Any]` | 306 | Return server readiness, calibrated cube dimensions, and catalog counts. |
-| `def api_catalog() -> dict[str, Any]` | 324 | Return the master Rule 3 & Rule 5 layer catalog (`data/web_tiles/layer_catalog.json`). |
-| `def api_story() -> dict[str, Any]` | 332 | Return the complete Phase 2 + Phase 3 + Phase 4 scientific payload for Story Mode and charts. |
-| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 347 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
-| `def api_echo_providers() -> dict[str, Any]` | 363 | Return all supported AI providers, models, and which keys are pre-configured in `.env`. |
-| `def api_echo_chat(payload) -> dict[str, Any]` | 374 | Answer user questions about the NISAR data and current UI state via Echo AI Helper. |
+| `class CalibratedCubeStore` | 60 | In-memory store for the 10-date 40m calibrated linear-power GCOV cube and masks. |
+| `  def __init__(self, h5_path) -> None` | 63 | No docstring. |
+| `  def inspect_location(self, lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 88 | Extract 10-date time series, interval changes, regime classification, and masks at any AOI point. |
+| `def get_cube_store() -> CalibratedCubeStore` | 298 | Lazy-load and cache the calibrated 10-date HDF5 cube in memory. |
+| `def api_health() -> dict[str, Any]` | 307 | Return server readiness, calibrated cube dimensions, and catalog counts. |
+| `def api_catalog() -> dict[str, Any]` | 325 | Return the master Rule 3 & Rule 5 layer catalog (`data/web_tiles/layer_catalog.json`). |
+| `def api_story() -> dict[str, Any]` | 333 | Return the complete Phase 2 + Phase 3 + Phase 4 scientific payload for Story Mode and charts. |
+| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 348 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
+| `def api_echo_providers() -> dict[str, Any]` | 364 | Return all supported AI providers, models, and which keys are pre-configured in `.env`. |
+| `def api_echo_chat(payload) -> dict[str, Any]` | 375 | Answer user questions about the NISAR data and current UI state via Echo AI Helper. |
+| `def api_echo_test(payload) -> dict[str, Any]` | 394 | Send a tiny 'ping' to the selected provider to verify the API key/model before chatting. |
 
 ## `src/nisar_pipeline/change_detection.py`
 **Summary:** Change Detection, Statistical Noise Threshold Derivation, and Polarization Disagreement Analysis.
@@ -111,16 +112,17 @@ _No top-level classes or functions defined._
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `def _load_dotenv_dict() -> dict[str, str]` | 28 | Read key-value pairs from workspace `.env` without logging values. |
-| `def get_env_configured_providers() -> dict[str, str]` | 211 | Return mapping of provider_id -> masked status for keys present in os.environ or `.env`. |
-| `def resolve_api_key(provider_id, client_api_key) -> str | None` | 224 | Resolve the API key from client request first, falling back to `.env` or environment. |
-| `def detect_provider_from_key(api_key, requested_provider) -> str` | 239 | Auto-correct provider if the user pasted a key with an unmistakable prefix. |
-| `def format_ui_context_block(ui_context) -> str` | 253 | Format the live frontend state into a concise markdown block for the prompt. |
-| `def query_echo_llm(provider=..., model=..., api_key=..., messages=..., ui_context=...) -> dict[str, Any]` | 279 | Send a grounded chat request to the selected LLM provider. |
-| `def _call_gemini(model, api_key, system_prompt, messages) -> dict[str, Any]` | 373 | Call Google Gemini GenerateContent REST API. |
-| `def _call_openai_compatible(provider_id=..., url=..., model=..., api_key=..., system_prompt=..., messages=...) -> dict[str, Any]` | 426 | Call any OpenAI-compatible Chat Completions endpoint (Groq, OpenRouter, OpenAI, DeepSeek, Mistral). |
-| `def _call_anthropic(model, api_key, system_prompt, messages) -> dict[str, Any]` | 488 | Call Anthropic Messages REST API. |
-| `def _call_ollama(model, system_prompt, messages) -> dict[str, Any]` | 534 | Call local Ollama instance on http://127.0.0.1:11434/api/chat. |
+| `def _load_dotenv_dict() -> dict[str, str]` | 29 | Read key-value pairs from workspace `.env` without logging values. |
+| `def get_env_configured_providers() -> dict[str, str]` | 214 | Return mapping of provider_id -> masked status for keys present in os.environ or `.env`. |
+| `def resolve_api_key(provider_id, client_api_key) -> str | None` | 229 | Resolve the API key from client request first, falling back to `.env` or environment. |
+| `def detect_provider_from_key(api_key, requested_provider) -> str` | 244 | Auto-correct provider if the user pasted a key with an unmistakable prefix. |
+| `def format_ui_context_block(ui_context) -> str` | 258 | Format the live frontend state into a concise markdown block for the prompt. |
+| `def query_echo_llm(provider=..., model=..., api_key=..., messages=..., ui_context=..., ping=...) -> dict[str, Any]` | 284 | Send a grounded chat request to the selected LLM provider. |
+| `def _dispatch_provider_call(provider_id=..., model=..., api_key=..., system_prompt=..., messages=...) -> dict[str, Any]` | 386 | Route a chat request to the correct provider-specific REST client. |
+| `def _call_gemini(model, api_key, system_prompt, messages, _tried_models) -> dict[str, Any]` | 419 | Call Google Gemini GenerateContent REST API with automatic on-the-go model fallback. |
+| `def _call_openai_compatible(provider_id=..., url=..., model=..., api_key=..., system_prompt=..., messages=...) -> dict[str, Any]` | 511 | Call any OpenAI-compatible Chat Completions endpoint (Groq, OpenRouter, OpenAI, DeepSeek, Mistral). |
+| `def _call_anthropic(model, api_key, system_prompt, messages) -> dict[str, Any]` | 573 | Call Anthropic Messages REST API. |
+| `def _call_ollama(model, system_prompt, messages) -> dict[str, Any]` | 619 | Call local Ollama instance on OLLAMA_BASE_URL (defaults to http://127.0.0.1:11434). |
 
 ## `src/nisar_pipeline/guards.py`
 **Summary:** Geometry, CRS, and Product Version Consistency Guards (Rules 3, 7, 8).

@@ -414,7 +414,7 @@ def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> No
     if not prov_resp["env_configured_providers"]:
         res = query_echo_llm(
             provider="gemini",
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             api_key="",
             messages=[{"role": "user", "content": "What is displayed on the map?"}],
             ui_context={"map_mode": "single", "active_layer_title": "NISAR Dual-Pol RGB Composite"},
