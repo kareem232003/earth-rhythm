@@ -469,27 +469,35 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
         }),
       });
 
-      let data: any;
-      if (res.status === 404) {
-        // Fallback if backend server hasn't been restarted since adding /api/echo/chat
+      let data: any = null;
+      if (res.ok) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+      }
+      // Fallback if the backend has no /api/echo/chat route (e.g. an older uvicorn process
+      // returns 404/405) or returns anything that is not a valid Echo payload.
+      const isValidEchoPayload =
+        data && (data.is_error === true || (data.is_error === false && typeof data.reply === 'string'));
+      if (!isValidEchoPayload) {
         data = await callProviderDirectlyFromBrowser(
           selectedProvider,
           currentModel,
           activeKey,
           updatedHistory
         );
-      } else {
-        data = await res.json();
       }
 
-      if (data.is_error) {
+      if (!data || data.is_error || typeof data.reply !== 'string') {
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: data.error || `Request failed.`,
+            content: String(data?.error || 'Echo received an empty or invalid response from the AI provider.'),
             isError: true,
-            needsKey: Boolean(data.needs_api_key),
+            needsKey: Boolean(data?.needs_api_key),
           },
         ]);
       } else {
@@ -517,8 +525,8 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
     }
   };
 
-  const renderFormattedContent = (text: string) => {
-    const lines = text.split('\n');
+  const renderFormattedContent = (text: unknown) => {
+    const lines = String(text ?? '').split('\n');
     return lines.map((line, i) => {
       const trimmed = line.trim();
       if (!trimmed) return <div key={i} className="echo-spacer" />;

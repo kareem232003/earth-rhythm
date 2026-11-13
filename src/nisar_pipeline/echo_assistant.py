@@ -318,7 +318,7 @@ def query_echo_llm(
             "provider": provider_id,
             "error": (
                 f"No API key configured for **{prov_spec['name']}**. "
-                "Click the **⚙️ Key Setup** button at the top of Echo's chat window to paste a key "
+                "Click the **🔑 API Key** button at the top of Echo's chat window to paste a key "
                 "(Google Gemini and Groq offer free keys in 10 seconds!), or add it to your `.env` file."
             ),
         }
