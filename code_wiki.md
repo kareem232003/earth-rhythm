@@ -3,8 +3,8 @@
 ## 1. Meta Information
 - **Project Name:** EARTH RHYTHM — NISAR Surface Change Storyteller
 - **Challenge:** NASA Space Apps Challenge 2026 ("Dancing with the SARs")
-- **Version:** 1.4.0
-- **Last Updated:** 2026-11-14T12:02:00+02:00
+- **Version:** 2.0.0
+- **Last Updated:** 2026-11-14T12:45:00+02:00
 
 ## 2. Technical Stack
 - **Data Discovery & Access:** Python 3, `earthaccess` (NASA CMR API), `asf_search` (Alaska Satellite Facility API), `h5py`
@@ -101,9 +101,12 @@ Earth Rhythm AI/
   - Packaged hybrid Docker (`Dockerfile`) and serverless static tensor cloud deployment (`frontend/src/staticBackend.ts`) hosted live on Hugging Face Spaces (`https://huggingface.co/spaces/kareem232003/earth-rhythm`).
 - [x] **Phase 10 (Progressive Disclosure UI Simplification — `Decision D-014`):**
   - Added `uiLabels.ts` and `Disclosure.tsx`, folded header details/map settings into compact popovers, consolidated 7 workbench tabs into 5 (`Story`, `This spot`, `Overview`, `Forecast`, `Help & data`), added collapsible map legend & Forecast metric styling (`styles.css`), keeping all technical names and Rule 2/3/5 labels intact.
+- [x] **Phase 11 (Master Scientific Audit, Spatio-Temporal State-Space Forecaster & Native Forecast COGs — `Decision D-015`):**
+  - Exported 4 native `EPSG:32636` `256x256` tiled Cloud-Optimized GeoTIFFs (`.tif`) in `data/cogs/predictions/` (`49` total COGs) and 4 `EPSG:4326` web overlays (`63` total overlays), fixing the Rule 3 Metadata COG download and `PROVISIONAL CRID P05023` provenance.
+  - Upgraded `scripts/phase5_explainable_prediction.py` and `PredictionPanel.tsx` with EGM2008 geoid-corrected orthometric `NISAR_DEM v1.2` (`-43.0 m MSL` Lake Qarun), 8-connected hydraulically routed `HAND` surge scenarios, Dual Ground-Truth Flood Validation (`OPERA DSWx-HLS` `ROC-AUC = 0.9937`, `Coastal IoU = 0.8820` + Pass 10 SAR holdout), elapsed-time-normalized Speckle-Aware Spatio-Temporal State-Space Forecaster (`HH RMSE = 0.903 dB`, `HV RMSE = 0.857 dB`, beating Persistence, Moving Average, and OLS Trend across all 4 rolling-origin folds), full 7-class confusion matrices, populated 6-ROI forecasts with Sentinel-2 NDVI context, and 5 mandatory audit/validation markdown reports.
 
 ### In-Progress
-- None (`v1.4.0` complete).
+- None (`v2.0.0` complete).
 
 ### Backlog
 - Multi-interferogram `L2_GUNW` SBAS velocity stacking once >= 20–30 passes accumulate over Fayoum Oasis.

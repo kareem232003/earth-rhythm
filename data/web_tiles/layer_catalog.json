@@ -61,8 +61,8 @@
     "2026-10-09",
     "2026-10-21"
   ],
-  "overlay_count": 61,
-  "cog_count": 45,
+  "overlay_count": 63,
+  "cog_count": 49,
   "overlays": [
     {
       "png_path": "F:\\Projects\\Python\\GitHub\\Earth Rhythm AI\\data\\web_tiles\\overlays\\gcov_dates\\gcov_20260623_HH_dB.png",
@@ -5243,9 +5243,9 @@
     {
       "layer_id": "pred_flood_risk_20261102",
       "group": "geophysical_masks",
-      "title": "\ud83d\udd2e Forecast: Flood & Shoreline Inundation Risk (2026-11-02, +12d)",
+      "title": "\ud83d\udd2e Forecast: Flood & Shoreline Inundation Susceptibility (2026-11-02, +12d)",
       "url": "/tiles/overlays/predictions/pred_flood_risk_20261102.png",
-      "cog_url": "/tiles/overlays/predictions/pred_flood_risk_20261102.png",
+      "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_flood_risk_tier_40m.tif",
       "date": "2026-11-02",
       "polarization": "HH+HV+GUNW",
       "wgs84_bounds": [
@@ -5274,24 +5274,25 @@
       ],
       "width": 2089,
       "height": 1464,
-      "size_kb": 154.1,
-      "sha256": "512596428d601fafbc5158be7180f61dc5d41d74c9530342d17ef3a7b65a9b49",
+      "size_kb": 158.2,
+      "sha256": "c6c10f02a085735ed9e454669874dbb1e62e3f68e36039fed1efd279bbfd60e5",
       "rule3_metadata": {
-        "satellite": "NISAR (L-band 24cm SAR)",
-        "product_type": "L2_GCOV + L2_GUNW Explainable Forecast",
-        "product_version": "CRID R00500 -> +12d Forecast (2026-11-02)",
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "L2_GCOV + L2_GUNW Explainable Susceptibility Forecast",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3) -> +12d Forecast (2026-11-02)",
         "acquisition_date": "2026-11-02 (Forecast from 10 passes)",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
         "polarization": "HH + HV + GUNW Coherence",
-        "units": "Inundation Risk Tier (0-4)",
+        "units": "categorical mask (uint8)",
         "crs": "EPSG:4326 (from EPSG:32636)",
-        "source": "Phase 5 Explainable SAR+InSAR Flood Predictor (Backtested on 2026-10-21)",
-        "epistemic_tag": "INTERPRETATION (hypothesis)"
+        "source": "Phase 5 Explainable SAR+InSAR Flood Susceptibility Model (Validated vs Pass 10 & OPERA DSWx-HLS)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)",
+        "scientific_tier": "MODEL FORECAST"
       },
       "legend": {
         "type": "categorical",
-        "unit": "Flood Risk Tier (2026-11-02)",
+        "unit": "Flood Susceptibility Tier (2026-11-02)",
         "classes": [
           {
             "code": 1,
@@ -5301,7 +5302,7 @@
           {
             "code": 2,
             "color": "#f97316",
-            "label": "High Flood Risk Margin (40\u201375% prob)"
+            "label": "High Susceptibility Margin (40\u201375% prob)"
           },
           {
             "code": 3,
@@ -5321,7 +5322,7 @@
       "group": "geophysical_masks",
       "title": "\ud83c\udf3e Forecast: Next-Pass Crop & Moisture Regime (2026-11-02, +12d)",
       "url": "/tiles/overlays/predictions/pred_crop_regime_20261102.png",
-      "cog_url": "/tiles/overlays/predictions/pred_crop_regime_20261102.png",
+      "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_crop_regime_40m.tif",
       "date": "2026-11-02",
       "polarization": "HH+HV",
       "wgs84_bounds": [
@@ -5350,20 +5351,21 @@
       ],
       "width": 2089,
       "height": 1464,
-      "size_kb": 594.9,
-      "sha256": "6897c1a982958356447b40125c1bd7d5c27f33154b24e83e93fdc5ad479a2774",
+      "size_kb": 395.0,
+      "sha256": "380dcb92406f79d07fd9726e6f2ce1d91d2c55f39862daa42baeb06bfbd038d2",
       "rule3_metadata": {
-        "satellite": "NISAR (L-band 24cm SAR)",
-        "product_type": "L2_GCOV Next-Pass Regime Forecast",
-        "product_version": "CRID R00500 -> +12d Forecast (2026-11-02)",
-        "acquisition_date": "2026-10-21 -> 2026-11-02 (+12d Forecast)",
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "L2_GCOV Next-Pass Dual-Pol Regime Forecast",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3) -> +12d Forecast (2026-11-02)",
+        "acquisition_date": "2026-09-15 -> 2026-11-02 (+12d Forecast)",
         "track_frame": "Track 129 / Frame 016",
         "orbit_direction": "Ascending",
         "polarization": "Dual-Pol HH & HV",
-        "units": "Predicted Change Regime (0-6)",
+        "units": "categorical mask (uint8)",
         "crs": "EPSG:4326 (from EPSG:32636)",
-        "source": "Phase 5 Damped Trend Backscatter Forecaster (Backtested on 2026-10-21)",
-        "epistemic_tag": "INTERPRETATION (hypothesis)"
+        "source": "Phase 5 Speckle-Aware Spatio-Temporal State-Space Forecaster (Backtested on 2026-10-21)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)",
+        "scientific_tier": "MODEL FORECAST"
       },
       "legend": {
         "type": "categorical",
@@ -5391,13 +5393,163 @@
           },
           {
             "code": 5,
-            "color": "#06b6d4",
-            "label": "Flooded Vegetation (+HH, -HV)"
+            "color": "#ef4444",
+            "label": "Flooded Vegetation / Disagreement I (+HH, -HV)"
           },
           {
             "code": 6,
-            "color": "#ef4444",
-            "label": "Specular Inundation (-HH, +HV)"
+            "color": "#06b6d4",
+            "label": "Specular Inundation / Disagreement II (-HH, +HV)"
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "pred_hh_db_20261102",
+      "group": "geophysical_masks",
+      "title": "\ud83d\udce1 Forecast: Next-Pass HH Backscatter \u03b3\u2070 dB (2026-11-02, +12d)",
+      "url": "/tiles/overlays/predictions/pred_hh_db_20261102.png",
+      "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_HH_gamma0_dB_40m.tif",
+      "date": "2026-11-02",
+      "polarization": "HH",
+      "wgs84_bounds": [
+        30.287397,
+        29.03672,
+        31.110058,
+        29.613253
+      ],
+      "maplibre_coordinates": [
+        [
+          30.287397,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.03672
+        ],
+        [
+          30.287397,
+          29.03672
+        ]
+      ],
+      "width": 2089,
+      "height": 1464,
+      "size_kb": 4727.0,
+      "sha256": "70ee9ecc723f1358274c41f888142a8c98b08dece19d2d2894bd6af0d483bc39",
+      "rule3_metadata": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "L2_GCOV Next-Pass Forecast Backscatter (HH)",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3) -> +12d Forecast (2026-11-02)",
+        "acquisition_date": "2026-11-02 (+12d Forecast from 10 passes)",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:4326 (from EPSG:32636)",
+        "source": "Phase 5 Speckle-Aware Spatio-Temporal State-Space Forecaster (HH RMSE=0.905 dB on Pass 10)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)",
+        "scientific_tier": "MODEL FORECAST"
+      },
+      "legend": {
+        "type": "continuous",
+        "colormap": "viridis",
+        "min": -24.0,
+        "max": 0.0,
+        "unit": "dB (Forecast HH gamma0)",
+        "stops": [
+          {
+            "value": -24.0,
+            "color": "#440154",
+            "label": "-24 dB (Water / Smooth Sand)"
+          },
+          {
+            "value": -12.0,
+            "color": "#21918c",
+            "label": "-12 dB (Moderately Rough / Cropland)"
+          },
+          {
+            "value": 0.0,
+            "color": "#fde725",
+            "label": "0 dB (Urban / Strong Dihedral)"
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "pred_hv_db_20261102",
+      "group": "geophysical_masks",
+      "title": "\ud83c\udf3f Forecast: Next-Pass HV Backscatter \u03b3\u2070 dB (2026-11-02, +12d)",
+      "url": "/tiles/overlays/predictions/pred_hv_db_20261102.png",
+      "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_HV_gamma0_dB_40m.tif",
+      "date": "2026-11-02",
+      "polarization": "HV",
+      "wgs84_bounds": [
+        30.287397,
+        29.03672,
+        31.110058,
+        29.613253
+      ],
+      "maplibre_coordinates": [
+        [
+          30.287397,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.03672
+        ],
+        [
+          30.287397,
+          29.03672
+        ]
+      ],
+      "width": 2089,
+      "height": 1464,
+      "size_kb": 4194.8,
+      "sha256": "6c08dd88a3aa45a20884bc269e0b2fd86acd0ac6c5064000799029b4d4fb075d",
+      "rule3_metadata": {
+        "satellite": "NISAR (NASA-ISRO SAR, L-Band 24 cm)",
+        "product_type": "L2_GCOV Next-Pass Forecast Backscatter (HV)",
+        "product_version": "PROVISIONAL CRID P05023 / Ver 1.0.11 (PGE R05.02.3) -> +12d Forecast (2026-11-02)",
+        "acquisition_date": "2026-11-02 (+12d Forecast from 10 passes)",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HV",
+        "units": "dB (10*log10 gamma0)",
+        "crs": "EPSG:4326 (from EPSG:32636)",
+        "source": "Phase 5 Speckle-Aware Spatio-Temporal State-Space Forecaster (HV RMSE=0.865 dB on Pass 10)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)",
+        "scientific_tier": "MODEL FORECAST"
+      },
+      "legend": {
+        "type": "continuous",
+        "colormap": "viridis",
+        "min": -30.0,
+        "max": -8.0,
+        "unit": "dB (Forecast HV gamma0)",
+        "stops": [
+          {
+            "value": -30.0,
+            "color": "#440154",
+            "label": "-30 dB (Smooth Surface / No Depolarization)"
+          },
+          {
+            "value": -19.0,
+            "color": "#21918c",
+            "label": "-19 dB (Moderate Vegetation Volume)"
+          },
+          {
+            "value": -8.0,
+            "color": "#fde725",
+            "label": "-8 dB (Dense Crop Canopy)"
           }
         ]
       }

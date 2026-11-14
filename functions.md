@@ -99,16 +99,25 @@
 | `def main() -> None` | 47 | No docstring. |
 
 ## `scripts/phase5_explainable_prediction.py`
-**Summary:** Phase 5: Explainable Next-Pass (+12 Day) Flood Inundation & Crop Backscatter Prediction.
+**Summary:** Phase 5: Explainable Next-Pass (+12 Day) Flood Susceptibility & Crop Backscatter Forecasting Engine.
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `def linear_to_db(arr) -> np.ndarray` | 56 | No docstring. |
-| `def sigmoid(x) -> np.ndarray` | 60 | No docstring. |
-| `def compute_roc_auc_exact(y_true, y_score) -> float` | 64 | Compute exact Mann-Whitney U / Wilcoxon rank-sum ROC-AUC without external sklearn dependency. |
-| `def forecast_backscatter_cube(hh_db_seq, hv_db_seq, damping) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]` | 80 | Forecast next 12-day pass (T+1) HH and HV (in dB) + 1-sigma uncertainty using damped local trend + EMA. |
-| `def compute_explainable_inundation_model(hh_db_seq, hv_db_seq, coherence_stack, dist_to_water_m, nisar_dem) -> dict[str, Any]` | 126 | Compute explainable flood/inundation probability (0..1) from 4 physical NASA SAR + DEM features. |
-| `def main() -> None` | 194 | No docstring. |
+| `def linear_to_db(arr) -> np.ndarray` | 87 | Convert positive linear gamma0 to dB safely. |
+| `def sigmoid(x) -> np.ndarray` | 92 | Numerically stable logistic function. |
+| `def compute_elapsed_days(date_strs) -> np.ndarray` | 97 | Compute exact elapsed days between consecutive acquisition dates (accounts for 24-day gap Jul 17 -> Aug 10). |
+| `def compute_roc_auc_exact(y_true, y_score) -> float` | 106 | Compute exact Mann-Whitney U / Wilcoxon rank-sum ROC-AUC without external sklearn dependency. |
+| `def compute_reliability_curve(y_true, y_prob, n_bins) -> dict[str, Any]` | 122 | Compute 10-bin probability calibration curve and Expected Calibration Error (ECE). |
+| `def _extract_ssm_state_components(seq_slice, dt_slice) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]` | 162 | Extract the 4 physical spatio-temporal state components at the end of `seq_slice` (length >= 3). |
+| `def _forecast_single_pol_adaptive_ssm(seq_db, dt_days, tau_db, horizon_days) -> tuple[np.ndarray, np.ndarray, np.ndarray]` | 187 | Speckle-Aware Spatio-Temporal State-Space Forecaster for a single polarization cube (T, H, W). |
+| `def forecast_backscatter_cube(hh_db_seq, hv_db_seq, dt_days, horizon_days) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]` | 251 | Forecast next pass (T+1) HH and HV (in dB), 1-sigma uncertainties, and composite confidence (0..1). |
+| `def forecast_baselines_cube(seq_db, dt_days, horizon_days) -> dict[str, np.ndarray]` | 270 | Compute standard forecasting baselines (Persistence, 3-Pass Moving Average, Elapsed-Time Linear OLS Trend). |
+| `def compute_regression_metrics(pred, actual, veg_mask, sigma) -> dict[str, float]` | 295 | Compute R^2, RMSE, MAE, Bias, and 1-sigma uncertainty across Full AOI and Cropland. |
+| `def compute_multiclass_regime_metrics(pred_cls, true_cls, eval_mask) -> dict[str, Any]` | 340 | Compute 7-class Overall Accuracy, Macro F1, Weighted F1, Balanced Accuracy, Per-Class metrics, and 7x7 Confusion Matrix. |
+| `def compute_explainable_inundation_model(hh_db_seq, hv_db_seq, coherence_stack, dist_to_water_m, dem_msl_m, low_snr_sand_mask, dt_days) -> dict[str, Any]` | 412 | Compute explainable flood & shoreline inundation susceptibility (0..1) from 4 physical NASA SAR + DEM features. |
+| `def evaluate_binary_flood_predictions(prob, truth_mask, eval_mask, threshold, include_calibration) -> dict[str, Any]` | 512 | Compute ROC-AUC, IoU, F1, Precision, Recall, Brier Score, 2x2 Confusion Matrix, and optional Calibration Curve. |
+| `def _write_temp_tagged_geotiff(out_path, arr, transform, crs, nodata, rule3_tags) -> None` | 563 | Write a temporary EPSG:32636 GeoTIFF with all Rule 3 tags so convert_geotiff_to_cog can build a verified COG. |
+| `def main() -> None` | 590 | No docstring. |
 
 ## `src/nisar_pipeline/__init__.py`
 **Summary:** NISAR Surface Change Storyteller — Core Scientific Processing Package.
@@ -228,6 +237,6 @@ _No top-level classes or functions defined._
 | `def test_invariant_6_gunw_phase_to_los_conversion_and_coherence_mask() -> None` | 251 | Invariant 6: GUNW phase-to-LOS matches -(lambda / 4*pi) * dphi and masks gamma < 0.50. |
 | `def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata() -> None` | 297 | Invariant 7: Every exported layer in layer_catalog.json and data/cogs/ has all Rule 3 & Rule 5 fields. |
 | `def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None` | 349 | Invariant 8: Dual-pol regime classification sums to 100% of valid pixels & API validates bounds. |
-| `def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None` | 409 | Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates. |
-| `def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants() -> None` | 435 | Invariant 10: Upgraded pure-SAR classifier preserves coherent islands and passes NASA benchmarks. |
-| `def test_invariant_11_phase5_explainable_prediction_sanity_bounds() -> None` | 490 | Invariant 11: Phase 5 explainable flood & next-pass crop forecast meets QA sanity bounds. |
+| `def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None` | 410 | Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates. |
+| `def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants() -> None` | 436 | Invariant 10: Upgraded pure-SAR classifier preserves coherent islands and passes NASA benchmarks. |
+| `def test_invariant_11_phase5_explainable_prediction_sanity_bounds() -> None` | 491 | Invariant 11: Phase 5 explainable flood & next-pass crop forecast meets QA sanity bounds. |

@@ -215,10 +215,10 @@ And view **5 types of change layers**:
 
 ---
 
-### B. Understanding the Right-Hand Workbench (The 4 Tabs)
+### B. Understanding the Right-Hand Workbench (The 5 Top-Level Tabs)
 
-#### Tab 1: `Story Mode (6)` — Your Guided Tour for Judges
-Contains **6 numbered buttons (`1` through `6`)**. Clicking each button flies the map camera to a specific discovery site (`ROI_01` to `ROI_06`), switches the map to the exact layer that proves the point, updates the time-series chart, and shows three color-coded **Rule 5 Epistemic Cards**:
+#### Tab 1: `Story` — Your 6-Chapter Guided Tour for Judges
+Contains **6 numbered chapter buttons (`1` through `6`)**. Clicking each button flies the map camera to a specific discovery site (`ROI_01` to `ROI_06`), switches the map to the exact layer that proves the point, updates the time-series chart, and shows a plain-language summary card plus three expandable **Rule 5 Epistemic Cards**:
 - **Blue Card (`OBSERVATION`):** Pure radar measurement facts (e.g., *"HV increased by +4.04 dB between June 23 and August 10"*).
 - **Purple Card (`CHANGE DETECTION`):** How that change compares to our desert statistical thresholds ($\tau_{\text{HH}} = 2.73\text{ dB}, \tau_{\text{HV}} = 2.03\text{ dB}$).
 - **Amber/Green Card (`INTERPRETATION (hypothesis)`):** The physical radar scattering explanation AND **what we explicitly refuse to overclaim** (*"What We Cannot Conclude"*).
@@ -232,17 +232,26 @@ Contains **6 numbered buttons (`1` through `6`)**. Clicking each button flies th
 - **Red Dashed Horizontal Line at `-24.5 dB`:** The **`NESZ` Thermal Noise Floor** (anything touching this red line is as dark as the radar can measure).
 - **Gold Dashed Line + Right Y-Axis (`+ Sentinel-2 NDVI` button):** Independent optical greenness (`NDVI` from `0.0` to `1.0`) from the European **Copernicus Sentinel-2 L2A** satellite, explicitly badged as external context (**Rule 2**). Over `ROI_01`, watch how the green `HV` radar line and the gold `Sentinel-2 NDVI` line climb and fall together ($r = 0.93$)!
 
-#### Tab 2: `Pixel Inspector` — Live On-The-Fly Query
+#### Tab 2: `This spot` (Live Pixel Inspector) — Live On-The-Fly Query
 - Click **anywhere on the map** (any farm field, Lake Qarun, Fayoum City, or the desert).
-- In **26 milliseconds**, the FastAPI backend slices the calibrated 10-date linear-power HDF5 cube at that exact coordinate, computes the 10-date `HH` and `HV` series, tells you which land-cover mask the pixel belongs to, and classifies its seasonal regime!
+- In **26 milliseconds**, the FastAPI backend (or static 3x tensor fallback on cloud) slices the calibrated 10-date linear-power HDF5 cube at that exact coordinate, computes the 10-date `HH` and `HV` series, tells you which land-cover mask the pixel belongs to, and classifies its seasonal regime!
 - You can even change the **Patch Window Size** (`1×1 = 40m`, `3×3 = 120m`, `5×5 = 200m`, `7×7 = 280m`) to see how spatial averaging affects the signal.
 
-#### Tab 3: `Rule 3 Metadata & Download`
-- Every single layer in the app displays all **11 mandatory Rule 3 provenance fields** (Satellite, Product Type, Version `CRID P05023`, Acquisition Date, Track `129` / Frame `016`, Ascending Orbit, Polarization, Units, CRS `EPSG:32636`, Source Granule ID, and Epistemic Tag).
-- Includes a **`Download Cloud-Optimized GeoTIFF (.tif)`** button so a scientist or judge can download the actual calibrated `EPSG:32636` raster directly into QGIS or Python!
+#### Tab 3: `Overview` (Basin Dashboards)
+- Interactive 5-section basin dashboard (`Season at a glance`, `Change breakdown`, `Landscape types`, `Rain & optical`, `Can we trust it?`) summarizing all `3,070,080` pixels (`4,912.13 km²`) and `1,208,974` agricultural pixels (`1,934.36 km²`).
 
-#### Tab 4: `Methods, Limits & Future NISAR Apps`
-- Shows our **Multi-Stage `ENL` Verification Table**, **External Context (`NASA POWER` showing `0.15 mm` total rain over 4 months)**, **4 Explicit Study Limitations (`Rule 6`)**, and **4 Future Operational NISAR Applications** (Canal Irrigation Auditing, Dual-Pol Crop Phenology Tracking, Multi-Pass InSAR Subsidence Stacking, and Desert Sand-Encroachment Monitoring).
+#### Tab 4: `Forecast` (Phase 5 Explainable Flood & Next-Pass `2026-11-02` Predictor)
+- **4 Interactive Forecast Map Layers:** `Flood Susceptibility Map (Nov 02)`, `7-Class Crop & Moisture Map (Nov 02)`, `Forecast HH Backscatter γ⁰ (dB)`, and `Forecast HV Backscatter γ⁰ (dB)`, plus direct download cards for the 4 native `EPSG:32636` Cloud-Optimized GeoTIFFs (`.tif`).
+- **Engine 1 — Hydraulically Connected Flood Susceptibility & Surge Simulator:** Combines 4 normalized `[0, 1]` physical drivers (`38%` HH Dielectric Water Index, `24%` 9-pair `L2_GUNW` Phase Instability, `22%` Multi-Pass Wetting Trend, `16%` EGM2008 geoid-corrected orthometric `NISAR_DEM` Basin/Shoreline Proximity) with 8-connected hydraulic path continuity for `+0.0 m` (`MODEL FORECAST`: `17,927.0 ha` at risk), `+0.5 m` (`HYPOTHETICAL SCENARIO`: `2,585.4 ha` connected overtop, `19,180.0 ha` total risk), and `+1.0 m` (`HYPOTHETICAL SCENARIO`: `3,255.0 ha` connected overtop, `20,210.7 ha` total risk).
+- **Dual Ground-Truth Flood Validation:**
+  - **Track B (Independent NASA OPERA DSWx-HLS v1.0 & NISAR_WATERMASK v0.5.0):** `ROC-AUC = 99.37%` (Full AOI), `Coastal 1.5 km IoU = 88.20%` (`F1 = 0.9373`), `Full AOI IoU = 79.03%`, `Brier = 0.0125`, and 10-bin `ECE = 0.0120`.
+  - **Track A (Pass 10 SAR Holdout Self-Consistency):** `ROC-AUC = 99.98%` (Full AOI) / `99.76%` (`1.5 km` coastal buffer) / `99.57%` (non-permanent shoreline margin), `Coastal IoU = 87.51%`, `Dynamic Margin IoU = 66.29%`.
+- **Engine 2 — Speckle-Aware Spatio-Temporal State-Space Forecaster:** Normalizes by actual elapsed days ($\Delta t = 24\text{ d}$ across `Jul 17 -> Aug 10`, $12\text{ d}$ elsewhere) and beats Persistence, 3-Pass Moving Average, and Linear OLS Trend across all 4 rolling-origin temporal CV folds (`Passes 7, 8, 9, 10`), achieving **`HH RMSE = 0.903 dB` (`R² = 0.9646`)** and **`HV RMSE = 0.857 dB` (`R² = 0.9181`)** on Held-Out Pass 10 (`2026-10-21`), **`80.38%` Cropland** (`90.89%` Full AOI) 7-class accuracy, and interactive 10-pass + Pass 11 (`±95% CI`) trajectories for all **6 focal Story ROIs**.
+
+#### Tab 5: `Help & data` (`How to read the app`, `Layer data sheet / Rule 3`, & `Methods & limits`)
+- **`How to read the app` (Guide & Glossary):** 3-minute reading path, Rule 5 label guide, colour cheat sheet, and searchable glossary.
+- **`Layer data sheet (Rule 3)`:** Displays all **11 mandatory Rule 3 provenance fields** (Satellite, Product Type, Version `PROVISIONAL CRID P05023`, Acquisition Date, Track `129` / Frame `016`, Ascending Orbit, Polarization, Units, CRS `EPSG:32636`, Source Granule ID, and Epistemic Tag) + **`Download Native COG (.tif)`** (`49` total COGs).
+- **`Methods & limits`:** Multi-Stage `ENL` Verification Table, `NASA POWER` (`0.15 mm` rain), Live Option 1 & Option 2 Water Benchmark Card (`IoU = 0.9243` vs. `OPERA DSWx-HLS`, cutting El-Qarn Island false water from `100.00% -> 0.80%`), Explicit Study Limitations (`Rule 6`), and 4 Future Operational NISAR Applications.
 
 ---
 

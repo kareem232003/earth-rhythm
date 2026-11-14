@@ -59,15 +59,21 @@ Built an integrated context-aware AI assistant ([src/nisar_pipeline/echo_assista
 - Live model discovery (`/api/echo/models`) and automatic on-the-go fallback cascades (e.g., handling deprecated Gemini 2.5 Flash -> Gemini 3.8/2.5/2.0 candidates automatically).
 - Explicit non-fabrication guard (`is_error: true`, `needs_api_key: true`) when no valid API key is supplied.
 
-### D. Phase 5 Explainable Flood & Next-Pass (`2026-11-02`) Forecaster (`D-013`)
+### D. Phase 5 Explainable Flood & Next-Pass (`2026-11-02`) Forecaster (`D-013` & `D-015` Scientific Audit)
 Implemented in [scripts/phase5_explainable_prediction.py](scripts/phase5_explainable_prediction.py), served via `/api/prediction`, and visualized in the **Forecast** tab ([frontend/src/components/PredictionPanel.tsx](frontend/src/components/PredictionPanel.tsx)):
-- **Temporal Holdout Backtest (`Passes 1..9: 2026-06-23..2026-10-09` → Held-Out `Pass 10: 2026-10-21`, `N = 3,070,080` px, `SEED = 42`):**
-  - **Flood & Shoreline Susceptibility:** 4-driver physical model (HH dielectric water index, `L2_GUNW` 12-day decorrelation, multi-pass wetting variability, and `NISAR_DEM` basin/shoreline proximity) yielding `ROC-AUC = 0.9998` (full AOI) / `0.9976` (`1.5 km` shoreline buffer), `IoU = 0.8871` (shoreline) / `0.8044` (full AOI), `F1 = 0.8916`, and `Brier Score = 0.01241` against the Pass 10 SAR water mask.
-  - **Backscatter & 7-Class Regime Forecast:** Damped trend state-space forecaster achieving `HH RMSE = 1.030 dB` (`R² = 0.9539`), `HV RMSE = 0.952 dB` (`R² = 0.8989`), and `89.37%` AOI / `78.12%` cropland 7-class regime accuracy.
-- **Forward Forecast (`Pass 11: 2026-11-02`, `+12 Days`):** Generates `pred_flood_risk_20261102` and `pred_crop_regime_20261102` web overlays (bringing the catalog to **`61` overlays**), cropland regime area breakdown, and interactive `NISAR_DEM` `HAND`-based drainage surge scenarios (`+0.0 m`: `15,434.4 ha`, `+0.5 m`: `21,668.6 ha`, `+1.0 m`: `24,815.2 ha` at risk).
+- **Dual Ground-Truth Flood Validation (`Passes 1..9: 2026-06-23..2026-10-09` → Held-Out `Pass 10: 2026-10-21`, `SEED = 42`):**
+  - **Track B (Independent Multi-Sensor Optical Validation vs. `NASA JPL OPERA_L3_DSWX-HLS_V1` & `NISAR_WATERMASK v0.5.0`):** `ROC-AUC = 0.9937` (Full AOI, `N = 3,063,660` px) / `0.9911` (`1.5 km` coastal buffer), **`Coastal IoU = 0.8820`** (`F1 = 0.9373`), **`Full AOI IoU = 0.7903`** (`F1 = 0.8828`, `Precision = 81.74%`, `Recall = 95.97%`), `Brier Score = 0.01251`, and 10-bin `ECE = 0.01200`.
+  - **Track A (Pass 10 SAR Holdout Self-Consistency):** `ROC-AUC = 0.9998` (Full AOI) / `0.9976` (`1.5 km` coastal buffer) / `0.9957` (non-permanent shoreline margin), `Coastal IoU = 0.8751` (`F1 = 0.9334`), `Full AOI IoU = 0.7936` (`F1 = 0.8849`), `Dynamic Margin IoU = 0.6629`, and `Brier Score = 0.01167`.
+- **Speckle-Aware Spatio-Temporal State-Space Forecaster & 7-Class Regime Validation:**
+  - Normalizes all velocities by actual elapsed days ($\Delta t = 24\text{ d}$ between `2026-07-17` and `2026-08-10`; $12\text{ d}$ elsewhere) and beats Persistence, 3-Pass Moving Average, and Linear OLS Trend across all 4 rolling-origin temporal CV folds (`Passes 7, 8, 9, 10`).
+  - Held-Out Pass 10 (`2026-10-21`): **`HH RMSE = 0.903 dB`** (`MAE = 0.606 dB`, `R² = 0.9646`, Cropland `RMSE = 1.222 dB`; vs. Persistence `0.964 dB`) and **`HV RMSE = 0.857 dB`** (`MAE = 0.539 dB`, `R² = 0.9181`, Cropland `RMSE = 1.269 dB`; vs. Persistence `0.902 dB`).
+  - **7-Class Dual-Pol Regime Accuracy:** **`90.89%` Full AOI OA** (`Weighted F1 = 0.9007`, `Macro F1 = 0.4833`), **`80.38%` Cropland 48-Day OA** (`Weighted F1 = 0.7945`, `Macro F1 = 0.4786`, `Balanced Accuracy = 43.54%`), and **`86.53%` Cropland 12-Day Single-Step OA**.
+- **Forward Forecast (`Pass 11: 2026-11-02`, `+12 Days`) & Native COGs:**
+  - Exports **4 native `EPSG:32636` Cloud-Optimized GeoTIFFs (`.tif`)** in `data/cogs/predictions/` (`49` total COGs) and **4 `EPSG:4326` RGBA web overlays** (`pred_flood_risk_20261102`, `pred_crop_regime_20261102`, `pred_hh_db_20261102`, `pred_hv_db_20261102`, bringing the catalog to **`63` overlays**).
+  - Enforces **8-connected hydraulic path continuity** over EGM2008 geoid-corrected orthometric `NISAR_DEM v1.2` (`Lake Qarun = -43.0 m MSL`) for drainage surge scenarios (`+0.0 m MODEL FORECAST`: `17,927.0 ha` at risk; `+0.5 m HYPOTHETICAL SCENARIO`: `2,585.4 ha` connected overtop, `19,180.0 ha` total risk, `215.0 ha` cropland; `+1.0 m HYPOTHETICAL SCENARIO`: `3,255.0 ha` connected overtop, `20,210.7 ha` total risk, `591.2 ha` cropland), plus populated 10-pass + Pass 11 (`±95% CI`) trajectories and Sentinel-2 NDVI context for all **6 focal Story ROIs**.
 
 ### E. Hybrid FastAPI + Serverless Static Cloud Hosting (`D-013`)
-- **Containerized Full-Stack Server ([Dockerfile](Dockerfile)):** Runs Uvicorn + FastAPI on port `7860` (`python:3.14-slim`) serving the compiled React SPA, full-resolution `40 m` HDF5 cube inspection, `45` COGs, `61` overlays, and Echo AI endpoints.
+- **Containerized Full-Stack Server ([Dockerfile](Dockerfile)):** Runs Uvicorn + FastAPI on port `7860` (`python:3.14-slim`) serving the compiled React SPA, full-resolution `40 m` HDF5 cube inspection, `49` COGs, `63` overlays, and Echo AI endpoints.
 - **Serverless Static Fallback ([frontend/src/staticBackend.ts](frontend/src/staticBackend.ts)):** Automatically falls back to `frontend/public/static_api/` JSON manifests and a compact `3x` binary cube (`cube_3x.bin`) when deployed without a Python backend (live demo on Hugging Face Spaces: `https://huggingface.co/spaces/kareem232003/earth-rhythm`).
 
 ---
@@ -86,14 +92,14 @@ npm --prefix frontend run build
 ```
 Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser. The FastAPI server exposes:
 - **`GET /`** — Compiled React + TypeScript + MapLibre GL JS Observatory (`frontend/dist/`)
-- **`GET /api/health`** — Server readiness, loaded `10 x 1560 x 1968` calibrated linear-power cube, and catalog counts (`45` COGs, `61` overlays)
+- **`GET /api/health`** — Server readiness, loaded `10 x 1560 x 1968` calibrated linear-power cube, and catalog counts (`49` COGs, `63` overlays)
 - **`GET /api/catalog`** — Master **Rule 3 & Rule 5** layer catalog ([data/web_tiles/layer_catalog.json](data/web_tiles/layer_catalog.json))
 - **`GET /api/story`** — Complete Phase 2 + Phase 3 + Phase 4 scientific report payload
 - **`GET /api/benchmark`** — Live Option 1 & Option 2 benchmark comparison JSON ([data/processed/sar_water_benchmark_report.json](data/processed/sar_water_benchmark_report.json)) rendered in **Help & data → Methods & limits**
 - **`GET /api/prediction`** — Phase 5 explainable flood & next-pass (`2026-11-02`) forecast and Pass 10 backtest JSON ([data/processed/phase5_prediction_report.json](data/processed/phase5_prediction_report.json)) rendered in the **Forecast** tab
 - **`GET /api/inspect?lon=30.9806&lat=29.3201&window_px=5`** — Real-time on-the-fly 10-date pixel/patch inspector (`~26 ms`)
 - **`GET /api/echo/providers` & `POST /api/echo/{models,test,chat}`** — Echo AI provider discovery, connectivity ping, and context-grounded Q&A
-- **`GET /tiles/overlays/...`** & **`GET /cogs/...`** — `61` `EPSG:4326` RGBA PNG map overlays & `45` Cloud-Optimized GeoTIFFs (`EPSG:32636`)
+- **`GET /tiles/overlays/...`** & **`GET /cogs/...`** — `63` `EPSG:4326` RGBA PNG map overlays & `49` Cloud-Optimized GeoTIFFs (`EPSG:32636`)
 
 ### 2. Re-run Benchmarks, Phase 5 Forecasts & Automated Scientific Invariant Tests (`pytest`)
 ```powershell
@@ -196,11 +202,11 @@ Earth Rhythm AI/
 ### What Works & Is Verified
 - **100% Real Calibrated NISAR Production Map:** All `10 L2_GCOV` passes and all `9 L2_GUNW` coherence arrays are real `PROVISIONAL CRID P05023` NISAR observations over Fayoum Oasis; external datasets remain strictly separated under **Rule 2**.
 - **Strict Linear-Power Radiometry (`Rule 4`):** All `10 m -> 40 m` multilooking and `3x3` Adaptive Lee filtering occur strictly in linear `gamma0` (`m²/m²`), increasing `ENL` from `4.90` (`10 m`) -> `41.15–45.14` (`40 m`) -> `152.74–481.20` (`40 m` Lee) with `< 0.08%` mean power drift.
-- **Full Rule 3, Rule 5 & QA Provenance:** All `61` overlays, `45` downloadable COGs, Phase 5 prediction report, and quantitative benchmarks pass all **11** automated tests in `pytest -v tests/test_nisar_invariants.py`.
+- **Full Rule 3, Rule 5 & QA Provenance:** All `63` overlays, `49` downloadable COGs, Phase 5 prediction report, and quantitative benchmarks pass all **11** automated tests in `pytest -v tests/test_nisar_invariants.py`. See also [`SCIENTIFIC_AUDIT_REPORT.md`](SCIENTIFIC_AUDIT_REPORT.md), [`MODEL_VALIDATION_REPORT.md`](MODEL_VALIDATION_REPORT.md), [`DATA_PROVENANCE.md`](DATA_PROVENANCE.md), [`MODEL_LIMITATIONS.md`](MODEL_LIMITATIONS.md), and [`CHANGELOG.md`](CHANGELOG.md).
 
 ### Explicit Limitations & What We Cannot Conclude (`Rule 6`)
 1. **Backscatter Is Not Ground Subsidence (`Rule 4`):** `gamma0` (`L2_GCOV`) changes track dielectric moisture and 3D canopy/surface roughness changes, never vertical land deformation.
-2. **Single-Pair L-Band `L2_GUNW` Tropospheric Ramp:** Although `66.85%` of the basin keeps 12-day L-band coherence `gamma >= 0.50`, single 12-day interferograms contain `24.1–29.5 mm` of regional tropospheric water-vapor phase gradients between Lake Qarun (`~ -28.8 m` surface / `-43 m` basin depression) and the surrounding plateau. Sub-centimeter ground subsidence cannot be claimed without an SBAS/PS-InSAR stack of `>= 20–30` pairs.
+2. **Single-Pair L-Band `L2_GUNW` Tropospheric Ramp:** Although `66.85%` of the basin keeps 12-day L-band coherence `gamma >= 0.50`, single 12-day interferograms contain `24.1–29.5 mm` (`8.80–18.78 mm` $1\sigma$ on stable desert bedrock) of regional tropospheric water-vapor phase gradients between Lake Qarun (`-28.8 m` WGS84 ellipsoidal / `-43.0 m` orthometric MSL) and the surrounding plateau. Sub-centimeter ground subsidence cannot be claimed without an SBAS/PS-InSAR stack of `>= 20–30` passes.
 3. **Crop Species & Gravimetric Soil Moisture (`m³/m³`):** Dual-pol SAR separates **canopy volume growth (`+HV`)** from **bare-soil wetting/tillage (`+HH`)**, but cannot classify exact crop species or yield absolute volumetric soil moisture without in-situ calibration.
-4. **Low-SNR Sand-Sheet Zones (`11.21%` of AOI):** Smooth quartz sand sheets where backscatter falls within `+3 dB` of `NESZ` (`-23.3 dB HH`, `-24.5 dB HV`) remain explicitly masked and excluded from quantitative soil-moisture claims.
-5. **Phase 5 Forecast Scope:** Pass 10 flood backtest metrics reflect consistency against the Pass 10 pure-SAR water mask (while independent multi-source optical verification lives in `sar_water_benchmark_report.json` against `OPERA_L3_DSWX-HLS_V1`), and the `+0.0 m / +0.5 m / +1.0 m` `HAND` surge numbers represent hypothetical elevation scenarios rather than hydrodynamic flood forecasts.
+4. **Low-SNR Sand-Sheet Zones (`11.21%` of AOI):** Smooth quartz sand sheets where backscatter falls within `+3 dB` of `NESZ` (`-23.3 dB HH`, `-24.5 dB HV`) remain explicitly masked (`composite_landcover_class == 6`) and excluded from quantitative soil-moisture and flood susceptibility claims.
+5. **Phase 5 Forecast Scope:** Flood susceptibility validation is reported transparently across both **Track B (Independent NASA OPERA DSWx-HLS v1.0 & NISAR_WATERMASK v0.5.0)** and **Track A (Pass 10 SAR Holdout Self-Consistency)**, and the `+0.5 m` and `+1.0 m` hydraulically connected `HAND` surge scenarios are explicitly labeled as `HYPOTHETICAL SCENARIO` hydrostatic routing rather than hydrodynamic flood forecasts.

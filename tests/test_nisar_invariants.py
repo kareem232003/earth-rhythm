@@ -301,7 +301,7 @@ def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
     layers = catalog.get("overlays", [])
-    assert len(layers) == 61, f"Expected 61 web overlay layers in catalog, found {len(layers)}"
+    assert len(layers) == 63, f"Expected 63 web overlay layers in catalog, found {len(layers)}"
 
     for layer in layers:
         layer_id = layer.get("layer_id")
@@ -315,9 +315,9 @@ def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata
         png_path = PROJECT_ROOT / "data" / "web_tiles" / png_rel.replace("tiles/", "", 1)
         assert png_path.exists(), f"Overlay PNG missing on disk for `{layer_id}`: {png_path}"
 
-    # Verify all 45 Cloud-Optimized GeoTIFFs on disk have 256x256 tiling, overviews, and Rule 3 tags
+    # Verify all 49 Cloud-Optimized GeoTIFFs on disk have 256x256 tiling, overviews, and Rule 3 tags
     cog_files = sorted((PROJECT_ROOT / "data" / "cogs").rglob("*.tif"))
-    assert len(cog_files) == 45, f"Expected 45 COGs in data/cogs/, found {len(cog_files)}"
+    assert len(cog_files) == 49, f"Expected 49 COGs in data/cogs/, found {len(cog_files)}"
     for cog_path in cog_files:
         with rasterio.open(cog_path) as src:
             assert src.profile.get("tiled") is True, f"COG `{cog_path.name}` is not internally tiled."
@@ -390,7 +390,8 @@ def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None:
     assert health["cube_shape_t_y_x"] == [10, 1560, 1968]
 
     cat = api_catalog()
-    assert cat["overlay_count"] == 61
+    assert cat["overlay_count"] == 63
+    assert cat["cog_count"] == 49
 
     story = api_story()
     assert "phase3_change_and_timeseries" in story
@@ -537,6 +538,25 @@ def test_invariant_11_phase5_explainable_prediction_sanity_bounds() -> None:
     assert len(active_classes) >= 5
     total_ag_pct = sum(r["fraction_of_cropland_pct"] for r in ag_bk)
     assert pytest.approx(total_ag_pct, abs=0.05) == 100.0
+
+    # 4. Verify independent optical validation (OPERA DSWx-HLS), baseline superiority, and all 6 focal ROIs
+    ind_op = bt["independent_optical_validation_opera_dswx"]["vs_opera_dswx_consensus_open_water_full_aoi"]
+    assert 0.95 < ind_op["roc_auc"] <= 1.0
+    assert 0.70 < ind_op["iou"] <= 1.0
+
+    baselines = bt["baseline_model_comparisons_pass10"]
+    ours = baselines["adaptive_state_space_model"]
+    for b_key in ("persistence_last_pass", "moving_average_3pass", "linear_ols_4pass"):
+        assert ours["hh"]["rmse_db_full_aoi"] < baselines[b_key]["hh"]["rmse_db_full_aoi"]
+        assert ours["hv"]["rmse_db_full_aoi"] < baselines[b_key]["hv"]["rmse_db_full_aoi"]
+
+    roi_forecasts = fwd["focal_roi_forecasts"]
+    assert len(roi_forecasts) == 6
+    for rf in roi_forecasts:
+        assert len(rf["historical_dates"]) == 10
+        assert rf["sentinel2_ndvi_context"] is not None
+        assert rf["sentinel2_ndvi_context"]["paired_scenes_count"] == 9
+    assert len(fwd["exported_cogs"]) == 4
 
 
 

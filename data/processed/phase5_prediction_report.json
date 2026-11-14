@@ -1,8 +1,9 @@
 {
-  "generated_at_utc": "2026-11-14T08:58:23.555151+00:00",
+  "generated_at_utc": "2026-11-14T10:34:59.851680+00:00",
   "random_seed": 42,
   "forecast_target_date": "2026-11-02",
   "forecast_horizon_days": 12,
+  "forecast_horizon_disclosure": "Pass 11 (2026-11-02) is the +12-day next-pass forecast horizon immediately following the 10-pass archived NISAR L2_GCOV time series (2026-06-23 to 2026-10-21). No unverified post-cutoff satellite granules are fabricated.",
   "training_dates": [
     "2026-06-23",
     "2026-07-05",
@@ -15,15 +16,36 @@
     "2026-10-09",
     "2026-10-21"
   ],
+  "elapsed_step_days": [
+    12,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12
+  ],
+  "irregular_interval_note": "Acquisition interval between Pass 3 (2026-07-17) and Pass 4 (2026-08-10) is 24 days (one missed 12-day orbital cycle); all velocity and state-space equations explicitly normalize by actual elapsed days dt_k.",
   "backtest_holdout_date": "2026-10-21",
+  "vertical_datum_disclosure": {
+    "dem_source": "NASA NISAR_DEM v1.2 (Modified Copernicus 30m DEM, resampled to 40m EPSG:32636)",
+    "native_vertical_datum": "WGS84 Ellipsoidal Height (m)",
+    "egm2008_geoid_undulation_fayoum_m": 14.2,
+    "lake_qarun_median_ellipsoidal_m": -28.8,
+    "lake_qarun_median_orthometric_msl_m": -43.0,
+    "upper_wadi_el_rayan_orthometric_msl_m": -10.7,
+    "lower_wadi_el_rayan_orthometric_msl_m": -29.7
+  },
   "explainable_model_drivers": [
     {
       "id": "sar_hh_dielectric_water_index",
       "name": "NISAR L2_GCOV HH Dielectric Water Index",
-      "nasa_source": "NISAR L2_GCOV (HH gamma0)",
+      "nasa_source": "NISAR L2_GCOV (HH & HV gamma0)",
       "weight": 0.38,
       "weight_pct": 38.0,
-      "plain_explanation": "Measures how smooth and water-saturated the surface is. Water acts like a mirror to L-band radar, dropping HH below -15.2 dB."
+      "plain_explanation": "Measures smooth specular water return where L-band radar reflects away from the sensor (HH < -13.8 dB & HV < -19.2 dB)."
     },
     {
       "id": "insar_gunw_coherence_decorrelation",
@@ -31,147 +53,1757 @@
       "nasa_source": "NISAR L2_GUNW (9 Interferometric Pairs)",
       "weight": 0.24,
       "weight_pct": 24.0,
-      "plain_explanation": "Measures whether the surface shifts between 12-day satellite passes. Moving water and mudflats lose phase lock (coherence < 0.34)."
+      "plain_explanation": "Separates true open water and active wetting margins (coherence < 0.18) from radar-dark dry eolian sand sheets (coherence > 0.35)."
     },
     {
       "id": "multi_pass_wetting_velocity",
-      "name": "Multi-Pass Wetting Trend & Canopy Loss",
-      "nasa_source": "NISAR L2_GCOV 10-Date Time-Series (dHH/dt & HV)",
+      "name": "Multi-Pass Wetting Trend & Capillary Wave Activity",
+      "nasa_source": "NISAR L2_GCOV Elapsed-Time Velocity (dHH/dt & std_HH)",
       "weight": 0.22,
       "weight_pct": 22.0,
-      "plain_explanation": "Tracks whether a pixel is rapidly getting wetter or losing vegetation cover over the last 3 orbital passes (36 days)."
+      "plain_explanation": "Tracks elapsed-time-normalized backscatter drops (dHH/dt) and wind-roughened Bragg wave variance across orbital passes."
     },
     {
       "id": "topographic_shoreline_basin_proximity",
       "name": "Hydrological Basin & Shoreline Proximity",
-      "nasa_source": "NISAR RTC Terrain Factor + OPERA DSWx-HLS Water Baseline",
+      "nasa_source": "NASA NISAR_DEM v1.2 (Orthometric MSL) + Shoreline Distance",
       "weight": 0.16,
       "weight_pct": 16.0,
-      "plain_explanation": "Measures how close a field or road is to Lake Qarun, Wadi El-Rayan, or main agricultural drainage canals on flat terrain."
+      "plain_explanation": "Constrains susceptibility to hydrologically low-lying depression floors (Lake Qarun -43m MSL, Wadi El-Rayan -11m to -30m MSL) and active lake/canal margins."
     }
   ],
   "backtest_validation_pass10_20261021": {
-    "description": "Trained strictly on Passes 1..9 (2026-06-23 to 2026-10-09) and evaluated against actual observed NASA NISAR Pass 10 (2026-10-21).",
+    "description": "Strict temporal holdout: calibrated on Passes 1..9 (2026-06-23 to 2026-10-09) and evaluated on Held-Out Pass 10 (2026-10-21) plus independent multi-sensor optical NASA OPERA DSWx-HLS v1.0 and NISAR_WATERMASK v0.5.0.",
+    "ground_truth_independence_note": "Track A evaluates temporal holdout self-consistency against Pass 10 SAR water detection; Track B evaluates against independent optical NASA JPL OPERA DSWx-HLS v1.0 (30m Harmonized Landsat-Sentinel-2) and NASA NISAR_WATERMASK v0.5.0 so water detection, flood susceptibility, and independent optical verification are never conflated.",
     "flood_inundation_classification": {
       "total_evaluated_pixels": 3070080,
       "roc_auc_full_aoi": 0.9998,
       "roc_auc_coastal_1500m_buffer": 0.9976,
-      "iou_full_aoi": 0.8044,
-      "iou_coastal_1500m_buffer": 0.8871,
-      "f1_score": 0.8916,
-      "precision": 0.8051,
-      "recall": 0.9989,
-      "brier_score": 0.01241,
+      "roc_auc_non_permanent_margin": 0.9957,
+      "iou_full_aoi": 0.7936,
+      "iou_coastal_1500m_buffer": 0.8751,
+      "iou_non_permanent_margin": 0.6629,
+      "f1_score": 0.8849,
+      "f1_score_coastal_1500m_buffer": 0.9334,
+      "f1_score_non_permanent_margin": 0.7973,
+      "precision": 0.7939,
+      "recall": 0.9995,
+      "brier_score": 0.01167,
       "confusion_matrix": {
-        "true_negative_px": 2838621,
-        "false_positive_px": 45076,
-        "false_negative_px": 206,
-        "true_positive_px": 186177,
+        "true_negative_px": 2835338,
+        "false_positive_px": 48359,
+        "false_negative_px": 90,
+        "true_positive_px": 186293,
         "sum_check_px": 3070080
+      },
+      "coastal_1500m_evaluation": {
+        "evaluated_pixels": 352299,
+        "evaluated_area_km2": 563.68,
+        "roc_auc": 0.9976,
+        "iou": 0.8751,
+        "f1_score": 0.9334,
+        "precision": 0.8755,
+        "recall": 0.9995,
+        "overall_accuracy": 0.9245,
+        "brier_score": 0.05798,
+        "confusion_matrix": {
+          "true_negative_px": 139420,
+          "false_positive_px": 26496,
+          "false_negative_px": 90,
+          "true_positive_px": 186293,
+          "sum_check_px": 352299
+        }
+      },
+      "non_permanent_margin_evaluation": {
+        "evaluated_pixels": 182178,
+        "evaluated_area_km2": 291.48,
+        "roc_auc": 0.9957,
+        "iou": 0.6629,
+        "f1_score": 0.7973,
+        "precision": 0.664,
+        "recall": 0.9974,
+        "overall_accuracy": 0.92,
+        "brier_score": 0.05977,
+        "confusion_matrix": {
+          "true_negative_px": 138923,
+          "false_positive_px": 14508,
+          "false_negative_px": 75,
+          "true_positive_px": 28672,
+          "sum_check_px": 182178
+        }
+      },
+      "calibration_10bin": {
+        "expected_calibration_error_ece": 0.01428,
+        "bins": [
+          {
+            "bin_index": 1,
+            "bin_range": "0.0-0.1",
+            "pixel_count": 2802852,
+            "mean_predicted_prob": 0.0005,
+            "observed_event_frequency": 0.0,
+            "calibration_gap": 0.0005
+          },
+          {
+            "bin_index": 2,
+            "bin_range": "0.1-0.2",
+            "pixel_count": 10869,
+            "mean_predicted_prob": 0.1505,
+            "observed_event_frequency": 0.0001,
+            "calibration_gap": 0.1504
+          },
+          {
+            "bin_index": 3,
+            "bin_range": "0.2-0.3",
+            "pixel_count": 8085,
+            "mean_predicted_prob": 0.2481,
+            "observed_event_frequency": 0.001,
+            "calibration_gap": 0.2471
+          },
+          {
+            "bin_index": 4,
+            "bin_range": "0.3-0.4",
+            "pixel_count": 6905,
+            "mean_predicted_prob": 0.3498,
+            "observed_event_frequency": 0.0029,
+            "calibration_gap": 0.3469
+          },
+          {
+            "bin_index": 5,
+            "bin_range": "0.4-0.5",
+            "pixel_count": 6717,
+            "mean_predicted_prob": 0.4501,
+            "observed_event_frequency": 0.0089,
+            "calibration_gap": 0.4411
+          },
+          {
+            "bin_index": 6,
+            "bin_range": "0.5-0.6",
+            "pixel_count": 5924,
+            "mean_predicted_prob": 0.5478,
+            "observed_event_frequency": 0.0442,
+            "calibration_gap": 0.5035
+          },
+          {
+            "bin_index": 7,
+            "bin_range": "0.6-0.7",
+            "pixel_count": 5112,
+            "mean_predicted_prob": 0.6504,
+            "observed_event_frequency": 0.1066,
+            "calibration_gap": 0.5438
+          },
+          {
+            "bin_index": 8,
+            "bin_range": "0.7-0.8",
+            "pixel_count": 6728,
+            "mean_predicted_prob": 0.7541,
+            "observed_event_frequency": 0.1171,
+            "calibration_gap": 0.637
+          },
+          {
+            "bin_index": 9,
+            "bin_range": "0.8-0.9",
+            "pixel_count": 21057,
+            "mean_predicted_prob": 0.8638,
+            "observed_event_frequency": 0.0559,
+            "calibration_gap": 0.8079
+          },
+          {
+            "bin_index": 10,
+            "bin_range": "0.9-1.0",
+            "pixel_count": 195831,
+            "mean_predicted_prob": 0.9701,
+            "observed_event_frequency": 0.9371,
+            "calibration_gap": 0.033
+          }
+        ]
+      }
+    },
+    "independent_optical_validation_opera_dswx": {
+      "vs_opera_dswx_consensus_open_water_full_aoi": {
+        "evaluated_pixels": 3063660,
+        "evaluated_area_km2": 4901.86,
+        "roc_auc": 0.9937,
+        "iou": 0.7903,
+        "f1_score": 0.8828,
+        "precision": 0.8174,
+        "recall": 0.9597,
+        "overall_accuracy": 0.9835,
+        "brier_score": 0.01251,
+        "confusion_matrix": {
+          "true_negative_px": 2821952,
+          "false_positive_px": 42673,
+          "false_negative_px": 8024,
+          "true_positive_px": 191011,
+          "sum_check_px": 3063660
+        },
+        "calibration_10bin": {
+          "expected_calibration_error_ece": 0.012,
+          "bins": [
+            {
+              "bin_index": 1,
+              "bin_range": "0.0-0.1",
+              "pixel_count": 2798815,
+              "mean_predicted_prob": 0.0005,
+              "observed_event_frequency": 0.0017,
+              "calibration_gap": 0.0012
+            },
+            {
+              "bin_index": 2,
+              "bin_range": "0.1-0.2",
+              "pixel_count": 10323,
+              "mean_predicted_prob": 0.1508,
+              "observed_event_frequency": 0.0886,
+              "calibration_gap": 0.0622
+            },
+            {
+              "bin_index": 3,
+              "bin_range": "0.2-0.3",
+              "pixel_count": 7798,
+              "mean_predicted_prob": 0.2482,
+              "observed_event_frequency": 0.0858,
+              "calibration_gap": 0.1624
+            },
+            {
+              "bin_index": 4,
+              "bin_range": "0.3-0.4",
+              "pixel_count": 6643,
+              "mean_predicted_prob": 0.3497,
+              "observed_event_frequency": 0.1228,
+              "calibration_gap": 0.2269
+            },
+            {
+              "bin_index": 5,
+              "bin_range": "0.4-0.5",
+              "pixel_count": 6397,
+              "mean_predicted_prob": 0.4501,
+              "observed_event_frequency": 0.1512,
+              "calibration_gap": 0.2989
+            },
+            {
+              "bin_index": 6,
+              "bin_range": "0.5-0.6",
+              "pixel_count": 5690,
+              "mean_predicted_prob": 0.5478,
+              "observed_event_frequency": 0.2025,
+              "calibration_gap": 0.3454
+            },
+            {
+              "bin_index": 7,
+              "bin_range": "0.6-0.7",
+              "pixel_count": 4966,
+              "mean_predicted_prob": 0.6505,
+              "observed_event_frequency": 0.2165,
+              "calibration_gap": 0.434
+            },
+            {
+              "bin_index": 8,
+              "bin_range": "0.7-0.8",
+              "pixel_count": 6615,
+              "mean_predicted_prob": 0.7543,
+              "observed_event_frequency": 0.1743,
+              "calibration_gap": 0.58
+            },
+            {
+              "bin_index": 9,
+              "bin_range": "0.8-0.9",
+              "pixel_count": 20886,
+              "mean_predicted_prob": 0.8639,
+              "observed_event_frequency": 0.1337,
+              "calibration_gap": 0.7301
+            },
+            {
+              "bin_index": 10,
+              "bin_range": "0.9-1.0",
+              "pixel_count": 195527,
+              "mean_predicted_prob": 0.9702,
+              "observed_event_frequency": 0.9453,
+              "calibration_gap": 0.0248
+            }
+          ]
+        }
+      },
+      "vs_opera_dswx_consensus_open_water_coastal_1500m": {
+        "evaluated_pixels": 349228,
+        "evaluated_area_km2": 558.76,
+        "roc_auc": 0.9911,
+        "iou": 0.882,
+        "f1_score": 0.9373,
+        "precision": 0.8956,
+        "recall": 0.9831,
+        "overall_accuracy": 0.9273,
+        "brier_score": 0.05576,
+        "confusion_matrix": {
+          "true_negative_px": 134065,
+          "false_positive_px": 22122,
+          "false_negative_px": 3261,
+          "true_positive_px": 189780,
+          "sum_check_px": 349228
+        }
+      },
+      "vs_opera_dswx_20260915_open_water": {
+        "evaluated_pixels": 3070012,
+        "evaluated_area_km2": 4912.02,
+        "roc_auc": 0.9888,
+        "iou": 0.7773,
+        "f1_score": 0.8747,
+        "precision": 0.8177,
+        "recall": 0.9402,
+        "overall_accuracy": 0.9821,
+        "brier_score": 0.01366,
+        "confusion_matrix": {
+          "true_negative_px": 2823211,
+          "false_positive_px": 42768,
+          "false_negative_px": 12193,
+          "true_positive_px": 191840,
+          "sum_check_px": 3070012
+        }
+      },
+      "vs_opera_dswx_20260915_open_plus_partial_water": {
+        "evaluated_pixels": 3070012,
+        "evaluated_area_km2": 4912.02,
+        "roc_auc": 0.926,
+        "iou": 0.676,
+        "f1_score": 0.8067,
+        "precision": 0.8022,
+        "recall": 0.8112,
+        "overall_accuracy": 0.9698,
+        "brier_score": 0.02456,
+        "confusion_matrix": {
+          "true_negative_px": 2783620,
+          "false_positive_px": 47724,
+          "false_negative_px": 45067,
+          "true_positive_px": 193601,
+          "sum_check_px": 3070012
+        }
+      },
+      "vs_nisar_watermask_v050_full_aoi": {
+        "evaluated_pixels": 3070080,
+        "evaluated_area_km2": 4912.13,
+        "roc_auc": 0.9885,
+        "iou": 0.7721,
+        "f1_score": 0.8714,
+        "precision": 0.8093,
+        "recall": 0.9438,
+        "overall_accuracy": 0.9817,
+        "brier_score": 0.01402,
+        "confusion_matrix": {
+          "true_negative_px": 2824122,
+          "false_positive_px": 44741,
+          "false_negative_px": 11306,
+          "true_positive_px": 189911,
+          "sum_check_px": 3070080
+        }
       }
     },
     "backscatter_regression_pass10": {
-      "hh_rmse_db_full_aoi": 1.03,
-      "hh_mae_db_full_aoi": 0.687,
-      "hh_r2_full_aoi": 0.9539,
-      "hv_rmse_db_full_aoi": 0.952,
-      "hv_mae_db_full_aoi": 0.602,
-      "hv_r2_full_aoi": 0.8989,
-      "hh_rmse_db_cropland": 1.368,
-      "hv_rmse_db_cropland": 1.398,
-      "regime_classification_accuracy_aoi": 0.8937,
-      "regime_classification_accuracy_cropland": 0.7812
+      "hh_rmse_db_full_aoi": 0.903,
+      "hh_mae_db_full_aoi": 0.606,
+      "hh_bias_db_full_aoi": -0.1264,
+      "hh_r2_full_aoi": 0.9646,
+      "hh_rmse_db_cropland": 1.222,
+      "hh_mae_db_cropland": 0.89,
+      "hh_bias_db_cropland": -0.034,
+      "hh_r2_cropland": 0.7688,
+      "hh_mean_1sigma_uncertainty_db": 0.702,
+      "hh_ci95_empirical_coverage_pct": 86.41,
+      "hv_rmse_db_full_aoi": 0.857,
+      "hv_mae_db_full_aoi": 0.539,
+      "hv_bias_db_full_aoi": 0.0443,
+      "hv_r2_full_aoi": 0.9181,
+      "hv_rmse_db_cropland": 1.269,
+      "hv_mae_db_cropland": 0.929,
+      "hv_bias_db_cropland": 0.0848,
+      "hv_r2_cropland": 0.7244,
+      "hv_mean_1sigma_uncertainty_db": 0.706,
+      "hv_ci95_empirical_coverage_pct": 90.87,
+      "regime_classification_accuracy_aoi": 0.9089,
+      "regime_classification_accuracy_cropland": 0.8038,
+      "regime_macro_f1_cropland": 0.4786,
+      "regime_weighted_f1_cropland": 0.7945,
+      "regime_balanced_accuracy_cropland": 0.4354,
+      "regime_12day_single_step_accuracy_cropland": 0.8653
+    },
+    "baseline_model_comparisons_pass10": {
+      "adaptive_state_space_model": {
+        "label": "Speckle-Aware Spatio-Temporal State-Space Forecaster (Ours)",
+        "hh": {
+          "rmse_db_full_aoi": 0.9029,
+          "mae_db_full_aoi": 0.6056,
+          "bias_db_full_aoi": -0.1264,
+          "r2_full_aoi": 0.9646,
+          "rmse_db_cropland": 1.222,
+          "mae_db_cropland": 0.8902,
+          "bias_db_cropland": -0.034,
+          "r2_cropland": 0.7688,
+          "mean_1sigma_uncertainty_db_aoi": 0.7018,
+          "mean_1sigma_uncertainty_db_cropland": 0.9124,
+          "empirical_ci95_coverage_pct": 86.41
+        },
+        "hv": {
+          "rmse_db_full_aoi": 0.8574,
+          "mae_db_full_aoi": 0.539,
+          "bias_db_full_aoi": 0.0443,
+          "r2_full_aoi": 0.9181,
+          "rmse_db_cropland": 1.2687,
+          "mae_db_cropland": 0.9292,
+          "bias_db_cropland": 0.0848,
+          "r2_cropland": 0.7244,
+          "mean_1sigma_uncertainty_db_aoi": 0.706,
+          "mean_1sigma_uncertainty_db_cropland": 0.9725,
+          "empirical_ci95_coverage_pct": 90.87
+        }
+      },
+      "persistence_last_pass": {
+        "label": "Persistence Baseline (Last Observation y_t)",
+        "hh": {
+          "rmse_db_full_aoi": 0.9638,
+          "mae_db_full_aoi": 0.6392,
+          "bias_db_full_aoi": -0.035,
+          "r2_full_aoi": 0.9597,
+          "rmse_db_cropland": 1.2885,
+          "mae_db_cropland": 0.9335,
+          "bias_db_cropland": -0.0406,
+          "r2_cropland": 0.7429
+        },
+        "hv": {
+          "rmse_db_full_aoi": 0.9017,
+          "mae_db_full_aoi": 0.5671,
+          "bias_db_full_aoi": 0.0046,
+          "r2_full_aoi": 0.9094,
+          "rmse_db_cropland": 1.3259,
+          "mae_db_cropland": 0.9605,
+          "bias_db_cropland": 0.0686,
+          "r2_cropland": 0.699
+        }
+      },
+      "moving_average_3pass": {
+        "label": "3-Pass Moving Average Baseline",
+        "hh": {
+          "rmse_db_full_aoi": 1.009,
+          "mae_db_full_aoi": 0.6761,
+          "bias_db_full_aoi": -0.1082,
+          "r2_full_aoi": 0.9558,
+          "rmse_db_cropland": 1.3781,
+          "mae_db_cropland": 0.9982,
+          "bias_db_cropland": 0.0441,
+          "r2_cropland": 0.706
+        },
+        "hv": {
+          "rmse_db_full_aoi": 1.0881,
+          "mae_db_full_aoi": 0.7643,
+          "bias_db_full_aoi": -0.2425,
+          "r2_full_aoi": 0.868,
+          "rmse_db_cropland": 1.5468,
+          "mae_db_cropland": 1.1091,
+          "bias_db_cropland": 0.0874,
+          "r2_cropland": 0.5903
+        }
+      },
+      "linear_ols_4pass": {
+        "label": "Elapsed-Time Linear OLS Trend Baseline (4-Pass)",
+        "hh": {
+          "rmse_db_full_aoi": 1.1881,
+          "mae_db_full_aoi": 0.806,
+          "bias_db_full_aoi": -0.2695,
+          "r2_full_aoi": 0.9387,
+          "rmse_db_cropland": 1.6104,
+          "mae_db_cropland": 1.1766,
+          "bias_db_cropland": -0.3239,
+          "r2_cropland": 0.5985
+        },
+        "hv": {
+          "rmse_db_full_aoi": 1.2226,
+          "mae_db_full_aoi": 0.8326,
+          "bias_db_full_aoi": -0.3281,
+          "r2_full_aoi": 0.8334,
+          "rmse_db_cropland": 1.7678,
+          "mae_db_cropland": 1.2974,
+          "bias_db_cropland": -0.227,
+          "r2_cropland": 0.4648
+        }
+      }
+    },
+    "rolling_origin_temporal_cv": [
+      {
+        "fold_target_pass": 7,
+        "target_date": "2026-09-15",
+        "train_dates_range": "2026-06-23..2026-09-03",
+        "elapsed_step_days": 12,
+        "hh_rmse_db_aoi": 1.0141,
+        "hh_r2_aoi": 0.9573,
+        "hh_persistence_rmse_db_aoi": 1.0891,
+        "hv_rmse_db_aoi": 1.0286,
+        "hv_r2_aoi": 0.8928,
+        "hv_persistence_rmse_db_aoi": 1.0903
+      },
+      {
+        "fold_target_pass": 8,
+        "target_date": "2026-09-27",
+        "train_dates_range": "2026-06-23..2026-09-15",
+        "elapsed_step_days": 12,
+        "hh_rmse_db_aoi": 1.1075,
+        "hh_r2_aoi": 0.9517,
+        "hh_persistence_rmse_db_aoi": 1.2067,
+        "hv_rmse_db_aoi": 1.0242,
+        "hv_r2_aoi": 0.9041,
+        "hv_persistence_rmse_db_aoi": 1.0721
+      },
+      {
+        "fold_target_pass": 9,
+        "target_date": "2026-10-09",
+        "train_dates_range": "2026-06-23..2026-09-27",
+        "elapsed_step_days": 12,
+        "hh_rmse_db_aoi": 1.0925,
+        "hh_r2_aoi": 0.9479,
+        "hh_persistence_rmse_db_aoi": 1.2192,
+        "hv_rmse_db_aoi": 1.1766,
+        "hv_r2_aoi": 0.8445,
+        "hv_persistence_rmse_db_aoi": 1.2037
+      },
+      {
+        "fold_target_pass": 10,
+        "target_date": "2026-10-21",
+        "train_dates_range": "2026-06-23..2026-10-09",
+        "elapsed_step_days": 12,
+        "hh_rmse_db_aoi": 0.9029,
+        "hh_r2_aoi": 0.9646,
+        "hh_persistence_rmse_db_aoi": 0.9638,
+        "hv_rmse_db_aoi": 0.8574,
+        "hv_r2_aoi": 0.9181,
+        "hv_persistence_rmse_db_aoi": 0.9017
+      }
+    ],
+    "spatial_block_validation_pass10": [
+      {
+        "block_id": "NW_Lake_Qarun_West_Basin",
+        "pixel_count": 767520,
+        "hh_rmse_db": 0.6407,
+        "hh_mae_db": 0.4456,
+        "hv_rmse_db": 0.5452,
+        "hv_mae_db": 0.3377
+      },
+      {
+        "block_id": "NE_Tamia_Sennuris_Oasis",
+        "pixel_count": 767520,
+        "hh_rmse_db": 1.0191,
+        "hh_mae_db": 0.6982,
+        "hv_rmse_db": 0.9579,
+        "hv_mae_db": 0.6362
+      },
+      {
+        "block_id": "SW_Wadi_El_Rayan_Depression",
+        "pixel_count": 767520,
+        "hh_rmse_db": 0.7471,
+        "hh_mae_db": 0.4947,
+        "hv_rmse_db": 0.615,
+        "hv_mae_db": 0.3679
+      },
+      {
+        "block_id": "SE_Etsa_Bahr_Youssef_Inlet",
+        "pixel_count": 767520,
+        "hh_rmse_db": 1.1197,
+        "hh_mae_db": 0.7838,
+        "hv_rmse_db": 1.1607,
+        "hv_mae_db": 0.8144
+      }
+    ],
+    "seven_class_regime_evaluation": {
+      "cropland_48day_autumn_window": {
+        "evaluated_pixels": 1208974,
+        "overall_accuracy": 0.8038,
+        "macro_f1": 0.4786,
+        "weighted_f1": 0.7945,
+        "balanced_accuracy": 0.4354,
+        "per_class_metrics": [
+          {
+            "regime_code": 0,
+            "regime_label": "Stable / Unchanged (< tau)",
+            "support_px": 734327,
+            "predicted_px": 842315,
+            "precision": 0.8066,
+            "recall": 0.9252,
+            "f1_score": 0.8618
+          },
+          {
+            "regime_code": 1,
+            "regime_label": "Canopy Growth / Winter Crop Emergence (+HV)",
+            "support_px": 129111,
+            "predicted_px": 94610,
+            "precision": 0.7407,
+            "recall": 0.5427,
+            "f1_score": 0.6264
+          },
+          {
+            "regime_code": 2,
+            "regime_label": "Harvest / Canopy Clearance (-HV)",
+            "support_px": 281757,
+            "predicted_px": 228522,
+            "precision": 0.8739,
+            "recall": 0.7088,
+            "f1_score": 0.7828
+          },
+          {
+            "regime_code": 3,
+            "regime_label": "Irrigation / Soil Wetting (+HH)",
+            "support_px": 16553,
+            "predicted_px": 6873,
+            "precision": 0.4314,
+            "recall": 0.1791,
+            "f1_score": 0.2531
+          },
+          {
+            "regime_code": 4,
+            "regime_label": "Surface Drying / Tilled Soil (-HH)",
+            "support_px": 44866,
+            "predicted_px": 35318,
+            "precision": 0.5475,
+            "recall": 0.431,
+            "f1_score": 0.4823
+          },
+          {
+            "regime_code": 5,
+            "regime_label": "Flooded Vegetation / Standing Water (+HH, -HV)",
+            "support_px": 939,
+            "predicted_px": 212,
+            "precision": 0.4481,
+            "recall": 0.1012,
+            "f1_score": 0.1651
+          },
+          {
+            "regime_code": 6,
+            "regime_label": "Specular Inundation / Smooth Wet Margin (-HH, +HV)",
+            "support_px": 1421,
+            "predicted_px": 1124,
+            "precision": 0.202,
+            "recall": 0.1597,
+            "f1_score": 0.1784
+          }
+        ],
+        "confusion_matrix_7x7": [
+          [
+            679377,
+            20682,
+            25297,
+            2164,
+            6789,
+            2,
+            16
+          ],
+          [
+            55731,
+            70074,
+            176,
+            1467,
+            1551,
+            1,
+            111
+          ],
+          [
+            74094,
+            535,
+            199712,
+            178,
+            7139,
+            83,
+            16
+          ],
+          [
+            11867,
+            1274,
+            387,
+            2965,
+            29,
+            31,
+            0
+          ],
+          [
+            20599,
+            1699,
+            2472,
+            6,
+            19336,
+            0,
+            754
+          ],
+          [
+            278,
+            0,
+            473,
+            93,
+            0,
+            95,
+            0
+          ],
+          [
+            369,
+            346,
+            5,
+            0,
+            474,
+            0,
+            227
+          ]
+        ]
+      },
+      "full_aoi_48day_autumn_window": {
+        "evaluated_pixels": 3070080,
+        "overall_accuracy": 0.9089,
+        "macro_f1": 0.4833,
+        "weighted_f1": 0.9007,
+        "balanced_accuracy": 0.4319,
+        "per_class_metrics": [
+          {
+            "regime_code": 0,
+            "regime_label": "Stable / Unchanged (< tau)",
+            "support_px": 2548748,
+            "predicted_px": 2686420,
+            "precision": 0.9262,
+            "recall": 0.9762,
+            "f1_score": 0.9505
+          },
+          {
+            "regime_code": 1,
+            "regime_label": "Canopy Growth / Winter Crop Emergence (+HV)",
+            "support_px": 138306,
+            "predicted_px": 98178,
+            "precision": 0.732,
+            "recall": 0.5196,
+            "f1_score": 0.6078
+          },
+          {
+            "regime_code": 2,
+            "regime_label": "Harvest / Canopy Clearance (-HV)",
+            "support_px": 287236,
+            "predicted_px": 231739,
+            "precision": 0.8688,
+            "recall": 0.7009,
+            "f1_score": 0.7759
+          },
+          {
+            "regime_code": 3,
+            "regime_label": "Irrigation / Soil Wetting (+HH)",
+            "support_px": 38894,
+            "predicted_px": 11335,
+            "precision": 0.5023,
+            "recall": 0.1464,
+            "f1_score": 0.2267
+          },
+          {
+            "regime_code": 4,
+            "regime_label": "Surface Drying / Tilled Soil (-HH)",
+            "support_px": 54486,
+            "predicted_px": 41053,
+            "precision": 0.5614,
+            "recall": 0.423,
+            "f1_score": 0.4825
+          },
+          {
+            "regime_code": 5,
+            "regime_label": "Flooded Vegetation / Standing Water (+HH, -HV)",
+            "support_px": 954,
+            "predicted_px": 220,
+            "precision": 0.4364,
+            "recall": 0.1006,
+            "f1_score": 0.1635
+          },
+          {
+            "regime_code": 6,
+            "regime_label": "Specular Inundation / Smooth Wet Margin (-HH, +HV)",
+            "support_px": 1456,
+            "predicted_px": 1135,
+            "precision": 0.2009,
+            "recall": 0.1566,
+            "f1_score": 0.176
+          }
+        ],
+        "confusion_matrix_7x7": [
+          [
+            2488134,
+            22110,
+            26683,
+            3480,
+            8323,
+            2,
+            16
+          ],
+          [
+            62696,
+            71866,
+            176,
+            1873,
+            1582,
+            1,
+            112
+          ],
+          [
+            77511,
+            535,
+            201326,
+            183,
+            7577,
+            88,
+            16
+          ],
+          [
+            31165,
+            1548,
+            412,
+            5694,
+            42,
+            33,
+            0
+          ],
+          [
+            26244,
+            1764,
+            2658,
+            9,
+            23048,
+            0,
+            763
+          ],
+          [
+            283,
+            0,
+            479,
+            96,
+            0,
+            96,
+            0
+          ],
+          [
+            387,
+            355,
+            5,
+            0,
+            481,
+            0,
+            228
+          ]
+        ]
+      },
+      "cropland_12day_single_step_window": {
+        "evaluated_pixels": 1208974,
+        "overall_accuracy": 0.8653,
+        "macro_f1": 0.1423,
+        "weighted_f1": 0.8048,
+        "balanced_accuracy": 0.1478,
+        "per_class_metrics": [
+          {
+            "regime_code": 0,
+            "regime_label": "Stable / Unchanged (< tau)",
+            "support_px": 1046629,
+            "predicted_px": 1206241,
+            "precision": 0.8665,
+            "recall": 0.9987,
+            "f1_score": 0.9279
+          },
+          {
+            "regime_code": 1,
+            "regime_label": "Canopy Growth / Winter Crop Emergence (+HV)",
+            "support_px": 56601,
+            "predicted_px": 127,
+            "precision": 0.2441,
+            "recall": 0.0005,
+            "f1_score": 0.0011
+          },
+          {
+            "regime_code": 2,
+            "regime_label": "Harvest / Canopy Clearance (-HV)",
+            "support_px": 78505,
+            "predicted_px": 1280,
+            "precision": 0.4539,
+            "recall": 0.0074,
+            "f1_score": 0.0146
+          },
+          {
+            "regime_code": 3,
+            "regime_label": "Irrigation / Soil Wetting (+HH)",
+            "support_px": 15886,
+            "predicted_px": 343,
+            "precision": 0.1603,
+            "recall": 0.0035,
+            "f1_score": 0.0068
+          },
+          {
+            "regime_code": 4,
+            "regime_label": "Surface Drying / Tilled Soil (-HH)",
+            "support_px": 10993,
+            "predicted_px": 983,
+            "precision": 0.2767,
+            "recall": 0.0247,
+            "f1_score": 0.0454
+          },
+          {
+            "regime_code": 5,
+            "regime_label": "Flooded Vegetation / Standing Water (+HH, -HV)",
+            "support_px": 271,
+            "predicted_px": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+          },
+          {
+            "regime_code": 6,
+            "regime_label": "Specular Inundation / Smooth Wet Margin (-HH, +HV)",
+            "support_px": 89,
+            "predicted_px": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+          }
+        ],
+        "confusion_matrix_7x7": [
+          [
+            1045226,
+            88,
+            659,
+            191,
+            465,
+            0,
+            0
+          ],
+          [
+            56457,
+            31,
+            23,
+            32,
+            58,
+            0,
+            0
+          ],
+          [
+            77691,
+            3,
+            581,
+            60,
+            170,
+            0,
+            0
+          ],
+          [
+            15809,
+            5,
+            7,
+            55,
+            10,
+            0,
+            0
+          ],
+          [
+            10708,
+            0,
+            8,
+            5,
+            272,
+            0,
+            0
+          ],
+          [
+            269,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            81,
+            0,
+            0,
+            0,
+            8,
+            0,
+            0
+          ]
+        ]
+      }
     }
   },
   "forward_forecast_20261102": {
     "drainage_surge_scenarios": [
       {
         "scenario_name": "Baseline Next-Pass Forecast (2026-11-02, +0.0 m Normal Inflow)",
+        "epistemic_category": "MODEL FORECAST",
         "water_level_surge_m": 0.0,
-        "total_shoreline_and_basin_at_risk_ha": 15434.4,
-        "imminent_inundation_ha": 10673.9,
-        "agricultural_cropland_at_risk_ha": 4.0,
+        "hydraulic_connectivity_enforced": true,
+        "hydraulically_connected_overtop_ha": 0.0,
+        "total_shoreline_and_basin_at_risk_ha": 17927.0,
+        "imminent_inundation_ha": 10814.7,
+        "agricultural_cropland_at_risk_ha": 6.4,
         "settlement_and_road_corridor_at_risk_ha": 0.0
       },
       {
-        "scenario_name": "Moderate Autumn Drainage Surge (+0.5 m Lake / Shoreline Rise)",
+        "scenario_name": "Hypothetical Moderate Autumn Drainage Surge (+0.5 m Lake / Shoreline Rise)",
+        "epistemic_category": "HYPOTHETICAL SCENARIO",
         "water_level_surge_m": 0.5,
-        "total_shoreline_and_basin_at_risk_ha": 21668.6,
-        "imminent_inundation_ha": 17434.6,
-        "agricultural_cropland_at_risk_ha": 312.6,
-        "settlement_and_road_corridor_at_risk_ha": 7.5
+        "hydraulic_connectivity_enforced": true,
+        "hydraulically_connected_overtop_ha": 2585.4,
+        "total_shoreline_and_basin_at_risk_ha": 19180.0,
+        "imminent_inundation_ha": 12368.5,
+        "agricultural_cropland_at_risk_ha": 215.0,
+        "settlement_and_road_corridor_at_risk_ha": 5.6
       },
       {
-        "scenario_name": "Severe Rainfall + Drainage Flash Surge (+1.0 m Basin Rise)",
+        "scenario_name": "Hypothetical Severe Rainfall + Drainage Flash Surge (+1.0 m Basin Rise)",
+        "epistemic_category": "HYPOTHETICAL SCENARIO",
         "water_level_surge_m": 1.0,
-        "total_shoreline_and_basin_at_risk_ha": 24815.2,
-        "imminent_inundation_ha": 19188.6,
-        "agricultural_cropland_at_risk_ha": 659.4,
-        "settlement_and_road_corridor_at_risk_ha": 16.2
+        "hydraulic_connectivity_enforced": true,
+        "hydraulically_connected_overtop_ha": 3255.0,
+        "total_shoreline_and_basin_at_risk_ha": 20210.7,
+        "imminent_inundation_ha": 13184.6,
+        "agricultural_cropland_at_risk_ha": 591.2,
+        "settlement_and_road_corridor_at_risk_ha": 13.8
       }
     ],
     "cropland_regime_forecast_breakdown": [
       {
         "regime_code": 0,
         "regime_label": "Stable / Unchanged (< tau)",
-        "pixel_count": 731531,
-        "area_ha": 117045.0,
-        "area_km2": 1170.45,
-        "fraction_of_cropland_pct": 60.51
+        "pixel_count": 903334,
+        "area_ha": 144533.4,
+        "area_km2": 1445.33,
+        "fraction_of_cropland_pct": 74.72
       },
       {
         "regime_code": 1,
         "regime_label": "Canopy Growth / Winter Crop Emergence (+HV)",
-        "pixel_count": 164967,
-        "area_ha": 26394.7,
-        "area_km2": 263.95,
-        "fraction_of_cropland_pct": 13.65
+        "pixel_count": 100073,
+        "area_ha": 16011.7,
+        "area_km2": 160.12,
+        "fraction_of_cropland_pct": 8.28
       },
       {
         "regime_code": 2,
         "regime_label": "Harvest / Canopy Clearance (-HV)",
-        "pixel_count": 231634,
-        "area_ha": 37061.4,
-        "area_km2": 370.61,
-        "fraction_of_cropland_pct": 19.16
+        "pixel_count": 165231,
+        "area_ha": 26437.0,
+        "area_km2": 264.37,
+        "fraction_of_cropland_pct": 13.67
       },
       {
         "regime_code": 3,
         "regime_label": "Irrigation / Soil Wetting (+HH)",
-        "pixel_count": 28467,
-        "area_ha": 4554.7,
-        "area_km2": 45.55,
-        "fraction_of_cropland_pct": 2.35
+        "pixel_count": 9639,
+        "area_ha": 1542.2,
+        "area_km2": 15.42,
+        "fraction_of_cropland_pct": 0.8
       },
       {
         "regime_code": 4,
         "regime_label": "Surface Drying / Tilled Soil (-HH)",
-        "pixel_count": 48823,
-        "area_ha": 7811.7,
-        "area_km2": 78.12,
-        "fraction_of_cropland_pct": 4.04
+        "pixel_count": 30045,
+        "area_ha": 4807.2,
+        "area_km2": 48.07,
+        "fraction_of_cropland_pct": 2.49
       },
       {
         "regime_code": 5,
         "regime_label": "Flooded Vegetation / Standing Water (+HH, -HV)",
-        "pixel_count": 1601,
-        "area_ha": 256.2,
-        "area_km2": 2.56,
-        "fraction_of_cropland_pct": 0.13
+        "pixel_count": 224,
+        "area_ha": 35.8,
+        "area_km2": 0.36,
+        "fraction_of_cropland_pct": 0.02
       },
       {
         "regime_code": 6,
         "regime_label": "Specular Inundation / Smooth Wet Margin (-HH, +HV)",
-        "pixel_count": 1951,
-        "area_ha": 312.2,
-        "area_km2": 3.12,
-        "fraction_of_cropland_pct": 0.16
+        "pixel_count": 428,
+        "area_ha": 68.5,
+        "area_km2": 0.68,
+        "fraction_of_cropland_pct": 0.04
       }
     ],
-    "focal_roi_forecasts": [],
+    "focal_roi_forecasts": [
+      {
+        "roi_id": "ROI_01_SUMMER_CROP_HARVEST",
+        "title": "Eastern Oasis Summer Crop Peak & September Harvest (Sennuris / Tamia)",
+        "change_type": "Change Type A1 \u2014 Agricultural Phenology & Harvest",
+        "wgs84_lon": 30.98062,
+        "wgs84_lat": 29.32007,
+        "utm_epsg32636_x": 303900.0,
+        "utm_epsg32636_y": 3245140.0,
+        "grid_row": 807,
+        "grid_col": 1665,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -13.08,
+          -12.89,
+          -9.23,
+          -6.61,
+          -8.72,
+          -9.62,
+          -10.35,
+          -12.84,
+          -14.27,
+          -12.14
+        ],
+        "historical_hv_db": [
+          -19.88,
+          -18.51,
+          -14.02,
+          -8.76,
+          -12.0,
+          -14.23,
+          -16.65,
+          -20.43,
+          -20.8,
+          -19.98
+        ],
+        "backtest_20261021_predicted_hh_db": -13.3,
+        "backtest_20261021_observed_hh_db": -12.14,
+        "backtest_20261021_residual_hh_db": -1.16,
+        "backtest_20261021_predicted_hv_db": -20.15,
+        "backtest_20261021_observed_hv_db": -19.98,
+        "backtest_20261021_residual_hv_db": -0.17,
+        "observed_20261021_hh_db": -12.14,
+        "observed_20261021_hv_db": -19.98,
+        "predicted_20261102_hh_db": -12.33,
+        "predicted_20261102_hh_1sigma_db": 1.84,
+        "predicted_20261102_hh_ci95_db": 3.61,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -15.93,
+          -8.72
+        ],
+        "predicted_20261102_hv_db": -19.47,
+        "predicted_20261102_hv_1sigma_db": 2.27,
+        "predicted_20261102_hv_ci95_db": 4.44,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -23.91,
+          -15.02
+        ],
+        "forecast_confidence_score_pct": 35.5,
+        "predicted_12d_delta_hh_db": -0.19,
+        "predicted_12d_delta_hv_db": 0.51,
+        "predicted_48d_autumn_delta_hh_db": -1.98,
+        "predicted_48d_autumn_delta_hv_db": -2.82,
+        "predicted_delta_hh_db": -0.19,
+        "predicted_delta_hv_db": 0.51,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 0,
+        "predicted_regime_label": "Stable / Unchanged (< tau)",
+        "mean_gunw_coherence": 0.373,
+        "dem_orthometric_msl_m": 21.76,
+        "hand_above_nearest_water_m": 0.0,
+        "distance_to_water_m": 2469.3,
+        "flood_inundation_probability_pct": 0.0,
+        "flood_risk_tier": "Safe / Upland (<15%)",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 21.6,
+          "insar_gunw_coherence_decorrelation": 0.2,
+          "multi_pass_wetting_velocity": 80.0,
+          "topographic_shoreline_basin_proximity": 5.1
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": 0.154,
+          "ndvi_max": 0.779,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": 0.661,
+          "hv_vs_ndvi_summer_pearson_r": 0.93
+        }
+      },
+      {
+        "roi_id": "ROI_02_AUTUMN_CROP_EMERGENCE",
+        "title": "Northeastern Basin Late-Summer Planting & Autumn Canopy Closure",
+        "change_type": "Change Type A1 \u2014 Asynchronous Multi-Cropping Phenology",
+        "wgs84_lon": 31.04389,
+        "wgs84_lat": 29.32787,
+        "utm_epsg32636_x": 310060.0,
+        "utm_epsg32636_y": 3245900.0,
+        "grid_row": 788,
+        "grid_col": 1819,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -17.24,
+          -17.22,
+          -15.46,
+          -10.23,
+          -9.21,
+          -8.5,
+          -6.19,
+          -5.94,
+          -5.69,
+          -5.7
+        ],
+        "historical_hv_db": [
+          -22.98,
+          -22.96,
+          -21.63,
+          -17.71,
+          -16.48,
+          -16.02,
+          -14.46,
+          -13.89,
+          -13.41,
+          -13.35
+        ],
+        "backtest_20261021_predicted_hh_db": -6.38,
+        "backtest_20261021_observed_hh_db": -5.7,
+        "backtest_20261021_residual_hh_db": -0.69,
+        "backtest_20261021_predicted_hv_db": -14.1,
+        "backtest_20261021_observed_hv_db": -13.35,
+        "backtest_20261021_residual_hv_db": -0.76,
+        "observed_20261021_hh_db": -5.7,
+        "observed_20261021_hv_db": -13.35,
+        "predicted_20261102_hh_db": -6.26,
+        "predicted_20261102_hh_1sigma_db": 1.3,
+        "predicted_20261102_hh_ci95_db": 2.54,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -8.8,
+          -3.72
+        ],
+        "predicted_20261102_hv_db": -14.02,
+        "predicted_20261102_hv_1sigma_db": 1.05,
+        "predicted_20261102_hv_ci95_db": 2.06,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -16.08,
+          -11.96
+        ],
+        "forecast_confidence_score_pct": 53.7,
+        "predicted_12d_delta_hh_db": -0.57,
+        "predicted_12d_delta_hv_db": -0.67,
+        "predicted_48d_autumn_delta_hh_db": -0.07,
+        "predicted_48d_autumn_delta_hv_db": 0.44,
+        "predicted_delta_hh_db": -0.57,
+        "predicted_delta_hv_db": -0.67,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 0,
+        "predicted_regime_label": "Stable / Unchanged (< tau)",
+        "mean_gunw_coherence": 0.536,
+        "dem_orthometric_msl_m": 41.86,
+        "hand_above_nearest_water_m": 13.34,
+        "distance_to_water_m": 2045.1,
+        "flood_inundation_probability_pct": 0.0,
+        "flood_risk_tier": "Safe / Upland (<15%)",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 34.4,
+          "insar_gunw_coherence_decorrelation": 0.0,
+          "multi_pass_wetting_velocity": 55.2,
+          "topographic_shoreline_basin_proximity": 5.7
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": 0.045,
+          "ndvi_max": 0.072,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": 0.072,
+          "hv_vs_ndvi_summer_pearson_r": 0.27
+        }
+      },
+      {
+        "roi_id": "ROI_03_SEASONAL_WATER_DRAWDOWN",
+        "title": "Southern Fayoum Seasonal Basin Drawdown & Re-Inundation",
+        "change_type": "Change Type A2 \u2014 Hydrological Drawdown & Flood Irrigation Cycle",
+        "wgs84_lon": 30.82487,
+        "wgs84_lat": 29.20719,
+        "utm_epsg32636_x": 288540.0,
+        "utm_epsg32636_y": 3232900.0,
+        "grid_row": 1113,
+        "grid_col": 1281,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -16.65,
+          -14.36,
+          -7.71,
+          -4.95,
+          -6.78,
+          -7.55,
+          -8.97,
+          -13.31,
+          -8.01,
+          -9.24
+        ],
+        "historical_hv_db": [
+          -21.93,
+          -21.7,
+          -18.41,
+          -18.23,
+          -19.32,
+          -16.98,
+          -17.02,
+          -20.01,
+          -16.31,
+          -16.82
+        ],
+        "backtest_20261021_predicted_hh_db": -9.07,
+        "backtest_20261021_observed_hh_db": -9.24,
+        "backtest_20261021_residual_hh_db": 0.17,
+        "backtest_20261021_predicted_hv_db": -16.31,
+        "backtest_20261021_observed_hv_db": -16.82,
+        "backtest_20261021_residual_hv_db": 0.5,
+        "observed_20261021_hh_db": -9.24,
+        "observed_20261021_hv_db": -16.82,
+        "predicted_20261102_hh_db": -8.9,
+        "predicted_20261102_hh_1sigma_db": 3.01,
+        "predicted_20261102_hh_ci95_db": 5.9,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -14.81,
+          -3.0
+        ],
+        "predicted_20261102_hv_db": -17.28,
+        "predicted_20261102_hv_1sigma_db": 2.02,
+        "predicted_20261102_hv_ci95_db": 3.96,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -21.25,
+          -13.32
+        ],
+        "forecast_confidence_score_pct": 23.7,
+        "predicted_12d_delta_hh_db": 0.34,
+        "predicted_12d_delta_hv_db": -0.47,
+        "predicted_48d_autumn_delta_hh_db": 0.07,
+        "predicted_48d_autumn_delta_hv_db": -0.26,
+        "predicted_delta_hh_db": 0.34,
+        "predicted_delta_hv_db": -0.47,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 0,
+        "predicted_regime_label": "Stable / Unchanged (< tau)",
+        "mean_gunw_coherence": 0.378,
+        "dem_orthometric_msl_m": 15.74,
+        "hand_above_nearest_water_m": 0.0,
+        "distance_to_water_m": 4619.8,
+        "flood_inundation_probability_pct": 0.0,
+        "flood_risk_tier": "Safe / Upland (<15%)",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 12.9,
+          "insar_gunw_coherence_decorrelation": 0.3,
+          "multi_pass_wetting_velocity": 65.3,
+          "topographic_shoreline_basin_proximity": 3.3
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": 0.131,
+          "ndvi_max": 0.883,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": 0.131,
+          "hv_vs_ndvi_summer_pearson_r": 0.15
+        }
+      },
+      {
+        "roi_id": "ROI_04_POLARIZATION_DISAGREEMENT",
+        "title": "Southeastern Oasis Polarization Disagreement (+HH Surge vs -HV Loss)",
+        "change_type": "Change Type A1/A2 \u2014 Polarization Disagreement (Regime 5: +HH / -HV)",
+        "wgs84_lon": 31.076,
+        "wgs84_lat": 29.21898,
+        "utm_epsg32636_x": 312980.0,
+        "utm_epsg32636_y": 3233780.0,
+        "grid_row": 1091,
+        "grid_col": 1892,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -9.6,
+          -10.57,
+          -9.61,
+          -7.34,
+          -7.93,
+          -8.17,
+          -8.71,
+          -9.49,
+          -4.73,
+          -4.86
+        ],
+        "historical_hv_db": [
+          -18.34,
+          -19.09,
+          -17.67,
+          -14.41,
+          -14.78,
+          -15.08,
+          -15.77,
+          -17.69,
+          -16.9,
+          -17.36
+        ],
+        "backtest_20261021_predicted_hh_db": -6.61,
+        "backtest_20261021_observed_hh_db": -4.86,
+        "backtest_20261021_residual_hh_db": -1.75,
+        "backtest_20261021_predicted_hv_db": -16.77,
+        "backtest_20261021_observed_hv_db": -17.36,
+        "backtest_20261021_residual_hv_db": 0.6,
+        "observed_20261021_hh_db": -4.86,
+        "observed_20261021_hv_db": -17.36,
+        "predicted_20261102_hh_db": -5.73,
+        "predicted_20261102_hh_1sigma_db": 2.15,
+        "predicted_20261102_hh_ci95_db": 4.21,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -9.94,
+          -1.52
+        ],
+        "predicted_20261102_hv_db": -17.37,
+        "predicted_20261102_hv_1sigma_db": 1.25,
+        "predicted_20261102_hv_ci95_db": 2.45,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -19.81,
+          -14.92
+        ],
+        "forecast_confidence_score_pct": 42.1,
+        "predicted_12d_delta_hh_db": -0.87,
+        "predicted_12d_delta_hv_db": -0.01,
+        "predicted_48d_autumn_delta_hh_db": 2.98,
+        "predicted_48d_autumn_delta_hv_db": -1.6,
+        "predicted_delta_hh_db": -0.87,
+        "predicted_delta_hv_db": -0.01,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 3,
+        "predicted_regime_label": "Irrigation / Soil Wetting (+HH)",
+        "mean_gunw_coherence": 0.449,
+        "dem_orthometric_msl_m": 26.36,
+        "hand_above_nearest_water_m": 0.0,
+        "distance_to_water_m": 2592.3,
+        "flood_inundation_probability_pct": 0.0,
+        "flood_risk_tier": "Safe / Upland (<15%)",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 8.5,
+          "insar_gunw_coherence_decorrelation": 0.1,
+          "multi_pass_wetting_velocity": 52.6,
+          "topographic_shoreline_basin_proximity": 4.2
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": 0.258,
+          "ndvi_max": 0.622,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": 0.258,
+          "hv_vs_ndvi_summer_pearson_r": 0.67
+        }
+      },
+      {
+        "roi_id": "ROI_05_LAKE_QARUN_OPEN_WATER",
+        "title": "Lake Qarun Central Open-Water Station (Specular & Wind-Wave Floor)",
+        "change_type": "Baseline / Confounder Control \u2014 Open Water Wind-Roughness Floor",
+        "wgs84_lon": 30.61803,
+        "wgs84_lat": 29.45266,
+        "utm_epsg32636_x": 268980.0,
+        "utm_epsg32636_y": 3260500.0,
+        "grid_row": 423,
+        "grid_col": 792,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -17.25,
+          -20.09,
+          -16.66,
+          -18.31,
+          -16.79,
+          -17.27,
+          -16.4,
+          -17.92,
+          -16.36,
+          -16.95
+        ],
+        "historical_hv_db": [
+          -22.74,
+          -23.27,
+          -22.41,
+          -22.12,
+          -22.06,
+          -22.08,
+          -22.25,
+          -22.56,
+          -21.8,
+          -21.88
+        ],
+        "backtest_20261021_predicted_hh_db": -16.84,
+        "backtest_20261021_observed_hh_db": -16.95,
+        "backtest_20261021_residual_hh_db": 0.11,
+        "backtest_20261021_predicted_hv_db": -21.73,
+        "backtest_20261021_observed_hv_db": -21.88,
+        "backtest_20261021_residual_hv_db": 0.15,
+        "observed_20261021_hh_db": -16.95,
+        "observed_20261021_hv_db": -21.88,
+        "predicted_20261102_hh_db": -16.87,
+        "predicted_20261102_hh_1sigma_db": 1.0,
+        "predicted_20261102_hh_ci95_db": 1.96,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -18.83,
+          -14.91
+        ],
+        "predicted_20261102_hv_db": -21.98,
+        "predicted_20261102_hv_1sigma_db": 0.38,
+        "predicted_20261102_hv_ci95_db": 0.74,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -22.72,
+          -21.24
+        ],
+        "forecast_confidence_score_pct": 57.5,
+        "predicted_12d_delta_hh_db": 0.08,
+        "predicted_12d_delta_hv_db": -0.09,
+        "predicted_48d_autumn_delta_hh_db": -0.47,
+        "predicted_48d_autumn_delta_hv_db": 0.27,
+        "predicted_delta_hh_db": 0.08,
+        "predicted_delta_hv_db": -0.09,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 0,
+        "predicted_regime_label": "Stable / Unchanged (< tau)",
+        "mean_gunw_coherence": 0.08,
+        "dem_orthometric_msl_m": -43.04,
+        "hand_above_nearest_water_m": 0.0,
+        "distance_to_water_m": 0.0,
+        "flood_inundation_probability_pct": 98.1,
+        "flood_risk_tier": "Persistent Open Water",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 92.0,
+          "insar_gunw_coherence_decorrelation": 95.1,
+          "multi_pass_wetting_velocity": 45.3,
+          "topographic_shoreline_basin_proximity": 94.1
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": -0.548,
+          "ndvi_max": 0.058,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": -0.312,
+          "hv_vs_ndvi_summer_pearson_r": -0.21
+        }
+      },
+      {
+        "roi_id": "ROI_06_DESERT_CALIBRATION_CONTROL",
+        "title": "Jebel Qatrani Eocene Limestone Plateau (Radiometric Stability Control)",
+        "change_type": "Baseline / Calibration Control \u2014 Stable Hyper-Arid Desert",
+        "wgs84_lon": 30.89692,
+        "wgs84_lat": 29.58475,
+        "utm_epsg32636_x": 296300.0,
+        "utm_epsg32636_y": 3274620.0,
+        "grid_row": 70,
+        "grid_col": 1475,
+        "window_dimensions_40m_px": "5x5 (25 pixels = 4.0 ha)",
+        "historical_dates": [
+          "2026-06-23",
+          "2026-07-05",
+          "2026-07-17",
+          "2026-08-10",
+          "2026-08-22",
+          "2026-09-03",
+          "2026-09-15",
+          "2026-09-27",
+          "2026-10-09",
+          "2026-10-21"
+        ],
+        "historical_hh_db": [
+          -13.3,
+          -13.24,
+          -13.17,
+          -13.03,
+          -13.59,
+          -13.22,
+          -13.56,
+          -13.71,
+          -13.24,
+          -13.16
+        ],
+        "historical_hv_db": [
+          -20.28,
+          -20.57,
+          -20.26,
+          -19.77,
+          -20.16,
+          -20.02,
+          -20.5,
+          -20.6,
+          -20.15,
+          -20.29
+        ],
+        "backtest_20261021_predicted_hh_db": -13.37,
+        "backtest_20261021_observed_hh_db": -13.16,
+        "backtest_20261021_residual_hh_db": -0.21,
+        "backtest_20261021_predicted_hv_db": -20.09,
+        "backtest_20261021_observed_hv_db": -20.29,
+        "backtest_20261021_residual_hv_db": 0.2,
+        "observed_20261021_hh_db": -13.16,
+        "observed_20261021_hv_db": -20.29,
+        "predicted_20261102_hh_db": -13.2,
+        "predicted_20261102_hh_1sigma_db": 0.35,
+        "predicted_20261102_hh_ci95_db": 0.69,
+        "predicted_20261102_hh_ci95_bounds_db": [
+          -13.89,
+          -12.51
+        ],
+        "predicted_20261102_hv_db": -20.28,
+        "predicted_20261102_hv_1sigma_db": 0.41,
+        "predicted_20261102_hv_ci95_db": 0.8,
+        "predicted_20261102_hv_ci95_bounds_db": [
+          -21.08,
+          -19.48
+        ],
+        "forecast_confidence_score_pct": 69.3,
+        "predicted_12d_delta_hh_db": -0.04,
+        "predicted_12d_delta_hv_db": 0.01,
+        "predicted_48d_autumn_delta_hh_db": 0.36,
+        "predicted_48d_autumn_delta_hv_db": 0.22,
+        "predicted_delta_hh_db": -0.04,
+        "predicted_delta_hv_db": 0.01,
+        "applied_thresholds_db": {
+          "tau_hh_db": 2.73,
+          "tau_hv_db": 2.03
+        },
+        "predicted_regime_code": 0,
+        "predicted_regime_label": "Stable / Unchanged (< tau)",
+        "mean_gunw_coherence": 0.655,
+        "dem_orthometric_msl_m": 26.39,
+        "hand_above_nearest_water_m": 69.23,
+        "distance_to_water_m": 9283.6,
+        "flood_inundation_probability_pct": 0.0,
+        "flood_risk_tier": "Safe / Upland (<15%)",
+        "driver_scores_0_to_100": {
+          "sar_hh_dielectric_water_index": 51.8,
+          "insar_gunw_coherence_decorrelation": 0.0,
+          "multi_pass_wetting_velocity": 31.8,
+          "topographic_shoreline_basin_proximity": 1.6
+        },
+        "sentinel2_ndvi_context": {
+          "source": "ESA Sentinel-2 L2A (10m B04/B08, Independent Contextual Evidence)",
+          "paired_scenes_count": 9,
+          "ndvi_min": 0.152,
+          "ndvi_max": 0.189,
+          "latest_sentinel2_date": "2026-10-19",
+          "latest_ndvi": 0.17,
+          "hv_vs_ndvi_summer_pearson_r": 0.18
+        }
+      }
+    ],
     "map_overlays": {
       "flood_risk_layer_id": "pred_flood_risk_20261102",
-      "crop_regime_layer_id": "pred_crop_regime_20261102"
+      "crop_regime_layer_id": "pred_crop_regime_20261102",
+      "forecast_hh_layer_id": "pred_hh_db_20261102",
+      "forecast_hv_layer_id": "pred_hv_db_20261102"
+    },
+    "exported_cogs": {
+      "NISAR_L2_PRED_T129_F016_20261102_flood_risk_tier_40m.tif": {
+        "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_flood_risk_tier_40m.tif",
+        "size_mb": 0.126,
+        "sha256": "ed7584f37706ff4e4ad1d08fb9c776c4a24bc7bdade5f1adcc53205adf133030",
+        "block_shape": [
+          256,
+          256
+        ],
+        "overview_factors": [
+          2,
+          4,
+          8
+        ]
+      },
+      "NISAR_L2_PRED_T129_F016_20261102_crop_regime_40m.tif": {
+        "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_crop_regime_40m.tif",
+        "size_mb": 0.384,
+        "sha256": "dc59f8f277dd6e6fb038e30abad28b8f33179110973ae7640725e29bc85a9d9f",
+        "block_shape": [
+          256,
+          256
+        ],
+        "overview_factors": [
+          2,
+          4,
+          8
+        ]
+      },
+      "NISAR_L2_PRED_T129_F016_20261102_HH_gamma0_dB_40m.tif": {
+        "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_HH_gamma0_dB_40m.tif",
+        "size_mb": 11.759,
+        "sha256": "f03079370d4f63b80281e80c066cb9e72ac7da39c37a9c938797b034e2135790",
+        "block_shape": [
+          256,
+          256
+        ],
+        "overview_factors": [
+          2,
+          4,
+          8
+        ]
+      },
+      "NISAR_L2_PRED_T129_F016_20261102_HV_gamma0_dB_40m.tif": {
+        "cog_url": "/cogs/predictions/NISAR_L2_PRED_T129_F016_20261102_HV_gamma0_dB_40m.tif",
+        "size_mb": 10.893,
+        "sha256": "4085f6362f66d6cbac0af338ecb45696203be59c1f801adf4d5416360bf55e01",
+        "block_shape": [
+          256,
+          256
+        ],
+        "overview_factors": [
+          2,
+          4,
+          8
+        ]
+      }
     }
   }
 }
