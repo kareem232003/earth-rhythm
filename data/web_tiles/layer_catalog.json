@@ -61,7 +61,7 @@
     "2026-10-09",
     "2026-10-21"
   ],
-  "overlay_count": 59,
+  "overlay_count": 61,
   "cog_count": 45,
   "overlays": [
     {
@@ -5236,6 +5236,168 @@
             "value": 0.06,
             "color": "#b40426",
             "label": "+60 mm Apparent LOS Range Change"
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "pred_flood_risk_20261102",
+      "group": "geophysical_masks",
+      "title": "\ud83d\udd2e Forecast: Flood & Shoreline Inundation Risk (2026-11-02, +12d)",
+      "url": "/tiles/overlays/predictions/pred_flood_risk_20261102.png",
+      "cog_url": "/tiles/overlays/predictions/pred_flood_risk_20261102.png",
+      "date": "2026-11-02",
+      "polarization": "HH+HV+GUNW",
+      "wgs84_bounds": [
+        30.287397,
+        29.03672,
+        31.110058,
+        29.613253
+      ],
+      "maplibre_coordinates": [
+        [
+          30.287397,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.03672
+        ],
+        [
+          30.287397,
+          29.03672
+        ]
+      ],
+      "width": 2089,
+      "height": 1464,
+      "size_kb": 154.1,
+      "sha256": "512596428d601fafbc5158be7180f61dc5d41d74c9530342d17ef3a7b65a9b49",
+      "rule3_metadata": {
+        "satellite": "NISAR (L-band 24cm SAR)",
+        "product_type": "L2_GCOV + L2_GUNW Explainable Forecast",
+        "product_version": "CRID R00500 -> +12d Forecast (2026-11-02)",
+        "acquisition_date": "2026-11-02 (Forecast from 10 passes)",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "HH + HV + GUNW Coherence",
+        "units": "Inundation Risk Tier (0-4)",
+        "crs": "EPSG:4326 (from EPSG:32636)",
+        "source": "Phase 5 Explainable SAR+InSAR Flood Predictor (Backtested on 2026-10-21)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)"
+      },
+      "legend": {
+        "type": "categorical",
+        "unit": "Flood Risk Tier (2026-11-02)",
+        "classes": [
+          {
+            "code": 1,
+            "color": "#facc15",
+            "label": "Low-Lying Flood Watch (15\u201340% prob)"
+          },
+          {
+            "code": 2,
+            "color": "#f97316",
+            "label": "High Flood Risk Margin (40\u201375% prob)"
+          },
+          {
+            "code": 3,
+            "color": "#dc2626",
+            "label": "Imminent Shoreline / Basin Inundation (>75%)"
+          },
+          {
+            "code": 4,
+            "color": "#0ea5e9",
+            "label": "Persistent Open Water (>75% prob)"
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "pred_crop_regime_20261102",
+      "group": "geophysical_masks",
+      "title": "\ud83c\udf3e Forecast: Next-Pass Crop & Moisture Regime (2026-11-02, +12d)",
+      "url": "/tiles/overlays/predictions/pred_crop_regime_20261102.png",
+      "cog_url": "/tiles/overlays/predictions/pred_crop_regime_20261102.png",
+      "date": "2026-11-02",
+      "polarization": "HH+HV",
+      "wgs84_bounds": [
+        30.287397,
+        29.03672,
+        31.110058,
+        29.613253
+      ],
+      "maplibre_coordinates": [
+        [
+          30.287397,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.613253
+        ],
+        [
+          31.110058,
+          29.03672
+        ],
+        [
+          30.287397,
+          29.03672
+        ]
+      ],
+      "width": 2089,
+      "height": 1464,
+      "size_kb": 594.9,
+      "sha256": "6897c1a982958356447b40125c1bd7d5c27f33154b24e83e93fdc5ad479a2774",
+      "rule3_metadata": {
+        "satellite": "NISAR (L-band 24cm SAR)",
+        "product_type": "L2_GCOV Next-Pass Regime Forecast",
+        "product_version": "CRID R00500 -> +12d Forecast (2026-11-02)",
+        "acquisition_date": "2026-10-21 -> 2026-11-02 (+12d Forecast)",
+        "track_frame": "Track 129 / Frame 016",
+        "orbit_direction": "Ascending",
+        "polarization": "Dual-Pol HH & HV",
+        "units": "Predicted Change Regime (0-6)",
+        "crs": "EPSG:4326 (from EPSG:32636)",
+        "source": "Phase 5 Damped Trend Backscatter Forecaster (Backtested on 2026-10-21)",
+        "epistemic_tag": "INTERPRETATION (hypothesis)"
+      },
+      "legend": {
+        "type": "categorical",
+        "unit": "Predicted Next-Pass Regime (2026-11-02)",
+        "classes": [
+          {
+            "code": 1,
+            "color": "#22c55e",
+            "label": "Canopy Growth / Emergence (+HV >= 2.03 dB)"
+          },
+          {
+            "code": 2,
+            "color": "#eab308",
+            "label": "Harvest / Canopy Clearance (-HV <= -2.03 dB)"
+          },
+          {
+            "code": 3,
+            "color": "#3b82f6",
+            "label": "Irrigation / Soil Wetting (+HH >= 2.73 dB)"
+          },
+          {
+            "code": 4,
+            "color": "#a855f7",
+            "label": "Surface Drying / Tilled (-HH <= -2.73 dB)"
+          },
+          {
+            "code": 5,
+            "color": "#06b6d4",
+            "label": "Flooded Vegetation (+HH, -HV)"
+          },
+          {
+            "code": 6,
+            "color": "#ef4444",
+            "label": "Specular Inundation (-HH, +HV)"
           }
         ]
       }

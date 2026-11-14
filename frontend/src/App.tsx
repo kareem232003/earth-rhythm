@@ -9,6 +9,8 @@ import {
   Download,
   Eye,
   Layers,
+  LayoutDashboard,
+  Lightbulb,
   Pause,
   Play,
   Sliders,
@@ -19,11 +21,16 @@ import { BasemapType, NisarMap } from './components/NisarMap';
 import { EchoHelper, EchoUiContext } from './components/EchoHelper';
 import { TimeSeriesChart } from './components/TimeSeriesChart';
 import { BenchmarkCard } from './components/BenchmarkCard';
+import { DashboardsPanel } from './components/DashboardsPanel';
+import { GuidePanel } from './components/GuidePanel';
+import { PredictionPanel } from './components/PredictionPanel';
+import { InspectorPlainReadout, MapReadingGuide, StoryPlainCard } from './components/PlainReadouts';
 import { STORY_STEPS } from './storySteps';
+import { loadCatalog, loadInspect, loadStory } from './staticBackend';
 import { FocalROI, InspectResponse, LayerCatalog, OverlayItem, StoryPayload } from './types';
 
 type MapMode = 'single' | 'swipe' | 'change' | 'masks';
-type WorkbenchTab = 'story' | 'inspector' | 'metadata' | 'methods';
+type WorkbenchTab = 'story' | 'inspector' | 'metadata' | 'methods' | 'dashboards' | 'forecast' | 'guide';
 
 export const App: React.FC = () => {
   const [catalog, setCatalog] = useState<LayerCatalog | null>(null);
@@ -71,21 +78,14 @@ export const App: React.FC = () => {
     async function loadInitial() {
       try {
         setLoading(true);
-        const [catRes, storyRes, inspRes] = await Promise.all([
-          fetch('/api/catalog'),
-          fetch('/api/story'),
-          fetch('/api/inspect?lon=30.9806&lat=29.3201&window_px=5'),
+        const [catJson, storyJson, inspJson] = await Promise.all([
+          loadCatalog(),
+          loadStory(),
+          loadInspect(30.9806, 29.3201, 5),
         ]);
-        if (!catRes.ok || !storyRes.ok) {
-          throw new Error('Failed to load catalog or story payload from FastAPI backend.');
-        }
-        const catJson: LayerCatalog = await catRes.json();
-        const storyJson: StoryPayload = await storyRes.json();
         setCatalog(catJson);
         setStoryData(storyJson);
-        if (inspRes.ok) {
-          setInspectResult(await inspRes.json());
-        }
+        setInspectResult(inspJson);
       } catch (err: any) {
         setError(err.message || 'Unknown error loading data');
       } finally {
@@ -168,11 +168,8 @@ export const App: React.FC = () => {
         setSelectedRoiId('CUSTOM_PIXEL');
       }
       try {
-        const res = await fetch(`/api/inspect?lon=${lon}&lat=${lat}&window_px=${winPx}`);
-        if (res.ok) {
-          const data: InspectResponse = await res.json();
-          setInspectResult(data);
-        }
+        const data = await loadInspect(lon, lat, winPx);
+        setInspectResult(data);
       } catch {
         // Ignore transient network errors
       }
@@ -277,6 +274,27 @@ export const App: React.FC = () => {
 
   const activeS2Points = selectedRoiId && s2ComparisonByRoi[selectedRoiId] ? s2ComparisonByRoi[selectedRoiId] : undefined;
   const activeS2Corr = selectedRoiId && s2Correlations[selectedRoiId] ? s2Correlations[selectedRoiId] : undefined;
+
+  // Dashboards -> map shortcuts (additive helpers; they only set existing map state).
+  const showRegimeOnMap = (intervalMapKey: string) => {
+    setIsPlaying(false);
+    setMapMode('change');
+    setChangeMetric('regime');
+    setChangeInterval(intervalMapKey);
+  };
+  const showDateOnMap = (dt: string) => {
+    const i = dates.indexOf(dt);
+    if (i >= 0) {
+      setIsPlaying(false);
+      setMapMode('single');
+      setActiveDateIdx(i);
+    }
+  };
+  const showPredictionLayerOnMap = (layerId: string) => {
+    setIsPlaying(false);
+    setMapMode('masks');
+    setSelectedMaskLayerId(layerId);
+  };
 
   const echoUiContext: EchoUiContext = {
     map_mode: mapMode,
@@ -583,6 +601,17 @@ export const App: React.FC = () => {
         )}
       </div>
 
+      {/* PLAIN-LANGUAGE READING GUIDE FOR THE CURRENT MAP VIEW (additive) */}
+      <MapReadingGuide
+        mapMode={mapMode}
+        singlePol={singlePol}
+        changeMetric={changeMetric}
+        thresholdMaskOnly={thresholdMaskOnly}
+        leftOverlay={leftOverlay}
+        rightOverlay={rightOverlay}
+        selectedMaskLayerId={selectedMaskLayerId}
+      />
+
       {/* MAIN SPLIT WORKSPACE: INTERACTIVE MAP (LEFT) + SCIENTIFIC WORKBENCH (RIGHT) */}
       <main className="main-workspace">
         <section className="map-column">
@@ -650,6 +679,27 @@ export const App: React.FC = () => {
             >
               <BookOpen size={14} /> Methods &amp; Limits
             </button>
+            <button
+              className={`tab-btn ${activeTab === 'dashboards' ? 'tab-btn-active' : ''}`}
+              onClick={() => setActiveTab('dashboards')}
+            >
+              <LayoutDashboard size={14} /> Dashboards
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'forecast' ? 'tab-btn-active' : ''}`}
+              onClick={() => {
+                setActiveTab('forecast');
+                showPredictionLayerOnMap('pred_flood_risk_20261102');
+              }}
+            >
+              🔮 Forecast
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'guide' ? 'tab-btn-active' : ''}`}
+              onClick={() => setActiveTab('guide')}
+            >
+              <Lightbulb size={14} /> Guide
+            </button>
           </nav>
 
           <div className="workbench-content">
@@ -694,6 +744,9 @@ export const App: React.FC = () => {
                     <p>{activeStep.whyPolarizationMatters}</p>
                   </div>
                 </div>
+
+                {/* Plain-language companion for this chapter (additive) */}
+                <StoryPlainCard stepNumber={activeStep.stepNumber} />
 
                 {/* Embedded Multi-Temporal Chart for Current Story Focal ROI */}
                 {inspectResult && (
@@ -808,6 +861,9 @@ export const App: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Plain-language readout generated from the live /api/inspect result (additive) */}
+                <InspectorPlainReadout data={inspectResult} />
 
                 <div className="story-chart-card">
                   <div className="card-header-row">
@@ -1228,6 +1284,39 @@ export const App: React.FC = () => {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* TAB 5: DASHBOARDS (additive) */}
+            {activeTab === 'dashboards' && (
+              <DashboardsPanel
+                storyData={storyData}
+                catalog={catalog}
+                focalRois={focalRois}
+                selectedRoiId={selectedRoiId}
+                onShowRegimeOnMap={showRegimeOnMap}
+                onSelectDate={showDateOnMap}
+              />
+            )}
+
+            {/* TAB 6: EXPLAINABLE FLOOD & CROP FORECAST (additive) */}
+            {activeTab === 'forecast' && (
+              <PredictionPanel
+                selectedRoiId={selectedRoiId}
+                onShowPredictionLayer={showPredictionLayerOnMap}
+                onFlyToRoi={(lon, lat, roiId) => {
+                  triggerInspect(lon, lat, inspectWindowPx, roiId);
+                  setFlyToTarget({ center: [lon, lat], zoom: 12.2, seq: Date.now() });
+                }}
+              />
+            )}
+
+            {/* TAB 7: PLAIN-LANGUAGE GUIDE & GLOSSARY (additive) */}
+            {activeTab === 'guide' && (
+              <GuidePanel
+                catalog={catalog}
+                onNavigate={(tab) => setActiveTab(tab)}
+                onOpenEcho={() => setIsEchoOpen(true)}
+              />
             )}
           </div>
         </aside>

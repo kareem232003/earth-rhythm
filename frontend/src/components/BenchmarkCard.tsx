@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { loadBenchmark } from '../staticBackend';
 
 interface ConfusionMetrics {
   valid_pixels: number;
@@ -66,11 +67,7 @@ export const BenchmarkCard: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    fetch('/api/benchmark')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
+    loadBenchmark<BenchmarkReport>()
       .then((data: BenchmarkReport) => {
         if (active) setReport(data);
       })
@@ -181,3 +178,4 @@ export const BenchmarkCard: React.FC = () => {
     </div>
   );
 };
+

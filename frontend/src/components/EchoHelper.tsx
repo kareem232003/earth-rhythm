@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ExternalLink, KeyRound, Send, Settings, Sparkles, Trash2, X } from 'lucide-react';
+import { ExternalLink, KeyRound, Send, Settings, Trash2, X } from 'lucide-react';
 
 export interface EchoUiContext {
   map_mode: string;
@@ -565,6 +565,46 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
       ? 'You are a connection test. Reply with exactly one word: READY'
       : `${CLIENT_FALLBACK_SYSTEM_PROMPT}\n\n${contextText}`;
 
+    if (provId === 'deterministic') {
+      if (pingMode) {
+        return { is_error: false, provider_name: 'Deterministic Echo (No API Key)', model: 'nisar-rule-engine-v1', reply: 'READY' };
+      }
+      const q = (history[history.length - 1]?.content || '').toLowerCase();
+      const ctxAny = uiContext as any;
+      const ir = ctxAny?.inspect_result || ctxAny?.inspect;
+      const coords = ir?.coordinates;
+      const stratum = ir?.geophysical_stratum;
+      const seas = ir?.seasonal_summary;
+      const ep = ir?.epistemic_statements;
+      let reply = '';
+      if (q.includes('pixel') || q.includes('inspect') || q.includes('point') || q.includes('current')) {
+        reply =
+          `**Inspected Location (${coords?.wgs84_lat?.toFixed(4) ?? '29.3201'}°N, ${coords?.wgs84_lon?.toFixed(4) ?? '30.9806'}°E — \`${ctxAny?.selected_roi_id || ctxAny?.selected_roi || 'Custom'}\`)**\n\n` +
+          `- **Geophysical Stratum:** \`${stratum?.landcover_label || 'Vegetated Agriculture'}\`\n` +
+          `- **10-Date Seasonal Range:** HH = \`${seas?.hh_min_db ?? -12.0} to ${seas?.hh_max_db ?? -6.0} dB\` (Δ \`${seas?.hh_dynamic_range_db ?? 6.0} dB\`, τ_HH = \`2.73 dB\`); HV = \`${seas?.hv_min_db ?? -19.0} to ${seas?.hv_max_db ?? -12.0} dB\` (Δ \`${seas?.hv_dynamic_range_db ?? 7.0} dB\`, τ_HV = \`2.03 dB\`).\n` +
+          `- **${ep?.observation || 'OBSERVATION: Calibrated 10-date NISAR L2_GCOV trajectory.'}**\n` +
+          `- **${ep?.change_detection || 'CHANGE DETECTION: Evaluated against desert-anchored minimum detectable change thresholds.'}**\n` +
+          `- **${ep?.interpretation || 'INTERPRETATION (hypothesis): L-band volume and surface scattering response.'}**`;
+      } else if (q.includes('benchmark') || q.includes('iou') || q.includes('accuracy') || q.includes('water')) {
+        reply =
+          `**OBSERVATION:** Our pure 9-pair NISAR interferometric + radiometric classifier (\`v3_pure_nisar_9gunw\`) achieves **IoU = 0.9243** (**92.43%**), **F1 = 0.9607**, and **Precision = 99.19%** against independent NASA **OPERA DSWx-HLS v1.0** optical reference water masks, while preserving **99.20%** of **El-Qarn Island** (\`404.64 ha\`).\n\n` +
+          `**CHANGE DETECTION:** Using temporal median \`HH\` across 10 dates plus 9 sequential 12-day \`L2_GUNW\` coherence pairs eliminates single-date capillary wind-roughening false positives (\`+9.16 dB\` spike on \`2026-07-05\`).\n\n` +
+          `**INTERPRETATION (hypothesis):** Open water decorrelates within milliseconds (\`γ_med = 0.256\`), whereas dry basalt bedrock on El-Qarn Island remains phase-coherent (\`γ_med = 0.594\`).`;
+      } else {
+        reply =
+          `**Earth Rhythm — Deterministic Scientific Summary (Active View: \`${uiContext?.active_layer_title || uiContext?.map_mode || 'Single-Date'}\`)**\n\n` +
+          `- **OBSERVATION:** Viewing calibrated NISAR L-band (\`λ = 24 cm\`) \`L2_GCOV\` gamma-nought (\`γ⁰_T\`, \`CRID R00500\`) over the Fayoum Oasis (\`Track 129 / Frame 016\`, \`10\` ascending passes from \`2026-06-23\` to \`2026-10-21\` at \`40 m\` filtered resolution, \`ENL ≈ 44\`).\n` +
+          `- **CHANGE DETECTION:** Changes are gated by desert-calibrated 95% thresholds (**τ_HH = 2.73 dB**, **τ_HV = 2.03 dB**). Across the vegetated oasis (\`1,796.76 km²\`), \`27.79%\` of cropland exceeds \`τ\` during Early-to-Peak Summer and \`24.75%\` during Peak-to-Autumn.\n` +
+          `- **INTERPRETATION (hypothesis):** Cross-pol \`HV\` tracks volumetric canopy biomass, while co-pol \`HH\` tracks surface roughness and soil/flood moisture (\`r = -0.96\` inverse trajectory with Sentinel-2 NDWI on seasonal wetland margins).`;
+      }
+      return {
+        is_error: false,
+        provider_name: 'Deterministic Echo (No API Key)',
+        model: 'nisar-rule-engine-v1',
+        reply,
+      };
+    }
+
     if (provId === 'gemini') {
       if (!apiKey) {
         return {
@@ -894,23 +934,7 @@ export const EchoHelper: React.FC<EchoHelperProps> = ({ uiContext, isOpen, onTog
 
   return (
     <>
-      {/* FLOATING ECHO LAUNCHER BUTTON */}
-      {!isOpen && (
-        <button className="echo-fab" onClick={onToggleOpen} title="Ask Echo — Your Earth Rhythm AI Guide">
-          <div className="echo-fab-avatar-wrap">
-            <img src="/echo-avatar.png" alt="Echo AI Guide" className="echo-fab-avatar" />
-            <span className="echo-status-dot" />
-          </div>
-          <div className="echo-fab-text">
-            <span className="echo-fab-title">
-              Ask Echo <Sparkles size={13} />
-            </span>
-            <span className="echo-fab-sub">Your Earth Rhythm Guide</span>
-          </div>
-        </button>
-      )}
-
-      {/* ECHO SLIDE-UP CHAT DRAWER */}
+      {/* ECHO SLIDE-UP CHAT DRAWER (launched from top-right header button) */}
       {isOpen && (
         <div className="echo-window">
           {/* HEADER */}

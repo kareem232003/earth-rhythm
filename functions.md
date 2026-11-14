@@ -98,6 +98,18 @@
 | :--- | :--- | :--- |
 | `def main() -> None` | 47 | No docstring. |
 
+## `scripts/phase5_explainable_prediction.py`
+**Summary:** Phase 5: Explainable Next-Pass (+12 Day) Flood Inundation & Crop Backscatter Prediction.
+
+| Symbol | Line | Description |
+| :--- | :--- | :--- |
+| `def linear_to_db(arr) -> np.ndarray` | 56 | No docstring. |
+| `def sigmoid(x) -> np.ndarray` | 60 | No docstring. |
+| `def compute_roc_auc_exact(y_true, y_score) -> float` | 64 | Compute exact Mann-Whitney U / Wilcoxon rank-sum ROC-AUC without external sklearn dependency. |
+| `def forecast_backscatter_cube(hh_db_seq, hv_db_seq, damping) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]` | 80 | Forecast next 12-day pass (T+1) HH and HV (in dB) + 1-sigma uncertainty using damped local trend + EMA. |
+| `def compute_explainable_inundation_model(hh_db_seq, hv_db_seq, coherence_stack, dist_to_water_m, nisar_dem) -> dict[str, Any]` | 126 | Compute explainable flood/inundation probability (0..1) from 4 physical NASA SAR + DEM features. |
+| `def main() -> None` | 194 | No docstring. |
+
 ## `src/nisar_pipeline/__init__.py`
 **Summary:** NISAR Surface Change Storyteller — Core Scientific Processing Package.
 
@@ -116,11 +128,12 @@ _No top-level classes or functions defined._
 | `def api_catalog() -> dict[str, Any]` | 331 | Return the master Rule 3 & Rule 5 layer catalog (`data/web_tiles/layer_catalog.json`). |
 | `def api_story() -> dict[str, Any]` | 339 | Return the complete Phase 2 + Phase 3 + Phase 4 scientific payload for Story Mode and charts. |
 | `def api_benchmark() -> dict[str, Any]` | 354 | Return quantitative pure-SAR vs NASA ancillary benchmark metrics (OPERA DSWx, NISAR_WATERMASK, NISAR_DEM). |
-| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 365 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
-| `def api_echo_providers() -> dict[str, Any]` | 381 | Return all supported AI providers, models, and which keys are pre-configured in `.env`. |
-| `def api_echo_chat(payload) -> dict[str, Any]` | 392 | Answer user questions about the NISAR data and current UI state via Echo AI Helper. |
-| `def api_echo_test(payload) -> dict[str, Any]` | 411 | Send a tiny 'ping' to the selected provider to verify the API key/model before chatting. |
-| `def api_echo_models(payload) -> dict[str, Any]` | 429 | Dynamically query and return available models for the given provider & API key. |
+| `def api_prediction() -> dict[str, Any]` | 365 | Return Phase 5 explainable next-pass (2026-11-02) flood & crop prediction and Pass 10 backtest report. |
+| `def api_inspect(lon, lat, utm_x, utm_y, window_px) -> dict[str, Any]` | 377 | Query the 10-date calibrated NISAR cube on the fly at any clicked coordinate in Fayoum Oasis. |
+| `def api_echo_providers() -> dict[str, Any]` | 393 | Return all supported AI providers, models, and which keys are pre-configured in `.env`. |
+| `def api_echo_chat(payload) -> dict[str, Any]` | 404 | Answer user questions about the NISAR data and current UI state via Echo AI Helper. |
+| `def api_echo_test(payload) -> dict[str, Any]` | 423 | Send a tiny 'ping' to the selected provider to verify the API key/model before chatting. |
+| `def api_echo_models(payload) -> dict[str, Any]` | 441 | Dynamically query and return available models for the given provider & API key. |
 
 ## `src/nisar_pipeline/change_detection.py`
 **Summary:** Change Detection, Statistical Noise Threshold Derivation, and Polarization Disagreement Analysis.
@@ -207,13 +220,14 @@ _No top-level classes or functions defined._
 
 | Symbol | Line | Description |
 | :--- | :--- | :--- |
-| `def test_invariant_1_linear_vs_db_averaging_and_guard() -> None` | 64 | Invariant 1: Averaging in linear power then converting to dB != averaging in dB (Rule 4). |
-| `def test_invariant_2_log_ratio_db_equivalence() -> None` | 101 | Invariant 2: Log-ratio in dB equals 10*log10(P2 / P1) == dB(P2) - dB(P1) within tolerance. |
-| `def test_invariant_3_zero_negative_nan_fill_handling_without_warnings() -> None` | 115 | Invariant 3: Zeros, NaNs, and masked fill values map to NaN before log10 without warnings. |
-| `def test_invariant_4_speckle_filter_increases_enl_and_preserves_mean_power() -> None` | 152 | Invariant 4: 3x3 Adaptive Lee & Boxcar filters increase ENL while preserving mean linear power. |
-| `def test_invariant_5_crs_grid_geometry_and_version_mismatch_guards() -> None` | 187 | Invariant 5: CRS, affine grid, orbit geometry, and CRID/version mismatches raise ValueError. |
-| `def test_invariant_6_gunw_phase_to_los_conversion_and_coherence_mask() -> None` | 243 | Invariant 6: GUNW phase-to-LOS matches -(lambda / 4*pi) * dphi and masks gamma < 0.50. |
-| `def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata() -> None` | 289 | Invariant 7: Every exported layer in layer_catalog.json and data/cogs/ has all Rule 3 & Rule 5 fields. |
-| `def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None` | 341 | Invariant 8: Dual-pol regime classification sums to 100% of valid pixels & API validates bounds. |
-| `def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None` | 401 | Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates. |
-| `def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants() -> None` | 427 | Invariant 10: Upgraded pure-SAR classifier preserves coherent islands and passes NASA benchmarks. |
+| `def test_invariant_1_linear_vs_db_averaging_and_guard() -> None` | 72 | Invariant 1: Averaging in linear power then converting to dB != averaging in dB (Rule 4). |
+| `def test_invariant_2_log_ratio_db_equivalence() -> None` | 109 | Invariant 2: Log-ratio in dB equals 10*log10(P2 / P1) == dB(P2) - dB(P1) within tolerance. |
+| `def test_invariant_3_zero_negative_nan_fill_handling_without_warnings() -> None` | 123 | Invariant 3: Zeros, NaNs, and masked fill values map to NaN before log10 without warnings. |
+| `def test_invariant_4_speckle_filter_increases_enl_and_preserves_mean_power() -> None` | 160 | Invariant 4: 3x3 Adaptive Lee & Boxcar filters increase ENL while preserving mean linear power. |
+| `def test_invariant_5_crs_grid_geometry_and_version_mismatch_guards() -> None` | 195 | Invariant 5: CRS, affine grid, orbit geometry, and CRID/version mismatches raise ValueError. |
+| `def test_invariant_6_gunw_phase_to_los_conversion_and_coherence_mask() -> None` | 251 | Invariant 6: GUNW phase-to-LOS matches -(lambda / 4*pi) * dphi and masks gamma < 0.50. |
+| `def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata() -> None` | 297 | Invariant 7: Every exported layer in layer_catalog.json and data/cogs/ has all Rule 3 & Rule 5 fields. |
+| `def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None` | 349 | Invariant 8: Dual-pol regime classification sums to 100% of valid pixels & API validates bounds. |
+| `def test_invariant_9_echo_ai_helper_providers_and_no_fabricated_fallback() -> None` | 409 | Invariant 9: Echo AI Helper exposes multi-provider catalog, auto-detects key prefixes, and never fabricates. |
+| `def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants() -> None` | 435 | Invariant 10: Upgraded pure-SAR classifier preserves coherent islands and passes NASA benchmarks. |
+| `def test_invariant_11_phase5_explainable_prediction_sanity_bounds() -> None` | 490 | Invariant 11: Phase 5 explainable flood & next-pass crop forecast meets QA sanity bounds. |

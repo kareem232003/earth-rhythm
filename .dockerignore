@@ -1,0 +1,20 @@
+# Exclude virtual environments, node_modules, git, secrets, and non-runtime intermediate data
+.venv/
+.git/
+frontend/node_modules/
+frontend/src/
+.env
+*.zip
+*.pdf
+__pycache__/
+*.pyc
+.pytest_cache/
+data/subsets/
+data/benchmarks/
+data/cogs/
+data/processed/change_maps/
+data/processed/gcov_filtered_db/
+data/processed/gunw_coherence/*.tif
+data/processed/gunw_los/
+data/processed/masks/
+

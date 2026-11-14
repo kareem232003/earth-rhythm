@@ -1,0 +1,177 @@
+{
+  "generated_at_utc": "2026-11-14T08:58:23.555151+00:00",
+  "random_seed": 42,
+  "forecast_target_date": "2026-11-02",
+  "forecast_horizon_days": 12,
+  "training_dates": [
+    "2026-06-23",
+    "2026-07-05",
+    "2026-07-17",
+    "2026-08-10",
+    "2026-08-22",
+    "2026-09-03",
+    "2026-09-15",
+    "2026-09-27",
+    "2026-10-09",
+    "2026-10-21"
+  ],
+  "backtest_holdout_date": "2026-10-21",
+  "explainable_model_drivers": [
+    {
+      "id": "sar_hh_dielectric_water_index",
+      "name": "NISAR L2_GCOV HH Dielectric Water Index",
+      "nasa_source": "NISAR L2_GCOV (HH gamma0)",
+      "weight": 0.38,
+      "weight_pct": 38.0,
+      "plain_explanation": "Measures how smooth and water-saturated the surface is. Water acts like a mirror to L-band radar, dropping HH below -15.2 dB."
+    },
+    {
+      "id": "insar_gunw_coherence_decorrelation",
+      "name": "NISAR L2_GUNW 12-Day Phase Instability (1 - gamma)",
+      "nasa_source": "NISAR L2_GUNW (9 Interferometric Pairs)",
+      "weight": 0.24,
+      "weight_pct": 24.0,
+      "plain_explanation": "Measures whether the surface shifts between 12-day satellite passes. Moving water and mudflats lose phase lock (coherence < 0.34)."
+    },
+    {
+      "id": "multi_pass_wetting_velocity",
+      "name": "Multi-Pass Wetting Trend & Canopy Loss",
+      "nasa_source": "NISAR L2_GCOV 10-Date Time-Series (dHH/dt & HV)",
+      "weight": 0.22,
+      "weight_pct": 22.0,
+      "plain_explanation": "Tracks whether a pixel is rapidly getting wetter or losing vegetation cover over the last 3 orbital passes (36 days)."
+    },
+    {
+      "id": "topographic_shoreline_basin_proximity",
+      "name": "Hydrological Basin & Shoreline Proximity",
+      "nasa_source": "NISAR RTC Terrain Factor + OPERA DSWx-HLS Water Baseline",
+      "weight": 0.16,
+      "weight_pct": 16.0,
+      "plain_explanation": "Measures how close a field or road is to Lake Qarun, Wadi El-Rayan, or main agricultural drainage canals on flat terrain."
+    }
+  ],
+  "backtest_validation_pass10_20261021": {
+    "description": "Trained strictly on Passes 1..9 (2026-06-23 to 2026-10-09) and evaluated against actual observed NASA NISAR Pass 10 (2026-10-21).",
+    "flood_inundation_classification": {
+      "total_evaluated_pixels": 3070080,
+      "roc_auc_full_aoi": 0.9998,
+      "roc_auc_coastal_1500m_buffer": 0.9976,
+      "iou_full_aoi": 0.8044,
+      "iou_coastal_1500m_buffer": 0.8871,
+      "f1_score": 0.8916,
+      "precision": 0.8051,
+      "recall": 0.9989,
+      "brier_score": 0.01241,
+      "confusion_matrix": {
+        "true_negative_px": 2838621,
+        "false_positive_px": 45076,
+        "false_negative_px": 206,
+        "true_positive_px": 186177,
+        "sum_check_px": 3070080
+      }
+    },
+    "backscatter_regression_pass10": {
+      "hh_rmse_db_full_aoi": 1.03,
+      "hh_mae_db_full_aoi": 0.687,
+      "hh_r2_full_aoi": 0.9539,
+      "hv_rmse_db_full_aoi": 0.952,
+      "hv_mae_db_full_aoi": 0.602,
+      "hv_r2_full_aoi": 0.8989,
+      "hh_rmse_db_cropland": 1.368,
+      "hv_rmse_db_cropland": 1.398,
+      "regime_classification_accuracy_aoi": 0.8937,
+      "regime_classification_accuracy_cropland": 0.7812
+    }
+  },
+  "forward_forecast_20261102": {
+    "drainage_surge_scenarios": [
+      {
+        "scenario_name": "Baseline Next-Pass Forecast (2026-11-02, +0.0 m Normal Inflow)",
+        "water_level_surge_m": 0.0,
+        "total_shoreline_and_basin_at_risk_ha": 15434.4,
+        "imminent_inundation_ha": 10673.9,
+        "agricultural_cropland_at_risk_ha": 4.0,
+        "settlement_and_road_corridor_at_risk_ha": 0.0
+      },
+      {
+        "scenario_name": "Moderate Autumn Drainage Surge (+0.5 m Lake / Shoreline Rise)",
+        "water_level_surge_m": 0.5,
+        "total_shoreline_and_basin_at_risk_ha": 21668.6,
+        "imminent_inundation_ha": 17434.6,
+        "agricultural_cropland_at_risk_ha": 312.6,
+        "settlement_and_road_corridor_at_risk_ha": 7.5
+      },
+      {
+        "scenario_name": "Severe Rainfall + Drainage Flash Surge (+1.0 m Basin Rise)",
+        "water_level_surge_m": 1.0,
+        "total_shoreline_and_basin_at_risk_ha": 24815.2,
+        "imminent_inundation_ha": 19188.6,
+        "agricultural_cropland_at_risk_ha": 659.4,
+        "settlement_and_road_corridor_at_risk_ha": 16.2
+      }
+    ],
+    "cropland_regime_forecast_breakdown": [
+      {
+        "regime_code": 0,
+        "regime_label": "Stable / Unchanged (< tau)",
+        "pixel_count": 731531,
+        "area_ha": 117045.0,
+        "area_km2": 1170.45,
+        "fraction_of_cropland_pct": 60.51
+      },
+      {
+        "regime_code": 1,
+        "regime_label": "Canopy Growth / Winter Crop Emergence (+HV)",
+        "pixel_count": 164967,
+        "area_ha": 26394.7,
+        "area_km2": 263.95,
+        "fraction_of_cropland_pct": 13.65
+      },
+      {
+        "regime_code": 2,
+        "regime_label": "Harvest / Canopy Clearance (-HV)",
+        "pixel_count": 231634,
+        "area_ha": 37061.4,
+        "area_km2": 370.61,
+        "fraction_of_cropland_pct": 19.16
+      },
+      {
+        "regime_code": 3,
+        "regime_label": "Irrigation / Soil Wetting (+HH)",
+        "pixel_count": 28467,
+        "area_ha": 4554.7,
+        "area_km2": 45.55,
+        "fraction_of_cropland_pct": 2.35
+      },
+      {
+        "regime_code": 4,
+        "regime_label": "Surface Drying / Tilled Soil (-HH)",
+        "pixel_count": 48823,
+        "area_ha": 7811.7,
+        "area_km2": 78.12,
+        "fraction_of_cropland_pct": 4.04
+      },
+      {
+        "regime_code": 5,
+        "regime_label": "Flooded Vegetation / Standing Water (+HH, -HV)",
+        "pixel_count": 1601,
+        "area_ha": 256.2,
+        "area_km2": 2.56,
+        "fraction_of_cropland_pct": 0.13
+      },
+      {
+        "regime_code": 6,
+        "regime_label": "Specular Inundation / Smooth Wet Margin (-HH, +HV)",
+        "pixel_count": 1951,
+        "area_ha": 312.2,
+        "area_km2": 3.12,
+        "fraction_of_cropland_pct": 0.16
+      }
+    ],
+    "focal_roi_forecasts": [],
+    "map_overlays": {
+      "flood_risk_layer_id": "pred_flood_risk_20261102",
+      "crop_regime_layer_id": "pred_crop_regime_20261102"
+    }
+  }
+}

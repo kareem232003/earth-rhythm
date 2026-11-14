@@ -25,6 +25,9 @@ An end-to-end L-band Synthetic Aperture Radar (SAR) scientific pipeline and inte
 
 ## 2. Latest Major Capabilities & Scientific Upgrades
 
+### 0. Plain-Language Layer, Dashboards & Guide (UI-only addition)
+New to radar? The app now ships a **"What am I looking at?"** bar under the map toolbar, an **"In plain words"** card in every Story chapter and in the Pixel Inspector, a **Dashboards** tab (season overview, change breakdown, landscape types, rain & optical context, threshold/noise ladder) and a **Guide** tab with a glossary. These only re-present the existing real data and keep every Rule 5 label; see Decision D-012 in `DECISIONS.md`.
+
 ### A. Decoupled Physical Scattering Composite (`HH / HV / Water+Wind`)
 Legacy false-color radar composites (`R = HH`, `G = HV`, `B = HH - HV`) tinted both wind-roughened water and dry bare soil purple because `HH` fed both Red and Blue simultaneously. Our production **Physical Scattering Map** ([src/nisar_pipeline/tiles_and_cogs.py](src/nisar_pipeline/tiles_and_cogs.py)) decouples scattering physics into intuitive, non-overlapping visual channels directly from calibrated **100% NISAR SAR** bands:
 - **Lush Green (`HV` Canopy Volume, `-18.8` to `-11.5 dB`):** Irrigated crops, orchards, and dense vegetation volume depolarization.

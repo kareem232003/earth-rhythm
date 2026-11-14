@@ -313,9 +313,38 @@ Each step flies the MapLibre camera (`flyTo`) to a verified focal region, activa
 7. **`test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata` (`PASSED`):** Programmatically verifies that all `59` layers in `data/web_tiles/layer_catalog.json` exist on disk and contain all 11 mandatory `Rule 3` + `Rule 5` fields, and all `45` COGs in `data/cogs/` are `256×256` tiled with `[2, 4, 8]` overviews and embedded `Rule 3` GDAL tags.
 8. **`test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector` (`PASSED`):** Confirms `classify_dual_pol_change` partitions 100% of valid pixels across Regimes `0..6` without overlap, and verifies `/api/health`, `/api/catalog`, `/api/story`, and `/api/inspect` (including HTTP `400` on out-of-bounds coordinates).
 
+---
 
+## Decision D-012: Plain-Language Layer, Dashboards & Guide (Frontend-Only, Additive)
 
+- **Status:** Executed & Verified (`2026-11-14`): `npm run build` (`tsc -b && vite build`) passes; new components rendered against the real `layer_catalog.json` and Phase 3 report with no `NaN`/`undefined` output.
+- **What:** Added understandability features on top of the existing UI. **No existing feature, layer, chart, table, text, endpoint or pipeline code was removed or edited.** The only edit to an existing line is widening the `WorkbenchTab` union type in `App.tsx`; all other `App.tsx` and `styles.css` changes are pure additions.
+- **New files:** `frontend/src/plainLanguage.ts`, `components/DashboardsPanel.tsx`, `components/PlainReadouts.tsx`, `components/GuidePanel.tsx`.
+- **Additions:**
+  1. **Map "What am I looking at?" bar** (collapsible, overlay dropdown so map layout never resizes): mode explanation, how-to-read, units/polarization/date, and the live legend of the active layer(s).
+  2. **Story Mode "In plain words" card** per chapter, split into OBSERVATION / CHANGE DETECTION / INTERPRETATION (hypothesis) (`Rule 5`).
+  3. **Pixel Inspector "In plain words" readout** generated from the live `/api/inspect` response: delta bars with the real ±τ markers, detected class and hypothesis, season swing vs. τ, NESZ and small-sample warnings.
+  4. **Dashboards tab** (5 views: season at a glance, change breakdown, landscape types, rain & optical, can-we-trust-it) reading only `/api/story` (Phase 3 report) and `/api/catalog`. Colours follow the live regime legend. Includes "Show on map" and "click a date" shortcuts that only set existing map state.
+  5. **Guide tab:** 3-minute reading path, Rule 5 label explanation, colour cheat sheet (from catalog RGB legend), searchable glossary.
+- **Guardrails honoured:** no fabricated or simulated data (all numbers come from existing JSON/API; per-card tags; `Rule 2` badge on NASA POWER and Sentinel-2 content); no forecasts or risk scores; backscatter change is never called displacement/subsidence; GUNW remains exploratory.
+- **No new dependencies:** charts are hand-written SVG/CSS.
 
+---
 
+## Decision D-013: Phase 5 Explainable Flood & Next-Pass (`2026-11-02`) Crop/Moisture Forecaster + Hybrid Cloud Deployment
+
+- **Status:** Executed, Backtest-Verified & Deployed (`2026-11-14`)
+- **Report Artifact:** [`data/processed/phase5_prediction_report.json`](file:///f:/Projects/Python/GitHub/Earth%20Rhythm%20AI/data/processed/phase5_prediction_report.json)
+- **Pipeline & UI Modules:** [`scripts/phase5_explainable_prediction.py`](file:///f:/Projects/Python/GitHub/Earth%20Rhythm%20AI/scripts/phase5_explainable_prediction.py), [`frontend/src/components/PredictionPanel.tsx`](file:///f:/Projects/Python/GitHub/Earth%20Rhythm%20AI/frontend/src/components/PredictionPanel.tsx), [`frontend/src/staticBackend.ts`](file:///f:/Projects/Python/GitHub/Earth%20Rhythm%20AI/frontend/src/staticBackend.ts), [`Dockerfile`](file:///f:/Projects/Python/GitHub/Earth%20Rhythm%20AI/Dockerfile)
+- **Live Cloud Deployment:** [`https://huggingface.co/spaces/kareem232003/earth-rhythm`](https://huggingface.co/spaces/kareem232003/earth-rhythm) (`https://kareem232003-earth-rhythm.static.hf.space`)
+- **What (`SEED = 42`):**
+  1. **Temporal Holdout Backtest (`Passes 1..9: 2026-06-23..2026-10-09` predicting Held-Out `Pass 10: 2026-10-21` across $N = 3,070,080$ pixels):**
+     - **Option 1 (Flood & Shoreline Inundation Susceptibility):** Explainable 4-driver physical model (`38%` NISAR `HH` dielectric index, `24%` `L2_GUNW` 12-day phase decorrelation $1-\bar{\gamma}$, `22%` 3-pass wetting velocity & canopy loss, `16%` `NISAR_DEM` + `OPERA DSWx-HLS` shoreline/basin proximity). Achieved **`ROC-AUC = 0.9998`** (full AOI) / **`0.9976`** (`1.5 km` shoreline buffer), **`IoU = 0.8871`** (shoreline buffer) / **`0.8044`** (full AOI), **`F1 = 0.8916`**, **`Recall = 99.89%`**, and **`Brier Score = 0.01241`** (`TN = 2,838,621`, `FP = 45,076`, `FN = 206`, `TP = 186,177`).
+     - **Option 2 (Next-Pass `HH`/`HV` Backscatter & 7-Class Crop/Moisture Regime Forecaster):** Pixel-wise damped harmonic + linear velocity state-space model predicting `Pass 10` (`2026-10-21`) with **`HH RMSE = 1.030 dB` (`R² = 0.9539`)**, **`HV RMSE = 0.952 dB` (`R² = 0.8989`)**, and **`89.37%` 7-class regime accuracy** (`78.12%` across active cropland).
+  2. **Forward Forecast (`Pass 11: 2026-11-02`, $+12\text{ Days}$):**
+     - Interactive drainage surge simulator (`+0.0 m`, `+0.5 m`, `+1.0 m`) showing exposed shoreline/basin area rising from **`15,434.4 ha`** (`+0.0 m`) to **`21,668.6 ha`** (`+0.5 m`, `312.6 ha` cropland) and **`24,815.2 ha`** (`+1.0 m`, `659.4 ha` cropland).
+     - Exported `pred_flood_risk_20261102` and `pred_crop_regime_20261102` overlays into `data/web_tiles/layer_catalog.json` (`61` total overlays, all passing Rule 3 & Rule 5 checks in `test_nisar_invariants.py`).
+  3. **Hybrid FastAPI + Serverless Static Tensor Cloud Hosting:**
+     - Built `Dockerfile` (`python:3.14-slim`, port `7860`) for local/containerized full-resolution hosting and `frontend/src/staticBackend.ts` for zero-cost static hosting on Hugging Face Spaces with 30× palette-compressed cloud overlays (`255.6 MB → 9.46 MB`).
 
 

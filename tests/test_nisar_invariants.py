@@ -37,7 +37,15 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from nisar_pipeline.api_server import api_benchmark, api_catalog, api_echo_providers, api_health, api_inspect, api_story
+from nisar_pipeline.api_server import (
+    api_benchmark,
+    api_catalog,
+    api_echo_providers,
+    api_health,
+    api_inspect,
+    api_prediction,
+    api_story,
+)
 from nisar_pipeline.tiles_and_cogs import compute_pure_sar_water_mask
 from nisar_pipeline.change_detection import classify_dual_pol_change, derive_change_thresholds
 from nisar_pipeline.echo_assistant import detect_provider_from_key, query_echo_llm
@@ -293,7 +301,7 @@ def test_invariant_7_exported_catalog_and_cogs_have_all_rule3_and_rule5_metadata
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
     layers = catalog.get("overlays", [])
-    assert len(layers) == 59, f"Expected 59 web overlay layers in catalog, found {len(layers)}"
+    assert len(layers) == 61, f"Expected 61 web overlay layers in catalog, found {len(layers)}"
 
     for layer in layers:
         layer_id = layer.get("layer_id")
@@ -382,7 +390,7 @@ def test_invariant_8_dual_pol_regime_partition_and_fastapi_inspector() -> None:
     assert health["cube_shape_t_y_x"] == [10, 1560, 1968]
 
     cat = api_catalog()
-    assert cat["overlay_count"] == 59
+    assert cat["overlay_count"] == 61
 
     story = api_story()
     assert "phase3_change_and_timeseries" in story
@@ -477,5 +485,58 @@ def test_invariant_10_pure_sar_water_preserves_el_qarn_and_benchmark_invariants(
     assert v3_iou > v2_iou > v1_iou
     assert v2_qarn_fp > 90.0
     assert v3_qarn_fp < 2.0
+
+
+def test_invariant_11_phase5_explainable_prediction_sanity_bounds() -> None:
+    """Invariant 11: Phase 5 explainable flood & next-pass crop forecast meets QA sanity bounds."""
+    pred = api_prediction()
+    assert pred["random_seed"] == 42
+    assert pred["forecast_target_date"] == "2026-11-02"
+    assert pred["backtest_holdout_date"] == "2026-10-21"
+
+    # 1. Explainable weights sum to 1.0 with no NaNs
+    weights = [f["weight"] for f in pred["explainable_model_drivers"]]
+    assert not any(np.isnan(weights))
+    assert pytest.approx(sum(weights), abs=1e-4) == 1.0
+
+    # 2. Option 1 Flood Predictor backtest sanity bounds (AUC in (0, 1], confusion matrix sums to N=3,070,080)
+    bt = pred["backtest_validation_pass10_20261021"]
+    bt1 = bt["flood_inundation_classification"]
+    assert bt1["total_evaluated_pixels"] == 3_070_080
+    assert 0.90 < bt1["roc_auc_full_aoi"] <= 1.0
+    assert 0.90 < bt1["roc_auc_coastal_1500m_buffer"] <= 1.0
+    assert 0.50 < bt1["iou_full_aoi"] <= 1.0
+    assert 0.50 < bt1["iou_coastal_1500m_buffer"] <= 1.0
+    assert 0.0 <= bt1["brier_score"] < 0.15
+
+    cm = bt1["confusion_matrix"]
+    assert (
+        cm["true_positive_px"] + cm["false_positive_px"] + cm["false_negative_px"] + cm["true_negative_px"]
+        == cm["sum_check_px"]
+        == 3_070_080
+    )
+
+    # Monotonic drainage surge simulator
+    fwd = pred["forward_forecast_20261102"]
+    scenarios = fwd["drainage_surge_scenarios"]
+    assert len(scenarios) == 3
+    areas = [s["total_shoreline_and_basin_at_risk_ha"] for s in scenarios]
+    assert areas == sorted(areas) and areas[-1] > areas[0]
+
+    # 3. Option 2 Next-Pass Crop & Moisture Forecaster sanity bounds
+    bt2 = bt["backscatter_regression_pass10"]
+    assert 0.1 < bt2["hh_rmse_db_full_aoi"] < 2.5
+    assert 0.1 < bt2["hv_rmse_db_full_aoi"] < 2.5
+    assert 0.70 < bt2["hh_r2_full_aoi"] <= 1.0
+    assert 0.70 < bt2["hv_r2_full_aoi"] <= 1.0
+    assert 0.70 < bt2["regime_classification_accuracy_aoi"] <= 1.0
+
+    # Predictions must span multiple classes and sum to ~100% of agricultural pixels
+    ag_bk = fwd["cropland_regime_forecast_breakdown"]
+    active_classes = [r for r in ag_bk if r["pixel_count"] > 0]
+    assert len(active_classes) >= 5
+    total_ag_pct = sum(r["fraction_of_cropland_pct"] for r in ag_bk)
+    assert pytest.approx(total_ag_pct, abs=0.05) == 100.0
+
 
 

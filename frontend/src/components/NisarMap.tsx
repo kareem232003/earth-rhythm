@@ -74,12 +74,15 @@ function applyOverlayToMap(
     return;
   }
 
-  const existingSrc = map.getSource(srcId) as maplibregl.ImageSource | undefined;
+  const existingSrc = map.getSource(srcId) as (maplibregl.ImageSource & { _lastUrl?: string }) | undefined;
   if (existingSrc) {
-    existingSrc.updateImage({
-      url: overlay.url,
-      coordinates: overlay.maplibre_coordinates,
-    });
+    if (existingSrc._lastUrl !== overlay.url) {
+      existingSrc.updateImage({
+        url: overlay.url,
+        coordinates: overlay.maplibre_coordinates,
+      });
+      existingSrc._lastUrl = overlay.url;
+    }
     if (map.getLayer(layerId)) {
       map.setPaintProperty(layerId, 'raster-opacity', opacity);
     }
@@ -89,6 +92,8 @@ function applyOverlayToMap(
       url: overlay.url,
       coordinates: overlay.maplibre_coordinates,
     });
+    const addedSrc = map.getSource(srcId) as (maplibregl.ImageSource & { _lastUrl?: string }) | undefined;
+    if (addedSrc) addedSrc._lastUrl = overlay.url;
     map.addLayer({
       id: layerId,
       type: 'raster',

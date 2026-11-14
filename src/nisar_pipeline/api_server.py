@@ -361,6 +361,18 @@ def api_benchmark() -> dict[str, Any]:
     return json.loads(BENCHMARK_REPORT_PATH.read_text(encoding="utf-8"))
 
 
+@app.get("/api/prediction")
+def api_prediction() -> dict[str, Any]:
+    """Return Phase 5 explainable next-pass (2026-11-02) flood & crop prediction and Pass 10 backtest report."""
+    pred_path = PROJECT_ROOT / "data" / "processed" / "phase5_prediction_report.json"
+    if not pred_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Prediction report not found. Run scripts/phase5_explainable_prediction.py.",
+        )
+    return json.loads(pred_path.read_text(encoding="utf-8"))
+
+
 @app.get("/api/inspect")
 def api_inspect(
     lon: float | None = Query(default=None, description="WGS84 Longitude (e.g., 30.9806)"),

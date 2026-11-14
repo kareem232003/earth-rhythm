@@ -22,9 +22,12 @@ data/web_tiles/overlays/
 *.nc
 *.tif
 *.tiff
+*.bin
+*.zip
 
 # Node / Frontend
 node_modules/
 dist/
 build/
+*.tsbuildinfo
 
