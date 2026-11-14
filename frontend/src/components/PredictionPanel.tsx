@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadPrediction } from '../staticBackend';
+import { roiShortName } from '../uiLabels';
 
 interface DriverSpec {
   id: string;
@@ -405,8 +406,9 @@ export const PredictionPanel: React.FC<Props> = ({
                 className={`mode-btn ${r.roi_id === activeRoi.roi_id ? 'mode-btn-active' : ''}`}
                 onClick={() => onFlyToRoi && onFlyToRoi(r.wgs84_lon, r.wgs84_lat, r.roi_id)}
                 style={{ fontSize: '0.72rem', padding: '0.28rem 0.5rem' }}
+                title={r.title}
               >
-                {r.title.split('(')[0].trim()}
+                {roiShortName(r.roi_id)}
               </button>
             ))}
           </div>
@@ -449,14 +451,26 @@ export const PredictionPanel: React.FC<Props> = ({
             </div>
           </div>
 
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            <strong>Predicted Regime:</strong> <code>{activeRoi.predicted_regime_label}</code> —{' '}
-            <span>
-              Dielectric Water Score: <code>{activeRoi.driver_scores_0_to_100.sar_hh_dielectric_water_index}%</code>, InSAR
-              Decorrelation: <code>{activeRoi.driver_scores_0_to_100.insar_gunw_coherence_decorrelation}%</code>, Wetting
-              Velocity: <code>{activeRoi.driver_scores_0_to_100.multi_pass_wetting_velocity}%</code>, Basin Proximity:{' '}
-              <code>{activeRoi.driver_scores_0_to_100.topographic_shoreline_basin_proximity}%</code>.
-            </span>
+          <div style={{ fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '0.4rem' }}>
+            <strong>Predicted Regime:</strong> <code>{activeRoi.predicted_regime_label}</code>
+          </div>
+          <div className="driver-score-grid" title="Driver scores (0–100) behind this spot's flood-risk estimate">
+            <div>
+              <span>Dielectric Water Score</span>
+              <code>{activeRoi.driver_scores_0_to_100.sar_hh_dielectric_water_index}%</code>
+            </div>
+            <div>
+              <span>InSAR Decorrelation</span>
+              <code>{activeRoi.driver_scores_0_to_100.insar_gunw_coherence_decorrelation}%</code>
+            </div>
+            <div>
+              <span>Wetting Velocity</span>
+              <code>{activeRoi.driver_scores_0_to_100.multi_pass_wetting_velocity}%</code>
+            </div>
+            <div>
+              <span>Basin Proximity</span>
+              <code>{activeRoi.driver_scores_0_to_100.topographic_shoreline_basin_proximity}%</code>
+            </div>
           </div>
         </div>
       )}
@@ -522,4 +536,3 @@ export const PredictionPanel: React.FC<Props> = ({
     </div>
   );
 };
-

@@ -25,8 +25,10 @@ An end-to-end L-band Synthetic Aperture Radar (SAR) scientific pipeline and inte
 
 ## 2. Latest Major Capabilities & Scientific Upgrades
 
-### 0. Plain-Language Layer, Dashboards & Guide (UI-only addition)
-New to radar? The app now ships a **"What am I looking at?"** bar under the map toolbar, an **"In plain words"** card in every Story chapter and in the Pixel Inspector, a **Dashboards** tab (season overview, change breakdown, landscape types, rain & optical context, threshold/noise ladder) and a **Guide** tab with a glossary. These only re-present the existing real data and keep every Rule 5 label; see Decision D-012 in `DECISIONS.md`.
+### 0. Plain-Language UI, Progressive Disclosure, Dashboards & Guide (`D-012` + `D-014`)
+New to radar? The app pairs plain-language explanations with full technical traceability (nothing removed, only progressively disclosed):
+- **Simplified Header & Map Controls (`D-014`):** Concise mission header with **Data details** and **Map settings** popovers, friendly map-mode chips (`One date`, `Compare two`, `What changed`, `Land types & extras`) retaining technical names as sub-labels/tooltips, compact 10-pass date stepper, short focal-spot buttons, collapsible **What am I looking at?** reading guide, and a minimizable map legend (preserving the `L2_GUNW` Rule 4/6 disclaimer).
+- **5 Streamlined Workbench Tabs:** **Story** (`6` guided chapters with plain-language cards + collapsible science & Rule 5 statements), **This spot** (live Pixel Inspector + plain-language delta bars & expandable exact table), **Overview** (`DashboardsPanel` with 5 basin-scale views), **Forecast** (`PredictionPanel`), and **Help & data** (`How to read the app` Guide & glossary, `Layer data sheet` Rule 3 metadata, and `Methods & limits`).
 
 ### A. Decoupled Physical Scattering Composite (`HH / HV / Water+Wind`)
 Legacy false-color radar composites (`R = HH`, `G = HV`, `B = HH - HV`) tinted both wind-roughened water and dry bare soil purple because `HH` fed both Red and Blue simultaneously. Our production **Physical Scattering Map** ([src/nisar_pipeline/tiles_and_cogs.py](src/nisar_pipeline/tiles_and_cogs.py)) decouples scattering physics into intuitive, non-overlapping visual channels directly from calibrated **100% NISAR SAR** bands:
@@ -57,6 +59,17 @@ Built an integrated context-aware AI assistant ([src/nisar_pipeline/echo_assista
 - Live model discovery (`/api/echo/models`) and automatic on-the-go fallback cascades (e.g., handling deprecated Gemini 2.5 Flash -> Gemini 3.8/2.5/2.0 candidates automatically).
 - Explicit non-fabrication guard (`is_error: true`, `needs_api_key: true`) when no valid API key is supplied.
 
+### D. Phase 5 Explainable Flood & Next-Pass (`2026-11-02`) Forecaster (`D-013`)
+Implemented in [scripts/phase5_explainable_prediction.py](scripts/phase5_explainable_prediction.py), served via `/api/prediction`, and visualized in the **Forecast** tab ([frontend/src/components/PredictionPanel.tsx](frontend/src/components/PredictionPanel.tsx)):
+- **Temporal Holdout Backtest (`Passes 1..9: 2026-06-23..2026-10-09` → Held-Out `Pass 10: 2026-10-21`, `N = 3,070,080` px, `SEED = 42`):**
+  - **Flood & Shoreline Susceptibility:** 4-driver physical model (HH dielectric water index, `L2_GUNW` 12-day decorrelation, multi-pass wetting variability, and `NISAR_DEM` basin/shoreline proximity) yielding `ROC-AUC = 0.9998` (full AOI) / `0.9976` (`1.5 km` shoreline buffer), `IoU = 0.8871` (shoreline) / `0.8044` (full AOI), `F1 = 0.8916`, and `Brier Score = 0.01241` against the Pass 10 SAR water mask.
+  - **Backscatter & 7-Class Regime Forecast:** Damped trend state-space forecaster achieving `HH RMSE = 1.030 dB` (`R² = 0.9539`), `HV RMSE = 0.952 dB` (`R² = 0.8989`), and `89.37%` AOI / `78.12%` cropland 7-class regime accuracy.
+- **Forward Forecast (`Pass 11: 2026-11-02`, `+12 Days`):** Generates `pred_flood_risk_20261102` and `pred_crop_regime_20261102` web overlays (bringing the catalog to **`61` overlays**), cropland regime area breakdown, and interactive `NISAR_DEM` `HAND`-based drainage surge scenarios (`+0.0 m`: `15,434.4 ha`, `+0.5 m`: `21,668.6 ha`, `+1.0 m`: `24,815.2 ha` at risk).
+
+### E. Hybrid FastAPI + Serverless Static Cloud Hosting (`D-013`)
+- **Containerized Full-Stack Server ([Dockerfile](Dockerfile)):** Runs Uvicorn + FastAPI on port `7860` (`python:3.14-slim`) serving the compiled React SPA, full-resolution `40 m` HDF5 cube inspection, `45` COGs, `61` overlays, and Echo AI endpoints.
+- **Serverless Static Fallback ([frontend/src/staticBackend.ts](frontend/src/staticBackend.ts)):** Automatically falls back to `frontend/public/static_api/` JSON manifests and a compact `3x` binary cube (`cube_3x.bin`) when deployed without a Python backend (live demo on Hugging Face Spaces: `https://huggingface.co/spaces/kareem232003/earth-rhythm`).
+
 ---
 
 ## 3. Quick Start
@@ -73,15 +86,16 @@ npm --prefix frontend run build
 ```
 Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser. The FastAPI server exposes:
 - **`GET /`** — Compiled React + TypeScript + MapLibre GL JS Observatory (`frontend/dist/`)
-- **`GET /api/health`** — Server readiness, loaded `10 x 1560 x 1968` calibrated linear-power cube, and catalog counts (`45` COGs, `59` overlays)
+- **`GET /api/health`** — Server readiness, loaded `10 x 1560 x 1968` calibrated linear-power cube, and catalog counts (`45` COGs, `61` overlays)
 - **`GET /api/catalog`** — Master **Rule 3 & Rule 5** layer catalog ([data/web_tiles/layer_catalog.json](data/web_tiles/layer_catalog.json))
 - **`GET /api/story`** — Complete Phase 2 + Phase 3 + Phase 4 scientific report payload
-- **`GET /api/benchmark`** — Live Option 1 & Option 2 benchmark comparison JSON ([data/processed/sar_water_benchmark_report.json](data/processed/sar_water_benchmark_report.json)) rendered in the **Methods & Limits** tab
+- **`GET /api/benchmark`** — Live Option 1 & Option 2 benchmark comparison JSON ([data/processed/sar_water_benchmark_report.json](data/processed/sar_water_benchmark_report.json)) rendered in **Help & data → Methods & limits**
+- **`GET /api/prediction`** — Phase 5 explainable flood & next-pass (`2026-11-02`) forecast and Pass 10 backtest JSON ([data/processed/phase5_prediction_report.json](data/processed/phase5_prediction_report.json)) rendered in the **Forecast** tab
 - **`GET /api/inspect?lon=30.9806&lat=29.3201&window_px=5`** — Real-time on-the-fly 10-date pixel/patch inspector (`~26 ms`)
 - **`GET /api/echo/providers` & `POST /api/echo/{models,test,chat}`** — Echo AI provider discovery, connectivity ping, and context-grounded Q&A
-- **`GET /tiles/overlays/...`** & **`GET /cogs/...`** — `59` `EPSG:4326` RGBA PNG map overlays & `45` Cloud-Optimized GeoTIFFs (`EPSG:32636`)
+- **`GET /tiles/overlays/...`** & **`GET /cogs/...`** — `61` `EPSG:4326` RGBA PNG map overlays & `45` Cloud-Optimized GeoTIFFs (`EPSG:32636`)
 
-### 2. Re-run Pipeline Extraction / Benchmarks & Automated Scientific Invariant Tests (`pytest`)
+### 2. Re-run Benchmarks, Phase 5 Forecasts & Automated Scientific Invariant Tests (`pytest`)
 ```powershell
 # Optional (requires NASA Earthdata credentials in .env): refresh 9 GUNW coherences & NASA benchmark GeoTIFFs
 .\.venv\Scripts\python.exe scripts/fetch_gunw_coherence_and_benchmarks.py
@@ -89,8 +103,18 @@ Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser. The Fas
 # Recompute water & El-Qarn Island benchmark report
 .\.venv\Scripts\python.exe scripts/benchmark_sar_water_accuracy.py
 
-# Run all 10 automated scientific invariant unit tests
+# Recompute Phase 5 explainable flood & next-pass crop forecast + Pass 10 backtest
+.\.venv\Scripts\python.exe scripts/phase5_explainable_prediction.py
+
+# Run all 11 automated scientific invariant unit tests
 .\.venv\Scripts\python.exe -m pytest -v tests/test_nisar_invariants.py
+```
+
+### 3. Containerized Deployment (Docker / Hugging Face Spaces)
+```powershell
+npm --prefix frontend run build
+docker build -t earth-rhythm .
+docker run -p 7860:7860 earth-rhythm
 ```
 
 ---
@@ -122,32 +146,47 @@ All primary granules were accessed via authenticated NASA Earthdata / ASF DAAC H
 
 ```text
 Earth Rhythm AI/
+├── Dockerfile                                 # FastAPI + built React SPA container (port 7860)
+├── .dockerignore                              # Excludes raw HDF5/cache & node_modules from image
 ├── src/nisar_pipeline/
-│   ├── guards.py             # Rules 3, 5, 7, 8 version/geometry/CRS/metadata guards
-│   ├── radiometry.py         # Linear-power Lee & boxcar filtering, ENL, dB & log-ratio math
-│   ├── masks.py              # Multi-temporal water, desert, cropland, urban & NESZ masks
-│   ├── insar.py              # L2_GUNW unwrapped phase -> LOS displacement & gamma >= 0.50 mask
-│   ├── change_detection.py   # Threshold derivation (tau_HH=2.73, tau_HV=2.03 dB) & 7-class regimes
-│   ├── tiles_and_cogs.py     # Pure-SAR v3 lake/island classifier, 45 COGs & 59 WGS84 overlays
-│   ├── echo_assistant.py     # Multi-provider Echo AI guide, model discovery & fallback cascades
-│   └── api_server.py         # FastAPI backend (/api/catalog, /story, /benchmark, /inspect, /echo/*)
+│   ├── guards.py                              # Rules 3, 5, 7, 8 version/geometry/CRS/metadata guards
+│   ├── radiometry.py                          # Linear-power Lee & boxcar filtering, ENL, dB & log-ratio math
+│   ├── masks.py                               # Multi-temporal water, desert, cropland, urban & NESZ masks
+│   ├── insar.py                               # L2_GUNW unwrapped phase -> LOS displacement & gamma >= 0.50 mask
+│   ├── change_detection.py                    # Threshold derivation (tau_HH=2.73, tau_HV=2.03 dB) & 7-class regimes
+│   ├── tiles_and_cogs.py                      # Pure-SAR v3 lake/island classifier, 45 COGs & 59 base overlays
+│   ├── echo_assistant.py                      # Multi-provider Echo AI guide, model discovery & fallback cascades
+│   └── api_server.py                          # FastAPI backend (/catalog, /story, /benchmark, /prediction, /inspect, /echo/*)
 ├── scripts/
 │   ├── phase0_audit.py                        # Phase 0: Environment & NASA CMR / ASF archive audit
 │   ├── phase1_extract_subsets.py              # Phase 1: Authenticated HTTP range-read HDF5 subsetting
 │   ├── phase2_process_layers.py               # Phase 2: Linear-power Lee filtering, ENL & masks
 │   ├── phase3_change_analysis.py              # Phase 3: Log-ratio change maps, ROIs & external context
-│   ├── phase4_build_cogs_and_tiles.py         # Phase 4: 45 COGs + 59 WGS84 overlays + layer_catalog.json
+│   ├── phase4_build_cogs_and_tiles.py         # Phase 4: 45 COGs + 59 base overlays + layer_catalog.json
+│   ├── phase5_explainable_prediction.py       # Phase 5: Flood/crop forecast (+2 overlays -> 61) & Pass 10 backtest
 │   ├── fetch_gunw_coherence_and_benchmarks.py # Option 1/2: 9 GUNW coherences + NASA benchmark layers
 │   ├── benchmark_sar_water_accuracy.py        # Quantitative v1-v4 vs OPERA DSWx / NISAR_WM / DEM report
 │   └── generate_functions_md.py               # Automated AST docstring mapper -> functions.md
-├── frontend/                 # React 18 + TypeScript + Vite + MapLibre GL JS SPA
-│   └── src/components/
-│       ├── NisarMap.tsx      # Synchronized map canvas + swipe curtain + dynamic legends
-│       ├── TimeSeriesChart.tsx # Multi-temporal HH/HV/IQR/NESZ + Sentinel-2 NDVI SVG chart
-│       ├── BenchmarkCard.tsx # Live /api/benchmark validation card inside Methods & Limits
-│       └── EchoHelper.tsx    # Echo AI companion chat panel, provider setup & active ping
+├── frontend/                                  # React 18 + TypeScript + Vite + MapLibre GL JS SPA
+│   ├── public/static_api/                     # Serverless static fallback JSONs & 3x cube (cube_3x.bin)
+│   └── src/
+│       ├── plainLanguage.ts                   # Plain-language map/chapter/glossary copy (D-012)
+│       ├── staticBackend.ts                   # Hybrid client-side tensor inspector & static JSON fallback (D-013)
+│       ├── storySteps.ts                      # 6-chapter guided narrative with camera flyTo & radar physics
+│       ├── types.ts                           # TypeScript interfaces for Rule 3/5 catalog, Story & Inspector
+│       ├── uiLabels.ts                        # Friendly UI labels paired with original technical names (D-014)
+│       └── components/
+│           ├── NisarMap.tsx                   # Synchronized map canvas + swipe curtain + minimizable legend
+│           ├── TimeSeriesChart.tsx            # Multi-temporal HH/HV/IQR/NESZ + Sentinel-2 NDVI SVG chart
+│           ├── PlainReadouts.tsx              # Map guide, Story & Inspector plain-language cards (D-012)
+│           ├── DashboardsPanel.tsx            # 5-view interactive basin dashboards (D-012)
+│           ├── PredictionPanel.tsx            # Phase 5 Explainable Flood & Next-Pass Forecast UI (D-013)
+│           ├── GuidePanel.tsx                 # 3-minute reading path, Rule 5 explainer & searchable glossary
+│           ├── Disclosure.tsx                 # Collapsible progressive-disclosure wrapper (D-014)
+│           ├── BenchmarkCard.tsx              # Live /api/benchmark validation card inside Methods & limits
+│           └── EchoHelper.tsx                 # Echo AI companion chat panel, provider setup & active ping
 └── tests/
-    └── test_nisar_invariants.py # 10 automated scientific invariant unit tests (pytest)
+    └── test_nisar_invariants.py               # 11 automated scientific invariant unit tests (pytest)
 ```
 
 ---
@@ -157,10 +196,11 @@ Earth Rhythm AI/
 ### What Works & Is Verified
 - **100% Real Calibrated NISAR Production Map:** All `10 L2_GCOV` passes and all `9 L2_GUNW` coherence arrays are real `PROVISIONAL CRID P05023` NISAR observations over Fayoum Oasis; external datasets remain strictly separated under **Rule 2**.
 - **Strict Linear-Power Radiometry (`Rule 4`):** All `10 m -> 40 m` multilooking and `3x3` Adaptive Lee filtering occur strictly in linear `gamma0` (`m²/m²`), increasing `ENL` from `4.90` (`10 m`) -> `41.15–45.14` (`40 m`) -> `152.74–481.20` (`40 m` Lee) with `< 0.08%` mean power drift.
-- **Full Rule 3, Rule 5 & QA Provenance:** All `59` overlays, `45` downloadable COGs, and quantitative benchmarks pass all **10** automated tests in `pytest -v tests/test_nisar_invariants.py`.
+- **Full Rule 3, Rule 5 & QA Provenance:** All `61` overlays, `45` downloadable COGs, Phase 5 prediction report, and quantitative benchmarks pass all **11** automated tests in `pytest -v tests/test_nisar_invariants.py`.
 
 ### Explicit Limitations & What We Cannot Conclude (`Rule 6`)
 1. **Backscatter Is Not Ground Subsidence (`Rule 4`):** `gamma0` (`L2_GCOV`) changes track dielectric moisture and 3D canopy/surface roughness changes, never vertical land deformation.
 2. **Single-Pair L-Band `L2_GUNW` Tropospheric Ramp:** Although `66.85%` of the basin keeps 12-day L-band coherence `gamma >= 0.50`, single 12-day interferograms contain `24.1–29.5 mm` of regional tropospheric water-vapor phase gradients between Lake Qarun (`~ -28.8 m` surface / `-43 m` basin depression) and the surrounding plateau. Sub-centimeter ground subsidence cannot be claimed without an SBAS/PS-InSAR stack of `>= 20–30` pairs.
 3. **Crop Species & Gravimetric Soil Moisture (`m³/m³`):** Dual-pol SAR separates **canopy volume growth (`+HV`)** from **bare-soil wetting/tillage (`+HH`)**, but cannot classify exact crop species or yield absolute volumetric soil moisture without in-situ calibration.
 4. **Low-SNR Sand-Sheet Zones (`11.21%` of AOI):** Smooth quartz sand sheets where backscatter falls within `+3 dB` of `NESZ` (`-23.3 dB HH`, `-24.5 dB HV`) remain explicitly masked and excluded from quantitative soil-moisture claims.
+5. **Phase 5 Forecast Scope:** Pass 10 flood backtest metrics reflect consistency against the Pass 10 pure-SAR water mask (while independent multi-source optical verification lives in `sar_water_benchmark_report.json` against `OPERA_L3_DSWX-HLS_V1`), and the `+0.0 m / +0.5 m / +1.0 m` `HAND` surge numbers represent hypothetical elevation scenarios rather than hydrodynamic flood forecasts.

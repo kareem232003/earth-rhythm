@@ -129,6 +129,7 @@ export const NisarMap: React.FC<Props> = ({
 
   const [swipePct, setSwipePct] = useState<number>(50);
   const [isDraggingSwipe, setIsDraggingSwipe] = useState<boolean>(false);
+  const [legendOpen, setLegendOpen] = useState<boolean>(true);
 
   // Initialize left & right maps
   useEffect(() => {
@@ -365,13 +366,24 @@ export const NisarMap: React.FC<Props> = ({
 
       {/* Floating Legend Box on Map Bottom-Right */}
       {leftOverlay && (
-        <div className="map-floating-legend">
+        <div className={`map-floating-legend ${legendOpen ? '' : 'legend-collapsed'}`}>
           <div className="legend-header">
             <span className={`epistemic-chip epistemic-${leftOverlay.rule3_metadata.epistemic_tag.split(' ')[0].toLowerCase()}`}>
               {leftOverlay.rule3_metadata.epistemic_tag}
             </span>
             <span className="legend-title-text">{leftOverlay.title}</span>
+            <button
+              type="button"
+              className="legend-toggle"
+              onClick={() => setLegendOpen((v) => !v)}
+              aria-expanded={legendOpen}
+              title={legendOpen ? 'Minimize the colour key' : 'Show the colour key'}
+            >
+              {legendOpen ? '–' : 'Colour key'}
+            </button>
           </div>
+          {legendOpen && (
+          <>
           <div className="legend-unit-sub">
             Units: <code>{leftOverlay.legend.unit}</code> • CRS: <code>{leftOverlay.rule3_metadata.crs}</code>
           </div>
@@ -424,14 +436,17 @@ export const NisarMap: React.FC<Props> = ({
                       style={{ backgroundColor: ch.color || fallbackColor }}
                     />
                     <span className="legend-cat-label">
-                      <strong>{ch.channel}</strong> ({ch.range}): {ch.meaning}
+                      <strong>{ch.channel}</strong> — {ch.meaning} <span className="legend-range">({ch.range})</span>
                     </span>
                   </div>
                 );
               })}
             </div>
           )}
+          </>
+          )}
 
+          {/* Rule 4/6 guardrail stays visible even when the colour key is minimized */}
           {leftOverlay.exploratory_disclaimer && (
             <div className="gunw-disclaimer-box">{leftOverlay.exploratory_disclaimer}</div>
           )}
@@ -440,4 +455,3 @@ export const NisarMap: React.FC<Props> = ({
     </div>
   );
 };
-

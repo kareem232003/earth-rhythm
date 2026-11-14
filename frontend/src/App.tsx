@@ -1,13 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   Crosshair,
   Database,
   Download,
-  Eye,
+  Info,
   Layers,
   LayoutDashboard,
   Lightbulb,
@@ -16,6 +18,7 @@ import {
   Sliders,
   Sparkles,
   SplitSquareHorizontal,
+  TrendingUp,
 } from 'lucide-react';
 import { BasemapType, NisarMap } from './components/NisarMap';
 import { EchoHelper, EchoUiContext } from './components/EchoHelper';
@@ -25,12 +28,26 @@ import { DashboardsPanel } from './components/DashboardsPanel';
 import { GuidePanel } from './components/GuidePanel';
 import { PredictionPanel } from './components/PredictionPanel';
 import { InspectorPlainReadout, MapReadingGuide, StoryPlainCard } from './components/PlainReadouts';
+import { Disclosure } from './components/Disclosure';
 import { STORY_STEPS } from './storySteps';
 import { loadCatalog, loadInspect, loadStory } from './staticBackend';
 import { FocalROI, InspectResponse, LayerCatalog, OverlayItem, StoryPayload } from './types';
+import { CHANGE_METRIC_LABELS, MAP_MODE_LABELS, POL_LABELS, roiShortName, shortDate } from './uiLabels';
 
 type MapMode = 'single' | 'swipe' | 'change' | 'masks';
 type WorkbenchTab = 'story' | 'inspector' | 'metadata' | 'methods' | 'dashboards' | 'forecast' | 'guide';
+type HelpTab = 'guide' | 'metadata' | 'methods';
+type ChangeMetric = 'HH' | 'HV' | 'HV_over_HH' | 'regime' | 'dyn_HH' | 'dyn_HV';
+
+// The 7 workbench views are grouped into 5 top-level tabs; "Help & data" holds 3 sub-views.
+const HELP_TABS: HelpTab[] = ['guide', 'metadata', 'methods'];
+const isHelpTab = (t: WorkbenchTab): t is HelpTab => (HELP_TABS as string[]).includes(t);
+const MODE_ICONS: Record<MapMode, React.ElementType> = {
+  single: Layers,
+  swipe: SplitSquareHorizontal,
+  change: Activity,
+  masks: Compass,
+};
 
 export const App: React.FC = () => {
   const [catalog, setCatalog] = useState<LayerCatalog | null>(null);
@@ -54,7 +71,7 @@ export const App: React.FC = () => {
 
   // Change mode controls
   const [changeInterval, setChangeInterval] = useState<string>('20260623_to_20260810');
-  const [changeMetric, setChangeMetric] = useState<'HH' | 'HV' | 'HV_over_HH' | 'regime' | 'dyn_HH' | 'dyn_HV'>('HV');
+  const [changeMetric, setChangeMetric] = useState<ChangeMetric>('HV');
   const [thresholdMaskOnly, setThresholdMaskOnly] = useState<boolean>(true);
 
   // Masks & Exploratory GUNW controls
@@ -72,6 +89,39 @@ export const App: React.FC = () => {
   const [showS2Overlay, setShowS2Overlay] = useState<boolean>(true);
   const [flyToTarget, setFlyToTarget] = useState<{ center: [number, number]; zoom: number; seq: number } | null>(null);
   const [isEchoOpen, setIsEchoOpen] = useState<boolean>(false);
+
+  // Simplified-header popovers (technical data details & map settings) and last-used Help sub-view
+  const [showDataDetails, setShowDataDetails] = useState<boolean>(false);
+  const [showMapSettings, setShowMapSettings] = useState<boolean>(false);
+  const [lastHelpTab, setLastHelpTab] = useState<HelpTab>('guide');
+  const dataDetailsRef = useRef<HTMLDivElement | null>(null);
+  const mapSettingsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showDataDetails && !showMapSettings) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (showDataDetails && dataDetailsRef.current && !dataDetailsRef.current.contains(t)) setShowDataDetails(false);
+      if (showMapSettings && mapSettingsRef.current && !mapSettingsRef.current.contains(t)) setShowMapSettings(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowDataDetails(false);
+        setShowMapSettings(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [showDataDetails, showMapSettings]);
+
+  const openTab = useCallback((tab: WorkbenchTab) => {
+    if (isHelpTab(tab)) setLastHelpTab(tab);
+    setActiveTab(tab);
+  }, []);
 
   // Fetch initial catalog, story payload, and default ROI inspection
   useEffect(() => {
@@ -333,62 +383,123 @@ export const App: React.FC = () => {
               <h1 className="app-title">
                 EARTH RHYTHM <span className="title-sub">NISAR L-Band Surface Change Storyteller</span>
               </h1>
+              <div className="brand-plain-line" ref={dataDetailsRef}>
+                <span>
+                  <strong>Fayoum Oasis, Egypt</strong> · one season of farms, water &amp; desert ·{' '}
+                  {dates.length} radar passes, {shortDate(dates[0] || '2026-06-23')} →{' '}
+                  {shortDate(dates[dates.length - 1] || '2026-10-21')} 2026
+                </span>
+                <button
+                  type="button"
+                  className={`data-details-btn ${showDataDetails ? 'active' : ''}`}
+                  onClick={() => setShowDataDetails((v) => !v)}
+                  aria-expanded={showDataDetails}
+                  title="Show the satellite product, orbit and date range behind every layer"
+                >
+                  <Info size={12} /> Data details
+                </button>
+                {showDataDetails && (
+                  <div className="header-popover data-details-popover" role="dialog" aria-label="Data details">
+                    <div className="popover-title">Where the data comes from</div>
+                    <dl className="popover-kv">
+                      <dt>Place</dt>
+                      <dd>Fayoum Oasis, Egypt</dd>
+                      <dt>Orbit</dt>
+                      <dd>Track 129 / Frame 016 Ascending</dd>
+                      <dt>Product</dt>
+                      <dd>
+                        <code>NISAR_L2_GCOV_PROVISIONAL_V1</code> (CRID <code>P05023</code>)
+                      </dd>
+                      <dt>Passes</dt>
+                      <dd>
+                        10 Passes (<code>2026-06-23</code> → <code>2026-10-21</code>)
+                      </dd>
+                    </dl>
+                    <div className="aoi-meta-pill">
+                      Fayoum Oasis, Egypt • Track 129 / Frame 016 Ascending • <code>NISAR_L2_GCOV_PROVISIONAL_V1</code> (CRID{' '}
+                      <code>P05023</code>) • 10 Passes (<code>2026-06-23</code> → <code>2026-10-21</code>)
+                    </div>
+                    <button
+                      type="button"
+                      className="dash-link-btn"
+                      onClick={() => {
+                        openTab('metadata');
+                        setShowDataDetails(false);
+                      }}
+                    >
+                      Full sheet for the layer on the map (Rule 3) →
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          <div className="aoi-meta-pill">
-            Fayoum Oasis, Egypt • Track 129 / Frame 016 Ascending • <code>NISAR_L2_GCOV_PROVISIONAL_V1</code> (CRID{' '}
-            <code>P05023</code>) • 10 Passes (<code>2026-06-23</code> → <code>2026-10-21</code>)
-          </div>
         </div>
 
-        {/* MAP MODE SWITCHER */}
-        <div className="mode-pill-group">
-          <button
-            className={`mode-btn ${mapMode === 'single' ? 'mode-btn-active' : ''}`}
-            onClick={() => setMapMode('single')}
-          >
-            <Layers size={15} /> 10-Date Time Slider
-          </button>
-          <button
-            className={`mode-btn ${mapMode === 'swipe' ? 'mode-btn-active' : ''}`}
-            onClick={() => setMapMode('swipe')}
-          >
-            <SplitSquareHorizontal size={15} /> Before / After Swipe
-          </button>
-          <button
-            className={`mode-btn ${mapMode === 'change' ? 'mode-btn-active' : ''}`}
-            onClick={() => setMapMode('change')}
-          >
-            <Activity size={15} /> Change &amp; Disagreement
-          </button>
-          <button
-            className={`mode-btn ${mapMode === 'masks' ? 'mode-btn-active' : ''}`}
-            onClick={() => setMapMode('masks')}
-          >
-            <Compass size={15} /> Masks &amp; Exploratory InSAR
-          </button>
+        {/* MAP MODE SWITCHER — plain label on top, original technical name underneath */}
+        <div className="mode-pill-group" role="group" aria-label="Map view">
+          <span className="mode-group-label">Map view</span>
+          {(Object.keys(MAP_MODE_LABELS) as MapMode[]).map((m) => {
+            const Icon = MODE_ICONS[m];
+            return (
+              <button
+                key={m}
+                className={`mode-btn mode-btn-2line ${mapMode === m ? 'mode-btn-active' : ''}`}
+                onClick={() => setMapMode(m)}
+                title={MAP_MODE_LABELS[m].tech}
+              >
+                <Icon size={15} />
+                <span className="mode-btn-text">
+                  <span className="mode-btn-label">{MAP_MODE_LABELS[m].label}</span>
+                  <span className="mode-btn-tech">{MAP_MODE_LABELS[m].tech}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* BASEMAP & OPACITY CONTROLS */}
+        {/* BASEMAP & OPACITY CONTROLS (folded into a "Map settings" popover) */}
         <div className="header-right-controls">
-          <div className="control-group">
-            <label>Basemap (Context):</label>
-            <select value={basemap} onChange={(e) => setBasemap(e.target.value as BasemapType)}>
-              <option value="satellite">ESRI Optical Satellite (Non-NISAR Context)</option>
-              <option value="dark">CARTO Dark Matter Radar Canvas</option>
-              <option value="osm">OpenStreetMap Topographic</option>
-            </select>
-          </div>
-          <div className="control-group opacity-group">
-            <label>SAR Opacity: {Math.round(opacity * 100)}%</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.02"
-              value={opacity}
-              onChange={(e) => setOpacity(parseFloat(e.target.value))}
-            />
+          <div className="popover-anchor" ref={mapSettingsRef}>
+            <button
+              type="button"
+              className={`settings-btn ${showMapSettings ? 'active' : ''}`}
+              onClick={() => setShowMapSettings((v) => !v)}
+              aria-expanded={showMapSettings}
+              title="Background map and radar layer opacity"
+            >
+              <Sliders size={14} />
+              <span className="settings-btn-text">
+                <span>Map settings</span>
+                <small>
+                  {basemap === 'satellite' ? 'Satellite photo' : basemap === 'dark' ? 'Dark' : 'Street map'} •{' '}
+                  {Math.round(opacity * 100)}%
+                </small>
+              </span>
+            </button>
+            {showMapSettings && (
+              <div className="header-popover settings-popover" role="dialog" aria-label="Map settings">
+                <div className="control-group control-stack">
+                  <label>Background map — Basemap (Context, not NISAR data):</label>
+                  <select value={basemap} onChange={(e) => setBasemap(e.target.value as BasemapType)}>
+                    <option value="satellite">ESRI Optical Satellite (Non-NISAR Context)</option>
+                    <option value="dark">CARTO Dark Matter Radar Canvas</option>
+                    <option value="osm">OpenStreetMap Topographic</option>
+                  </select>
+                </div>
+                <div className="control-group control-stack opacity-group">
+                  <label>Radar layer see-through — SAR Opacity: {Math.round(opacity * 100)}%</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.02"
+                    value={opacity}
+                    onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <button
             className={`echo-header-trigger ${isEchoOpen ? 'active' : ''}`}
@@ -411,44 +522,69 @@ export const App: React.FC = () => {
               title="Play/Pause 10-Date NISAR Time Series"
             >
               {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-              {isPlaying ? 'Pause' : 'Animate 10 Dates'}
+              {isPlaying ? 'Pause' : 'Play season'}
             </button>
 
-            <div className="pol-toggle-group">
-              <button
-                className={`pol-chip ${singlePol === 'RGB' ? 'pol-chip-active' : ''}`}
-                onClick={() => setSinglePol('RGB')}
-              >
-                Physical Scattering Map (Crops / Buildings / Water)
-              </button>
-              <button
-                className={`pol-chip ${singlePol === 'HH' ? 'pol-chip-active' : ''}`}
-                onClick={() => setSinglePol('HH')}
-              >
-                HH Co-Pol (Surface / Double-Bounce)
-              </button>
-              <button
-                className={`pol-chip ${singlePol === 'HV' ? 'pol-chip-active' : ''}`}
-                onClick={() => setSinglePol('HV')}
-              >
-                HV Cross-Pol (Canopy Volume)
-              </button>
+            <div className="toolbar-field">
+              <span className="toolbar-label">Show</span>
+              <div className="pol-toggle-group">
+                {(['RGB', 'HH', 'HV'] as const).map((p) => (
+                  <button
+                    key={p}
+                    className={`pol-chip ${singlePol === p ? 'pol-chip-active' : ''}`}
+                    onClick={() => setSinglePol(p)}
+                    title={POL_LABELS[p].tech}
+                  >
+                    {POL_LABELS[p].label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="date-scrubber">
-              {dates.map((dt, idx) => (
-                <button
-                  key={dt}
-                  className={`date-step-btn ${idx === activeDateIdx ? 'date-step-active' : ''}`}
-                  onClick={() => {
-                    setIsPlaying(false);
-                    setActiveDateIdx(idx);
-                  }}
-                >
-                  <span className="step-idx">Pass {idx + 1}</span>
-                  <span className="step-date">{dt}</span>
-                </button>
-              ))}
+            <div className="date-stepper">
+              <button
+                className="date-arrow"
+                disabled={activeDateIdx === 0}
+                onClick={() => {
+                  setIsPlaying(false);
+                  setActiveDateIdx((i) => Math.max(0, i - 1));
+                }}
+                aria-label="Previous pass"
+                title="Previous pass"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <div className="date-scrubber">
+                {dates.map((dt, idx) => (
+                  <button
+                    key={dt}
+                    className={`date-step-btn ${idx === activeDateIdx ? 'date-step-active' : ''}`}
+                    onClick={() => {
+                      setIsPlaying(false);
+                      setActiveDateIdx(idx);
+                    }}
+                    title={`Pass ${idx + 1} of ${dates.length} • ${dt}`}
+                  >
+                    <span className="step-idx">Pass {idx + 1}</span>
+                    <span className="step-date">{shortDate(dt)}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                className="date-arrow"
+                disabled={activeDateIdx >= dates.length - 1}
+                onClick={() => {
+                  setIsPlaying(false);
+                  setActiveDateIdx((i) => Math.min(dates.length - 1, i + 1));
+                }}
+                aria-label="Next pass"
+                title="Next pass"
+              >
+                <ChevronRight size={14} />
+              </button>
+              <span className="date-current">
+                Pass {activeDateIdx + 1}/{dates.length} • <code>{activeDate}</code>
+              </span>
             </div>
           </div>
         )}
@@ -456,7 +592,7 @@ export const App: React.FC = () => {
         {mapMode === 'swipe' && (
           <div className="toolbar-row swipe-toolbar">
             <div className="swipe-select-box">
-              <span className="side-tag left-tag">LEFT CURTAIN LAYER:</span>
+              <span className="side-tag left-tag" title="LEFT CURTAIN LAYER">LEFT SIDE</span>
               <select value={swipeLeftId} onChange={(e) => setSwipeLeftId(e.target.value)}>
                 {catalog.overlays.map((o) => (
                   <option key={o.layer_id} value={o.layer_id}>
@@ -466,36 +602,40 @@ export const App: React.FC = () => {
               </select>
             </div>
             <div className="swipe-presets">
+              <span className="toolbar-label">Quick picks</span>
               <button
                 className="preset-btn"
+                title="Jun 23 vs Aug 10 (HV Growth)"
                 onClick={() => {
                   setSwipeLeftId('gcov_20260623_HV');
                   setSwipeRightId('gcov_20260810_HV');
                 }}
               >
-                Jun 23 vs Aug 10 (HV Growth)
+                Crop growth · Jun 23 vs Aug 10 (HV)
               </button>
               <button
                 className="preset-btn"
+                title="Aug 10 vs Oct 21 (HV Harvest)"
                 onClick={() => {
                   setSwipeLeftId('gcov_20260810_HV');
                   setSwipeRightId('gcov_20261021_HV');
                 }}
               >
-                Aug 10 vs Oct 21 (HV Harvest)
+                Harvest · Aug 10 vs Oct 21 (HV)
               </button>
               <button
                 className="preset-btn"
+                title="ΔHH vs ΔHV Disagreement (Aug 10 → Oct 21, thresholded)"
                 onClick={() => {
                   setSwipeLeftId('delta_HH_20260810_to_20261021_sig');
                   setSwipeRightId('delta_HV_20260810_to_20261021_sig');
                 }}
               >
-                ΔHH vs ΔHV Disagreement
+                HH vs HV disagreement (ΔHH | ΔHV)
               </button>
             </div>
             <div className="swipe-select-box">
-              <span className="side-tag right-tag">RIGHT CURTAIN LAYER:</span>
+              <span className="side-tag right-tag" title="RIGHT CURTAIN LAYER">RIGHT SIDE</span>
               <select value={swipeRightId} onChange={(e) => setSwipeRightId(e.target.value)}>
                 {catalog.overlays.map((o) => (
                   <option key={o.layer_id} value={o.layer_id}>
@@ -510,7 +650,7 @@ export const App: React.FC = () => {
         {mapMode === 'change' && (
           <div className="toolbar-row">
             <div className="control-group">
-              <label>Seasonal Window:</label>
+              <label title="Seasonal Window">Time window:</label>
               <select value={changeInterval} onChange={(e) => setChangeInterval(e.target.value)}>
                 <option value="20260623_to_20260810">Early → Peak Summer (2026-06-23 → 2026-08-10)</option>
                 <option value="20260810_to_20261021">Peak Summer → Autumn Harvest (2026-08-10 → 2026-10-21)</option>
@@ -518,54 +658,54 @@ export const App: React.FC = () => {
               </select>
             </div>
 
-            <div className="pol-toggle-group">
-              <button
-                className={`pol-chip ${changeMetric === 'HV' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('HV')}
-              >
-                ΔHV Canopy Change (τ = 2.03 dB)
-              </button>
-              <button
-                className={`pol-chip ${changeMetric === 'HH' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('HH')}
-              >
-                ΔHH Surface/Wetting Change (τ = 2.73 dB)
-              </button>
-              <button
-                className={`pol-chip ${changeMetric === 'regime' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('regime')}
-              >
-                7-Class Dual-Pol Regime &amp; Disagreement Map
-              </button>
-              <button
-                className={`pol-chip ${changeMetric === 'HV_over_HH' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('HV_over_HH')}
-              >
-                Δ(HV/HH) Ratio
-              </button>
-              <button
-                className={`pol-chip ${changeMetric === 'dyn_HV' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('dyn_HV')}
-              >
-                10-Date HV Dynamic Range
-              </button>
-              <button
-                className={`pol-chip ${changeMetric === 'dyn_HH' ? 'pol-chip-active' : ''}`}
-                onClick={() => setChangeMetric('dyn_HH')}
-              >
-                10-Date HH Dynamic Range
-              </button>
+            <div className="toolbar-field">
+              <span className="toolbar-label" title="Change between the 2 dates of the time window">
+                Between 2 dates
+              </span>
+              <div className="pol-toggle-group">
+                {(['HV', 'HH', 'regime', 'HV_over_HH'] as ChangeMetric[]).map((m) => (
+                  <button
+                    key={m}
+                    className={`pol-chip ${changeMetric === m ? 'pol-chip-active' : ''}`}
+                    onClick={() => setChangeMetric(m)}
+                    title={CHANGE_METRIC_LABELS[m].tech}
+                  >
+                    {CHANGE_METRIC_LABELS[m].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="toolbar-field">
+              <span className="toolbar-label" title="How far each pixel swung over all 10 dates">
+                Over all 10 dates
+              </span>
+              <div className="pol-toggle-group">
+                {(['dyn_HV', 'dyn_HH'] as ChangeMetric[]).map((m) => (
+                  <button
+                    key={m}
+                    className={`pol-chip ${changeMetric === m ? 'pol-chip-active' : ''}`}
+                    onClick={() => setChangeMetric(m)}
+                    title={CHANGE_METRIC_LABELS[m].tech}
+                  >
+                    {CHANGE_METRIC_LABELS[m].label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {(changeMetric === 'HH' || changeMetric === 'HV') && (
-              <label className="threshold-checkbox">
+              <label
+                className="threshold-checkbox"
+                title={`Hide Sub-Threshold Noise (|ΔdB| < ${changeMetric === 'HH' ? '2.73' : '2.03'} dB transparent)`}
+              >
                 <input
                   type="checkbox"
                   checked={thresholdMaskOnly}
                   onChange={(e) => setThresholdMaskOnly(e.target.checked)}
                 />
                 <span>
-                  Hide Sub-Threshold Noise (|ΔdB| &lt; {changeMetric === 'HH' ? '2.73' : '2.03'} dB transparent)
+                  Hide noise: changes smaller than τ = {changeMetric === 'HH' ? '2.73' : '2.03'} dB
                 </span>
               </label>
             )}
@@ -575,7 +715,9 @@ export const App: React.FC = () => {
         {mapMode === 'masks' && (
           <div className="toolbar-row">
             <div className="control-group">
-              <label>Select Geophysical Mask or Exploratory InSAR Layer:</label>
+              <label title="Select Geophysical Mask or Exploratory InSAR Layer">
+                Supporting layer (land types, quality masks, forecasts, exploratory InSAR):
+              </label>
               <select value={selectedMaskLayerId} onChange={(e) => setSelectedMaskLayerId(e.target.value)}>
                 <optgroup label="Phase 2 Geophysical & Radiometric Calibration Masks (40m)">
                   {catalog.overlays
@@ -628,25 +770,29 @@ export const App: React.FC = () => {
             onMapClick={(lon, lat) => {
               triggerInspect(lon, lat, inspectWindowPx);
               if (activeTab !== 'inspector' && activeTab !== 'story') {
-                setActiveTab('inspector');
+                openTab('inspector');
               }
             }}
             onSelectRoi={(roi) => handleSelectRoi(roi, true)}
           />
 
-          {/* Quick Focal ROI Jump Bar at Bottom of Map */}
+          {/* Quick Focal ROI Jump Bar at Bottom of Map (short names; full titles in tooltips) */}
           <div className="roi-quick-bar">
-            <span className="quick-bar-label">
-              <Crosshair size={13} /> Focal Story ROIs (200m × 200m):
+            <span className="quick-bar-label" title="Focal Story ROIs (200m × 200m)">
+              <Crosshair size={13} />
+              <span className="quick-bar-label-text">
+                Story spots <small>200 m × 200 m each</small>
+              </span>
             </span>
             {focalRois.map((roi, idx) => (
               <button
                 key={roi.roi_id}
                 className={`roi-quick-btn ${selectedRoiId === roi.roi_id ? 'roi-quick-active' : ''}`}
                 onClick={() => handleSelectRoi(roi, true)}
+                title={`${roi.title} — ${roi.roi_id}`}
               >
                 <span className="pin-circle">{idx + 1}</span>
-                {roi.roi_id.replace(/^ROI_0\d_/, '').replace(/_/g, ' ')}
+                {roiShortName(roi.roi_id)}
               </button>
             ))}
           </div>
@@ -654,64 +800,88 @@ export const App: React.FC = () => {
 
         {/* RIGHT SCIENTIFIC WORKBENCH PANEL */}
         <aside className="workbench-panel">
-          <nav className="workbench-tabs">
+          <nav className="workbench-tabs workbench-tabs-5">
             <button
               className={`tab-btn ${activeTab === 'story' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('story')}
+              onClick={() => openTab('story')}
+              title="Story Mode — 6 guided chapters"
             >
-              <Sparkles size={14} /> Story Mode (6)
+              <Sparkles size={14} /> Story
             </button>
             <button
               className={`tab-btn ${activeTab === 'inspector' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('inspector')}
+              onClick={() => openTab('inspector')}
+              title="Pixel Inspector — what happened at the selected spot"
             >
-              <Crosshair size={14} /> Pixel Inspector
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'metadata' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('metadata')}
-            >
-              <Database size={14} /> Rule 3 Metadata
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'methods' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('methods')}
-            >
-              <BookOpen size={14} /> Methods &amp; Limits
+              <Crosshair size={14} /> This spot
             </button>
             <button
               className={`tab-btn ${activeTab === 'dashboards' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('dashboards')}
+              onClick={() => openTab('dashboards')}
+              title="Dashboards — the whole area at a glance"
             >
-              <LayoutDashboard size={14} /> Dashboards
+              <LayoutDashboard size={14} /> Overview
             </button>
             <button
               className={`tab-btn ${activeTab === 'forecast' ? 'tab-btn-active' : ''}`}
               onClick={() => {
-                setActiveTab('forecast');
+                openTab('forecast');
                 showPredictionLayerOnMap('pred_flood_risk_20261102');
               }}
+              title="Forecast — flood & crop outlook for the next pass"
             >
-              🔮 Forecast
+              <TrendingUp size={14} /> Forecast
             </button>
             <button
-              className={`tab-btn ${activeTab === 'guide' ? 'tab-btn-active' : ''}`}
-              onClick={() => setActiveTab('guide')}
+              className={`tab-btn ${isHelpTab(activeTab) ? 'tab-btn-active' : ''}`}
+              onClick={() => openTab(isHelpTab(activeTab) ? activeTab : lastHelpTab)}
+              title="Guide & glossary, Rule 3 layer metadata, Methods & Limits"
             >
-              <Lightbulb size={14} /> Guide
+              <BookOpen size={14} /> Help &amp; data
             </button>
           </nav>
 
           <div className="workbench-content">
+            {/* "Help & data" sub-views */}
+            {isHelpTab(activeTab) && (
+              <div className="subtab-bar" role="tablist" aria-label="Help and data">
+                <button
+                  className={`subtab-btn ${activeTab === 'guide' ? 'subtab-active' : ''}`}
+                  onClick={() => openTab('guide')}
+                  title="Guide"
+                >
+                  <Lightbulb size={13} /> How to read the app
+                </button>
+                <button
+                  className={`subtab-btn ${activeTab === 'metadata' ? 'subtab-active' : ''}`}
+                  onClick={() => openTab('metadata')}
+                  title="Rule 3 Metadata"
+                >
+                  <Database size={13} /> Layer data sheet <span className="subtab-tech">Rule 3</span>
+                </button>
+                <button
+                  className={`subtab-btn ${activeTab === 'methods' ? 'subtab-active' : ''}`}
+                  onClick={() => openTab('methods')}
+                  title="Methods & Limits"
+                >
+                  <BookOpen size={13} /> Methods &amp; limits
+                </button>
+              </div>
+            )}
+
             {/* TAB 1: 6-STEP GUIDED STORY MODE */}
             {activeTab === 'story' && (
               <div className="tab-pane story-pane">
                 <div className="story-stepper-bar">
+                  <span className="story-progress">
+                    Chapter <strong>{storyStepIdx + 1}</strong> of {STORY_STEPS.length}
+                  </span>
                   {STORY_STEPS.map((st, idx) => (
                     <button
                       key={st.id}
                       className={`step-dot-btn ${idx === storyStepIdx ? 'step-dot-active' : ''}`}
                       onClick={() => applyStoryStep(idx)}
+                      title={`Chapter ${st.stepNumber}: ${st.title}`}
                     >
                       {st.stepNumber}
                     </button>
@@ -721,51 +891,61 @@ export const App: React.FC = () => {
                       disabled={storyStepIdx === 0}
                       onClick={() => applyStoryStep(Math.max(0, storyStepIdx - 1))}
                     >
-                      ← Prev
+                      ← Back
                     </button>
                     <button
+                      className="step-next-btn"
                       disabled={storyStepIdx === STORY_STEPS.length - 1}
                       onClick={() => applyStoryStep(Math.min(STORY_STEPS.length - 1, storyStepIdx + 1))}
                     >
-                      Next Chapter →
+                      Next chapter →
                     </button>
                   </div>
                 </div>
 
-                <div className="story-chapter-card">
-                  <div className="chapter-badge">{activeStep.badge}</div>
-                  <h2 className="chapter-title">{activeStep.title}</h2>
-                  <div className="chapter-subtitle">{activeStep.subtitle}</div>
-
-                  <p className="chapter-body">{activeStep.physicsTakeaway}</p>
-
-                  <div className="pol-highlight-box">
-                    <strong>Dual-Pol &amp; Wavelength Insight:</strong>
-                    <p>{activeStep.whyPolarizationMatters}</p>
-                  </div>
-                </div>
-
-                {/* Plain-language companion for this chapter (additive) */}
-                <StoryPlainCard stepNumber={activeStep.stepNumber} />
+                {/* Plain words first; the technical chapter text is one click away */}
+                <StoryPlainCard
+                  stepNumber={activeStep.stepNumber}
+                  badge={activeStep.badge}
+                  title={activeStep.title}
+                  subtitle={activeStep.subtitle}
+                >
+                  <Disclosure
+                    title="Science details for this chapter"
+                    hint="radar physics & dual-pol / wavelength insight"
+                    className="story-chapter-card"
+                  >
+                    <p className="chapter-body">{activeStep.physicsTakeaway}</p>
+                    <div className="pol-highlight-box">
+                      <strong>Dual-Pol &amp; Wavelength Insight:</strong>
+                      <p>{activeStep.whyPolarizationMatters}</p>
+                    </div>
+                  </Disclosure>
+                </StoryPlainCard>
 
                 {/* Embedded Multi-Temporal Chart for Current Story Focal ROI */}
                 {inspectResult && (
                   <div className="story-chart-card">
                     <div className="card-header-row">
-                      <h3>
-                        10-Date NISAR Trajectory •{' '}
-                        <code>
-                          ({inspectResult.coordinates.wgs84_lon.toFixed(4)}°E,{' '}
-                          {inspectResult.coordinates.wgs84_lat.toFixed(4)}°N)
-                        </code>
-                      </h3>
+                      <div>
+                        <h3>How this spot changed over the 10 passes</h3>
+                        <div className="card-sub">
+                          10-Date NISAR Trajectory •{' '}
+                          {selectedRoiId !== 'CUSTOM_PIXEL' ? `${roiShortName(selectedRoiId)} • ` : 'Clicked spot • '}
+                          <code>
+                            ({inspectResult.coordinates.wgs84_lon.toFixed(4)}°E,{' '}
+                            {inspectResult.coordinates.wgs84_lat.toFixed(4)}°N)
+                          </code>{' '}
+                          • click a date to show it on the map
+                        </div>
+                      </div>
                       <label className="s2-toggle-label">
                         <input
                           type="checkbox"
                           checked={showS2Overlay}
                           onChange={(e) => setShowS2Overlay(e.target.checked)}
                         />
-                        <span>Overlay Sentinel-2 NDVI (Context)</span>
+                        <span>Overlay Sentinel-2 NDVI (optical context, not NISAR)</span>
                       </label>
                     </div>
 
@@ -783,24 +963,29 @@ export const App: React.FC = () => {
                       showSentinel2Overlay={showS2Overlay}
                     />
 
-                    {/* Epistemic 3-Tier Statements (Rule 5) */}
-                    <div className="epistemic-stack">
-                      <div className="epistemic-card obs-card">
-                        <span className="ep-tag obs-tag">OBSERVATION</span>
-                        <p>{inspectResult.epistemic_statements.observation}</p>
+                    {/* Epistemic 3-Tier Statements (Rule 5) — technical wording, folded */}
+                    <Disclosure
+                      title="Technical findings for this spot"
+                      hint="OBSERVATION • CHANGE DETECTION • INTERPRETATION (hypothesis)"
+                    >
+                      <div className="epistemic-stack">
+                        <div className="epistemic-card obs-card">
+                          <span className="ep-tag obs-tag">OBSERVATION</span>
+                          <p>{inspectResult.epistemic_statements.observation}</p>
+                        </div>
+                        <div className="epistemic-card chg-card">
+                          <span className="ep-tag chg-tag">CHANGE DETECTION</span>
+                          <p>{inspectResult.epistemic_statements.change_detection}</p>
+                        </div>
+                        <div className="epistemic-card hyp-card">
+                          <span className="ep-tag hyp-tag">INTERPRETATION (hypothesis)</span>
+                          <p>
+                            {focalRois.find((r) => r.roi_id === selectedRoiId)?.hypothesis_statement ||
+                              inspectResult.epistemic_statements.interpretation}
+                          </p>
+                        </div>
                       </div>
-                      <div className="epistemic-card chg-card">
-                        <span className="ep-tag chg-tag">CHANGE DETECTION</span>
-                        <p>{inspectResult.epistemic_statements.change_detection}</p>
-                      </div>
-                      <div className="epistemic-card hyp-card">
-                        <span className="ep-tag hyp-tag">INTERPRETATION (hypothesis)</span>
-                        <p>
-                          {focalRois.find((r) => r.roi_id === selectedRoiId)?.hypothesis_statement ||
-                            inspectResult.epistemic_statements.interpretation}
-                        </p>
-                      </div>
-                    </div>
+                    </Disclosure>
                   </div>
                 )}
               </div>
@@ -812,7 +997,10 @@ export const App: React.FC = () => {
                 <div className="inspector-header-card">
                   <div className="inspector-coords-row">
                     <div>
-                      <span className="section-eyebrow">LIVE CALIBRATED CUBE QUERY (/api/inspect)</span>
+                      <span className="section-eyebrow">
+                        THIS SPOT{selectedRoiId !== 'CUSTOM_PIXEL' ? ` • ${roiShortName(selectedRoiId).toUpperCase()}` : ' • CLICKED ON MAP'}
+                        <span className="eyebrow-tech"> • LIVE CALIBRATED CUBE QUERY (/api/inspect)</span>
+                      </span>
                       <h3>
                         {selectedRoiId !== 'CUSTOM_PIXEL'
                           ? focalRois.find((r) => r.roi_id === selectedRoiId)?.title || selectedRoiId
@@ -825,7 +1013,7 @@ export const App: React.FC = () => {
                     </div>
 
                     <div className="patch-size-selector">
-                      <label>Patch Window:</label>
+                      <label title="Patch Window">Area averaged (patch window):</label>
                       <select
                         value={inspectWindowPx}
                         onChange={(e) => {
@@ -860,6 +1048,7 @@ export const App: React.FC = () => {
                       </span>
                     )}
                   </div>
+                  <div className="inspector-tip">Click anywhere on the map, or a numbered story spot, to inspect another place.</div>
                 </div>
 
                 {/* Plain-language readout generated from the live /api/inspect result (additive) */}
@@ -867,14 +1056,19 @@ export const App: React.FC = () => {
 
                 <div className="story-chart-card">
                   <div className="card-header-row">
-                    <h3>Multi-Temporal Backscatter (γ⁰ dB Median &amp; [P25, P75] IQR)</h3>
+                    <div>
+                      <h3>Radar signal over the season</h3>
+                      <div className="card-sub">
+                        Multi-Temporal Backscatter (γ⁰ dB Median &amp; [P25, P75] IQR) • click a date to show it on the map
+                      </div>
+                    </div>
                     <label className="s2-toggle-label">
                       <input
                         type="checkbox"
                         checked={showS2Overlay}
                         onChange={(e) => setShowS2Overlay(e.target.checked)}
                       />
-                      <span>Sentinel-2 L2A NDVI (Context)</span>
+                      <span>Sentinel-2 L2A NDVI (optical context, not NISAR)</span>
                     </label>
                   </div>
 
@@ -902,8 +1096,12 @@ export const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* Seasonal Log-Ratio Interval Table */}
-                <div className="data-table-card">
+                {/* Seasonal Log-Ratio Interval Table (folded: the plain readout above shows the same ΔHH/ΔHV values) */}
+                <Disclosure
+                  title="Exact numbers per time window"
+                  hint="ΔHH, ΔHV, Δ(HV/HH) and change class in one table"
+                  className="data-table-card"
+                >
                   <h3>Seasonal Log-Ratio Change &amp; Threshold Evaluation (τ_HH = 2.73 dB, τ_HV = 2.03 dB)</h3>
                   <table className="sci-table">
                     <thead>
@@ -942,7 +1140,8 @@ export const App: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                  <p className="table-foot">★ = the change is bigger than the noise threshold τ for that channel.</p>
+                </Disclosure>
 
                 {/* External Meteorological Context Strip (Rule 2 — NASA POWER) */}
                 <div className="external-context-card">
@@ -951,6 +1150,7 @@ export const App: React.FC = () => {
                     <strong>{nasaPower.source_label}</strong>
                   </div>
                   <p className="context-text">{nasaPower.scientific_implication}</p>
+                  <div className="weather-caption">Weather on each radar pass date: rain (mm/day) and wind at 2 m (m/s)</div>
                   <div className="weather-mini-grid">
                     {nasaPower.nisar_overpass_dates_weather.map((w) => (
                       <div key={w.nisar_date} className="weather-chip">
@@ -965,6 +1165,16 @@ export const App: React.FC = () => {
             )}
 
             {/* TAB 3: MANDATORY RULE 3 LAYER METADATA PANEL */}
+            {activeTab === 'metadata' && (
+              <div className="plain-intro">
+                <strong>The “receipt” for the layer on the map.</strong> Which satellite and product it comes from, its
+                date(s), polarization, units, map projection, source file and certainty label. Change the map view and this
+                sheet follows it.
+              </div>
+            )}
+            {activeTab === 'metadata' && !leftOverlay && (
+              <div className="empty-chart">No layer is currently shown on the map.</div>
+            )}
             {activeTab === 'metadata' && leftOverlay && (
               <div className="tab-pane metadata-pane">
                 <div className="metadata-card">
@@ -1114,6 +1324,32 @@ export const App: React.FC = () => {
             {/* TAB 4: METHOD & LIMITS PANEL + FUTURE NISAR APPLICATIONS */}
             {activeTab === 'methods' && (
               <div className="tab-pane methods-pane">
+                {/* Plain summary of the cards below (no new numbers — every value is restated from them) */}
+                <div className="plain-card">
+                  <div className="plain-card-head">
+                    <span className="plain-eyebrow">IN SHORT • HOW WE KEEP THE SCIENCE HONEST</span>
+                    <h3>Four things to know before trusting a change</h3>
+                  </div>
+                  <ol className="plain-steps">
+                    <li>
+                      <strong>Speckle is smoothed without bias.</strong> Pixels are averaged in linear power before
+                      converting to dB, so the mean brightness is kept within 0.02%.
+                    </li>
+                    <li>
+                      <strong>A change only counts if it beats the noise.</strong> Stable desert sets the bar: τ = 2.73 dB
+                      for HH and τ = 2.03 dB for HV.
+                    </li>
+                    <li>
+                      <strong>Some things can fool the radar.</strong> Wind ripples on Lake Qarun and very smooth sand near
+                      the sensor noise floor.
+                    </li>
+                    <li>
+                      <strong>12-day InSAR is not ground sinking.</strong> The atmosphere alone adds 8.80–18.78 mm of
+                      apparent motion, far more than plausible compaction, so we never claim subsidence.
+                    </li>
+                  </ol>
+                </div>
+
                 {/* 1. Multi-Stage Speckle Filtering & ENL Verification */}
                 <div className="data-table-card">
                   <span className="section-eyebrow">SCIENCE REQ 2 • LINEAR-POWER SPECKLE FILTERING &amp; ENL</span>
@@ -1314,7 +1550,7 @@ export const App: React.FC = () => {
             {activeTab === 'guide' && (
               <GuidePanel
                 catalog={catalog}
-                onNavigate={(tab) => setActiveTab(tab)}
+                onNavigate={(tab) => openTab(tab)}
                 onOpenEcho={() => setIsEchoOpen(true)}
               />
             )}
@@ -1331,4 +1567,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-

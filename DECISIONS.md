@@ -348,3 +348,23 @@ Each step flies the MapLibre camera (`flyTo`) to a verified focal region, activa
      - Built `Dockerfile` (`python:3.14-slim`, port `7860`) for local/containerized full-resolution hosting and `frontend/src/staticBackend.ts` for zero-cost static hosting on Hugging Face Spaces with 30× palette-compressed cloud overlays (`255.6 MB → 9.46 MB`).
 
 
+---
+
+## Decision D-014: Simplified, Digestible UI by Progressive Disclosure (Frontend-Only, Nothing Removed)
+
+- **Status:** Executed & Verified (`2026-11-14`): `npm run build` (`tsc -b && vite build`) passes (only the pre-existing >500 kB chunk warning). Headless screenshot checks at `1600×1000` and `1366×768` across 16 views: no horizontal overflow, no clipped tabs, `0` console errors.
+- **Goal:** make the app easier to read for non-specialists **without removing any data**. Plain wording comes first; every technical name, number and label stays visible as a sub-label, tooltip, popover or expandable section. No pipeline, API, JSON, layer or numeric value was changed.
+- **New files:** `frontend/src/uiLabels.ts` (plain names for story spots, map views, polarizations and change metrics, with the original technical names kept alongside), `frontend/src/components/Disclosure.tsx` (collapsible "Show / Hide" section).
+- **Changes:**
+  1. **Header:** one plain line (place, season, pass count, date range). The full technical mission line (Track / Frame, product version, CRID, AOI pill) moved into a **"Data details"** popover with a link to the Rule 3 sheet. Basemap and SAR opacity moved into a **"Map settings"** popover (original labels kept).
+  2. **Map views:** plain names (One date / Compare two / What changed / Land types & extras), technical name shown as a sub-label and tooltip.
+  3. **Toolbars:** compact 10-pass date stepper (prev/next, short dates, "Pass n/10 • ISO date"); plain polarization chips (Colour mix / HH · ground & buildings / HV · plants); change metrics grouped into "Between 2 dates" and "Over all 10 dates" with technical names as tooltips; plain noise-threshold toggle that still shows τ.
+  4. **Story spots bar:** short names, wraps instead of scrolling; full ROI title and id kept in tooltips.
+  5. **Workbench tabs 7 → 5:** Story / This spot / Overview / Forecast / Help & data. Help & data holds sub-tabs: How to read the app (Guide), Layer data sheet (`Rule 3` metadata), Methods & limits (adds an "In short" card that only restates numbers already shown).
+  6. **Story:** plain card first, with "Chapter n of 6" progress; `physicsTakeaway` and `whyPolarizationMatters` in a "Science details" disclosure; technical O/C/I statements in a "Technical findings for this spot" disclosure.
+  7. **This spot (Inspector):** plain header and tip; exact per-window ΔHH / ΔHV / Δ(HV/HH) table in an "Exact numbers" disclosure with a ★ footnote; NASA POWER weather caption.
+  8. **Map legend:** compact and minimizable; the GUNW exploratory disclaimer (Rule 4/6) stays visible when minimized.
+  9. **Bug fix:** Forecast tab classes (`workbench-section`, `inspector-metrics-grid`, `metric-box`, `metric-label`, `metric-value`, `metric-sub`, `scientific-table`) had no CSS, so metric values ran together; styles added.
+- **Guardrails honoured:** no fabricated data; `Rule 2` external-context badges, `Rule 3` metadata and `Rule 5` OBSERVATION / CHANGE DETECTION / INTERPRETATION (hypothesis) tags all intact; backscatter change is never called displacement/subsidence; GUNW remains exploratory.
+- **Known data gap (not changed):** `frontend/public/static_api/prediction.json` has an empty `forward_forecast_20261102.focal_roi_forecasts`, so the per-spot forecast card does not render (same as before this change).
+- **No new dependencies.**

@@ -3,8 +3,8 @@
 ## 1. Meta Information
 - **Project Name:** EARTH RHYTHM — NISAR Surface Change Storyteller
 - **Challenge:** NASA Space Apps Challenge 2026 ("Dancing with the SARs")
-- **Version:** 1.3.0
-- **Last Updated:** 2026-11-14T11:10:00+02:00
+- **Version:** 1.4.0
+- **Last Updated:** 2026-11-14T12:02:00+02:00
 
 ## 2. Technical Stack
 - **Data Discovery & Access:** Python 3, `earthaccess` (NASA CMR API), `asf_search` (Alaska Satellite Facility API), `h5py`
@@ -52,11 +52,13 @@ Earth Rhythm AI/
 │       ├── storySteps.ts        # 6-chapter guided narrative with camera flyTo & radar physics
 │       ├── plainLanguage.ts     # Plain-language translations for map modes, chapters & glossary (D-012)
 │       ├── staticBackend.ts     # Hybrid client-side tensor inspector & static JSON fallback
+│       ├── uiLabels.ts          # Friendly UI labels paired with original technical names (D-014)
 │       ├── components/
-│       │   ├── NisarMap.tsx     # Dual-synchronized MapLibre GL JS canvas + swipe curtain + legends
+│       │   ├── NisarMap.tsx     # Dual-synchronized MapLibre GL JS canvas + swipe curtain + minimizable legend
 │       │   ├── TimeSeriesChart.tsx # Interactive SVG multi-temporal HH/HV/IQR/NESZ + Sentinel-2 NDVI chart
 │       │   ├── PlainReadouts.tsx   # Map "What am I looking at?", Story & Inspector plain-words cards
 │       │   ├── DashboardsPanel.tsx # 5-view interactive basin dashboards (D-012)
+│       │   ├── Disclosure.tsx      # Collapsible progressive-disclosure wrapper (D-014)
 │       │   ├── GuidePanel.tsx      # 3-minute reading path, Rule 5 explainer & searchable glossary
 │       │   ├── PredictionPanel.tsx # Phase 5 Explainable Flood & Next-Pass (2026-11-02) Forecast UI (D-013)
 │       │   ├── BenchmarkCard.tsx   # Live /api/benchmark comparison table inside Methods & Limits
@@ -97,9 +99,11 @@ Earth Rhythm AI/
   - Added Plain-Language Readouts (`PlainReadouts.tsx`), 5-view Basin Dashboards (`DashboardsPanel.tsx`), and 3-minute Guide & Glossary (`GuidePanel.tsx`) (`Decision D-012`).
   - Built and backtest-verified the Phase 5 Explainable Flood & Next-Pass (`2026-11-02`) Crop/Moisture Forecaster (`scripts/phase5_explainable_prediction.py`, `PredictionPanel.tsx`, `/api/prediction`, `ROC-AUC = 0.9998`, `Coastal IoU = 0.8871`, `HH RMSE = 1.030 dB`, `HV RMSE = 0.952 dB`, `Invariant 11`) (`Decision D-013`).
   - Packaged hybrid Docker (`Dockerfile`) and serverless static tensor cloud deployment (`frontend/src/staticBackend.ts`) hosted live on Hugging Face Spaces (`https://huggingface.co/spaces/kareem232003/earth-rhythm`).
+- [x] **Phase 10 (Progressive Disclosure UI Simplification — `Decision D-014`):**
+  - Added `uiLabels.ts` and `Disclosure.tsx`, folded header details/map settings into compact popovers, consolidated 7 workbench tabs into 5 (`Story`, `This spot`, `Overview`, `Forecast`, `Help & data`), added collapsible map legend & Forecast metric styling (`styles.css`), keeping all technical names and Rule 2/3/5 labels intact.
 
 ### In-Progress
-- None (`v1.3.0` complete).
+- None (`v1.4.0` complete).
 
 ### Backlog
 - Multi-interferogram `L2_GUNW` SBAS velocity stacking once >= 20–30 passes accumulate over Fayoum Oasis.

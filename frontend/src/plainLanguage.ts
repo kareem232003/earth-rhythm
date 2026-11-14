@@ -81,8 +81,8 @@ export const PLAIN_CHAPTERS: PlainChapter[] = [
     hypothesis:
       'A reasonable reading is staggered planting: some farmers harvest while others are just planting a new crop.',
     lookFor: [
-      'Turn the "Hide sub-threshold noise" option on or off in the Change view.',
-      'Compare the dashboard bar for growth vs harvest in the Dashboards tab.',
+      'Turn the "Hide noise" option on or off in the "What changed" map view.',
+      'Compare the dashboard bar for growth vs harvest in the Overview tab (Dashboards).',
     ],
     whyItMatters:
       'A single number for the whole area would say "nothing changed". Pixel-level maps show that a lot did.',
@@ -114,7 +114,7 @@ export const PLAIN_CHAPTERS: PlainChapter[] = [
       'One plausible sequence is crop clearance (HV down) followed by tillage or flooding of the bare field (HH up). This is a hypothesis; the satellite alone cannot confirm field operations.',
     lookFor: [
       'Look for the red class in the regime map (HH up and HV down).',
-      'Note how few pixels are in the two disagreement classes compared with all other classes in the Dashboards tab.',
+      'Note how few pixels are in the two disagreement classes compared with all other classes in the Overview tab (Dashboards).',
     ],
     whyItMatters:
       'A radar that only measured HH would call this "growth". Two polarizations avoid that mistake.',
@@ -129,8 +129,8 @@ export const PLAIN_CHAPTERS: PlainChapter[] = [
     hypothesis:
       'The interferometry layer shows an apparent line-of-sight phase pattern that is dominated by atmosphere over such a short period, so it is not used to claim ground sinking.',
     lookFor: [
-      'Open the Methods & Limits tab to see the noise numbers.',
-      'In the Dashboards tab, open "Can we trust it?" for the threshold ladder.',
+      'Open Help & data → Methods & limits to see the noise numbers.',
+      'In the Overview tab (Dashboards), open "Can we trust it?" for the threshold ladder.',
     ],
     whyItMatters:
       'Saying clearly what the data cannot show is part of the result, not a weakness.',

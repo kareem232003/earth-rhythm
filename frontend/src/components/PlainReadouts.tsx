@@ -20,16 +20,40 @@ const sgn = (n: number): string => (n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
 /* 1. Story Mode companion: "In plain words"                                   */
 /* -------------------------------------------------------------------------- */
 
-export const StoryPlainCard: React.FC<{ stepNumber: number }> = ({ stepNumber }) => {
+export const StoryPlainCard: React.FC<{
+  stepNumber: number;
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  children?: React.ReactNode;
+}> = ({ stepNumber, badge, title, subtitle, children }) => {
   const ch = PLAIN_CHAPTERS.find((c) => c.stepNumber === stepNumber);
   if (!ch) return null;
   return (
-    <div className="plain-card">
-      <div className="plain-card-head">
+    <div className="plain-card story-plain-card">
+      {(badge || title) && (
+        <div className="story-chapter-head">
+          {badge && <span className="chapter-badge">{badge}</span>}
+          {title && <h2 className="chapter-title">{title}</h2>}
+          {subtitle && <div className="chapter-subtitle">{subtitle}</div>}
+        </div>
+      )}
+
+      <div className="plain-card-head story-headline">
         <span className="plain-eyebrow">IN PLAIN WORDS</span>
         <h3>{ch.headline}</h3>
       </div>
 
+      <div className="plain-look">
+        <strong>What to look at on the map</strong>
+        <ul>
+          {ch.lookFor.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="plain-sub-label">What we can say, from most to least certain</div>
       <div className="epistemic-stack">
         <div className="epistemic-card obs-card">
           <span className="ep-tag obs-tag">OBSERVATION</span>
@@ -45,17 +69,10 @@ export const StoryPlainCard: React.FC<{ stepNumber: number }> = ({ stepNumber })
         </div>
       </div>
 
-      <div className="plain-look">
-        <strong>What to look at on the map</strong>
-        <ul>
-          {ch.lookFor.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-      </div>
       <div className="plain-why">
         <strong>Why it matters:</strong> {ch.whyItMatters}
       </div>
+      {children}
     </div>
   );
 };
@@ -306,7 +323,8 @@ export const MapReadingGuide: React.FC<MapGuideProps> = ({
             </>
           )}
           <p className="mg-foot">
-            Tip: click anywhere on the map to see what that spot did over the season in the Pixel Inspector.
+            Tip: click anywhere on the map to see what that spot did over the season in the “This spot” tab (Pixel
+            Inspector).
           </p>
         </div>
       )}
